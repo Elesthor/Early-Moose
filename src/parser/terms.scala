@@ -29,17 +29,16 @@ case class VInt  (v: Int) extends Value{
      def retString(x: Int): String = return " "*x+v.toString+"\n"
 }
 
-// case class VCount(l: ListTerm)                      extends Value{
-//      def retString(x: Int): String =
-//        " "*x+"Count("+l.retString(x)+")\n"
-// }
+case class VCount(l: ListTerm) extends Value{
+      def retString(x: Int): String = " "*x+"Count("+l.retString(x)+")\n"
+}
 
 case class VSup  (left: Value, right: Value) extends Value{
      def retString(x: Int): String =
         " "*x+"Sup:\n"+left.retString(x+1)+right.retString(x+1)
 }
 
-case class VEqual(left: Term, right: Term)          extends Value{
+case class VEqual(left: Term, right: Term) extends Value{
      def retString(x: Int): String =
         " "*x+"Equal:\n"+left.retString(x+1)+right.retString(x+1)
 }
@@ -48,14 +47,17 @@ case class VAnd  (left: Value, right: Value) extends Value{
      def retString(x: Int): String =
         " "*x+"And:\n"+left.retString(x+1)+right.retString(x+1)
 }
+
 case class VOr   (left: Value, right: Value) extends Value{
      def retString(x: Int): String =
         " "*x+"Or:\n"+left.retString(x+1)+right.retString(x+1)
 }
+
 case class VNot  (v: Value) extends Value{
      def retString(x: Int): String =
         " "*x+"Not:\n" + v.retString(x+1)
 }
+
 case class VConst(s: String) extends Value{
      def retString(x: Int): String = " "*x+s
 }
@@ -64,14 +66,21 @@ case class VConst(s: String) extends Value{
 ////////////////////////////////////////////////////////////////////////////////
 //                               Lists                                        //
 ////////////////////////////////////////////////////////////////////////////////
-abstract class ListTerm                                      extends Term{
-    val content: Option[List[Term]] = None
+
+class ListTerm(content: Option[List[Term]]) extends Term{
+
+    def retString(x: Int): String = " "*x+"\n"+(content match{
+        case None       => "Void List"
+        case Some(t)    => "List"+t.foldLeft(""){
+                                (acc, item) => acc+ item.retString(x+1)+"\n"}
+        })
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //                               Terms                                        //
 ////////////////////////////////////////////////////////////////////////////////
+
 case class TVar (p: String) extends Term{
     def retString(x: Int): String = " "*x+p
 }
@@ -95,6 +104,7 @@ case class TEnc (left: Term, right: Term) extends Term{
     def retString(x: Int): String =
         " "*x+"Enc:\n"+left.retString(x+1)+right.retString(x+1)
 }
+
 case class TDec (left: Term, right: Term) extends Term{
     def retString(x: Int): String =
         " "*x+"Dec:\n"+left.retString(x+1)+right.retString(x+1)
@@ -119,6 +129,7 @@ val d = new VAnd(a, c)
 
 val e = new TSk(d)
 val f = new VEqual(e, a)
+val g = new ListTerm(Some(List(a,f,x)))
 
-println(f.retString(0))
+println(g.retString(0))
 
