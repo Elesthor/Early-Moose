@@ -8,7 +8,7 @@
 //
 //
 
-class Channel(c: Int) {} // Temporary class to reprend outputs channels.
+class Channel(c: String) {} // Temporary class to reprend outputs channels.
 
 abstract class Process{
     //def retString (x: Int): String
