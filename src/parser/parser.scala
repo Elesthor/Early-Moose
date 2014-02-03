@@ -12,25 +12,21 @@
 
 abstract class Input
 {
-  type Ch = Char
-  def GetChar() : Ch
+  def GetChar(): Ch
   
+  type Ch = Char
+  type Checker = Char => Boolean
   var line = 0
   var col = 0
-  var peeked : Option[Ch] = None
-  def Peek(expected: Ch => Boolean) : Ch =
+  var peeked: Option[Ch] = None
+  def Peek(expected: Checker): Ch =
   {
-    val c = Peek();
+    val c = GetChar()
+    peeked = Some(c)
     if(expected(c))
       c
     else
       throw new Unexpected(c, expected);
-  }
-  def Peek() =
-  {
-    val c = GetChar()
-    peeked = Some(c)
-    c
   }
   def GetPeeked () =
   {
@@ -38,9 +34,9 @@ abstract class Input
     peeked = None
     c
   }
-  def GetWord(expected: Ch => Boolean, delimiters: Ch => Boolean) : String =
+  def GetWord(expected: Checker, delimiters: Checker): String =
   {
-    def allExpected = { x : Ch => expected(x) || delimiters(x) }
+    def allExpected = { x: Ch => expected(x) || delimiters(x) }
     var word = ""
     var ok = true
     while(ok)
@@ -55,18 +51,19 @@ abstract class Input
   }
   def GetNumber() =
   {
-    Integer.parseInt(GetWord(numeric, {x => true}))
+    Integer.parseInt(GetWord(Numeric, {x => true}))
   }
   
-  case class Unexpected(c:Ch, expected: Ch => Boolean) extends Exception
+  case class Unexpected(c:Ch, expected: Checker) extends Exception
   case class EndOfFile() extends Exception
   
-  def numeric  (x : Ch) = { x >= '0' && x <= '9' }
-  def alphaLow (x : Ch) = { x >= 'a' && x <= 'z' }
-  def alphaUp  (x : Ch) = { x >= 'A' && x <= 'Z' }
-  def alpha(x : Ch) = { alphaLow(x) || alphaUp(x) }
-  def alphaNumeric(x : Ch) = { alpha(x) || numeric(x) }
-  def parenthesis(x : Ch) = { x == '(' || x == ')' }
+  def Numeric  (x: Ch) = { x >= '0' && x <= '9' }
+  def AlphaLow (x: Ch) = { x >= 'a' && x <= 'z' }
+  def AlphaUp  (x: Ch) = { x >= 'A' && x <= 'Z' }
+  def Alpha(x: Ch) = { AlphaLow(x) || AlphaUp(x) }
+  def AlphaNumeric(x: Ch) = { Alpha(x) || Numeric(x) }
+  def IsChar(c: Ch)(x: Ch) = { x == c }
+  def Parenthesis(x: Ch) = { x == '(' || x == ')' }
 }
 
 import java.io.FileInputStream
@@ -91,34 +88,57 @@ class InputFromFile(file:String) extends Input
   }
 }
 
-class Parser(src : Input)
+class Parser(src: Input)
 {
   case class SyntaxError(line:Int, col:Int) extends Exception
   
-  def CheckPeeked(c : Char)
+  def CheckPeeked(c: src.Ch)
   {
     if(src.GetPeeked() != c)
       throw SyntaxError(src.line, src.col)
   }
   
-  def ParseProcess() : Process =
+  def ParseVariable(delimiters: src.Checker) =
   {
-    val keyword = src.GetWord(src.alpha, {x : Char => src.parenthesis(x) || x == ' ' || x == '^' || x == '0'})
+    new TVar(src.GetWord(src.Alpha, delimiters))
+  }
+  def ParseChannel() =
+  {
+    new Channel(src.GetNumber())
+  }
+  def ParseProcess(): Process =
+  {
+    val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
     val peeked = src.GetPeeked()
     (keyword, peeked) match
     {
       case ("in", '(') =>
-        val channel = new Channel(src.GetNumber())
+        val channel = ParseChannel()
         CheckPeeked(',')
         
-        val variable = new TVar(src.GetWord(src.alpha, { x : Char => x == ')' }))
-        // no need to check if peeked = Some(')')
-        src.Peek()
-        CheckPeeked('.')
+        val variable = ParseVariable(src.IsChar(')'))
+        // no need to check if peeked is Some(')')
+        src.Peek(src.IsChar('.'))
         
         new PIn(channel, variable, ParseProcess())
         
-      case ("in", '^') => new PTrivial
+      case ("in", '^') =>
+        new PTrivial
+        /*
+        val k = src.GetNumber()
+        CheckPeeked('(')
+        
+        val channel = ParseChannel()
+        CheckPeeked(',')
+        
+        val variable = ParseVariable(src.IsChar('-'))
+        // no need to check if peeked is Some('-')
+        src.Peek(src.IsChar('>'))
+        */
+        
+        
+        
+        
       case ("out", '(') => new PTrivial
       case ("if", ' ') => new PTrivial
       case ("new", ' ') => new PTrivial
