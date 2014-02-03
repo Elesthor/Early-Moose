@@ -8,13 +8,13 @@
 //
 //
 
-class Channel // Temporary class to reprend outputs channels.
+class Channel(c : Int) {} // Temporary class to reprend outputs channels.
 
 abstract class Process{
     //def retString (x: Int): String
 }
 
-case class PTrivial extends Process{
+case class PTrivial() extends Process{
     //def retString (x: Int): String = "Trivial Process: 0"
 }
 case class PIn (c: Channel, x: TVar, p: Process)                 extends Process

@@ -95,13 +95,29 @@ class Parser(src : Input)
 {
   case class SyntaxError(line:Int, col:Int) extends Exception
   
-  def ParseProcess() =
+  def CheckPeeked(c : Char)
+  {
+    if(src.GetPeeked() != c)
+      throw SyntaxError(src.line, src.col)
+  }
+  
+  def ParseProcess() : Process =
   {
     val keyword = src.GetWord(src.alpha, {x : Char => src.parenthesis(x) || x == ' ' || x == '^' || x == '0'})
     val peeked = src.GetPeeked()
     (keyword, peeked) match
     {
-      case ("in", '(') => new PTrivial
+      case ("in", '(') =>
+        val channel = new Channel(src.GetNumber())
+        CheckPeeked(',')
+        
+        val variable = new TVar(src.GetWord(src.alpha, { x : Char => x == ')' }))
+        // no need to check if peeked = Some(')')
+        src.Peek()
+        CheckPeeked('.')
+        
+        new PIn(channel, variable, ParseProcess())
+        
       case ("in", '^') => new PTrivial
       case ("out", '(') => new PTrivial
       case ("if", ' ') => new PTrivial
@@ -112,8 +128,13 @@ class Parser(src : Input)
   }
 }
 
-val in = new InputFromFile("test")
-val p = new Parser(in)
-p.ParseProcess()
+object TestParser
+{
+  def main(args: Array[String])
+  {
+    val p = new Parser(new InputFromFile("test"))
+    //p.ParseProcess().retString()
+  }
+}
 
 
