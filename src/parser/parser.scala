@@ -10,8 +10,9 @@
 
 
 
-trait Input[Ch]
+trait Input
 {
+  type Ch = Char
   def GetChar() : Ch
   def numeric(x : Ch) : Boolean
   def alphaLow(x : Ch) : Boolean
@@ -61,6 +62,7 @@ trait Input[Ch]
   }
   
   case class Unexpected(c:Ch, expected: Ch => Boolean) extends Exception
+  case class EndOfFile() extends Exception
   
   def alpha(x : Ch) = { alphaLow(x) || alphaUp(x) }
   def alphaNumeric(x : Ch) = { alpha(x) || numeric(x) }
@@ -68,13 +70,13 @@ trait Input[Ch]
 }
 
 import java.io.FileInputStream
-class InputFromFile(file:String) extends Input[Int]
+class InputFromFile(file:String) extends Input
 {
   val inStream = new FileInputStream(file)
   
-  def numeric  (x : Int) = { x >= '0' && x <= '9' }
-  def alphaLow (x : Int) = { x >= 'a' && x <= 'z' }
-  def alphaUp  (x : Int) = { x >= 'A' && x <= 'Z' }
+  def numeric  (x : Ch) = { x >= '0' && x <= '9' }
+  def alphaLow (x : Ch) = { x >= 'a' && x <= 'z' }
+  def alphaUp  (x : Ch) = { x >= 'A' && x <= 'Z' }
   
   def GetChar() =
   {
@@ -86,16 +88,25 @@ class InputFromFile(file:String) extends Input[Int]
     }
     else
       col = col + 1
-    c
+    if(c== -1)
+      throw EndOfFile()
+    
+    Character.toChars(c)(0) // convert Int to Char
   }
 }
 
-class parser(src : Input[Int])
+class Parser(src : Input)
 {
-  def ParseProcess =
+  def ParseProcess() =
   {
-    //var name = src.GetWord();
+    println(src.GetWord(src.alpha, src.parenthesis))
+    println(src.GetPeeked())
+    println(src.GetPeeked())
   }
 }
+
+val in = new InputFromFile("test")
+val p = new Parser(in)
+p.ParseProcess()
 
 
