@@ -10,13 +10,10 @@
 
 
 
-trait Input
+abstract class Input
 {
   type Ch = Char
   def GetChar() : Ch
-  def numeric(x : Ch) : Boolean
-  def alphaLow(x : Ch) : Boolean
-  def alphaUp(x : Ch) : Boolean
   
   var line = 0
   var col = 0
@@ -64,6 +61,9 @@ trait Input
   case class Unexpected(c:Ch, expected: Ch => Boolean) extends Exception
   case class EndOfFile() extends Exception
   
+  def numeric  (x : Ch) = { x >= '0' && x <= '9' }
+  def alphaLow (x : Ch) = { x >= 'a' && x <= 'z' }
+  def alphaUp  (x : Ch) = { x >= 'A' && x <= 'Z' }
   def alpha(x : Ch) = { alphaLow(x) || alphaUp(x) }
   def alphaNumeric(x : Ch) = { alpha(x) || numeric(x) }
   def parenthesis(x : Ch) = { x == '(' || x == ')' }
@@ -73,10 +73,6 @@ import java.io.FileInputStream
 class InputFromFile(file:String) extends Input
 {
   val inStream = new FileInputStream(file)
-  
-  def numeric  (x : Ch) = { x >= '0' && x <= '9' }
-  def alphaLow (x : Ch) = { x >= 'a' && x <= 'z' }
-  def alphaUp  (x : Ch) = { x >= 'A' && x <= 'Z' }
   
   def GetChar() =
   {
@@ -97,11 +93,22 @@ class InputFromFile(file:String) extends Input
 
 class Parser(src : Input)
 {
+  case class SyntaxError(line:Int, col:Int) extends Exception
+  
   def ParseProcess() =
   {
-    println(src.GetWord(src.alpha, src.parenthesis))
-    println(src.GetPeeked())
-    println(src.GetPeeked())
+    val keyword = src.GetWord(src.alpha, {x : Char => src.parenthesis(x) || x == ' ' || x == '^' || x == '0'})
+    val peeked = src.GetPeeked()
+    (keyword, peeked) match
+    {
+      case ("in", '(') => new PTrivial
+      case ("in", '^') => new PTrivial
+      case ("out", '(') => new PTrivial
+      case ("if", ' ') => new PTrivial
+      case ("new", ' ') => new PTrivial
+      case ("", '0') => new PTrivial
+      case (_, _) => throw SyntaxError(src.line, src.col)
+    }
   }
 }
 
