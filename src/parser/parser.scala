@@ -28,7 +28,7 @@ trait Input
 }
 
 import java.io.FileInputStream
-class FromFile(file:String) extends Input
+class InputFromFile(file:String) extends Input
 {
   type Ch = Int
   val inStream = new FileInputStream(file)
