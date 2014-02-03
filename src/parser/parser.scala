@@ -16,6 +16,10 @@ trait Input
   def GetChar() : Ch
   def GetChar(expected: Ch => Boolean) : Ch
   def GetWord(expected: Ch => Boolean, delimiters: Ch => Boolean) : String
+  def GetNumber() =
+  {
+    Integer.parseInt(GetWord(numeric, {x => true}))
+  }
   var line : Int
   var col : Int
   case class Unexpected(c:Ch, expected: Ch => Boolean) extends Exception
@@ -31,21 +35,12 @@ import java.io.FileInputStream
 class InputFromFile(file:String) extends Input
 {
   type Ch = Int
-  val inStream = new FileInputStream(file)
+  val inStream = new FileInputStream(file) // TODO : le fermer dans un destructeur
   var line = 0
   var col = 0
-  def numeric (x : Ch) =
-  {
-    x >= '0' && x <= '9'
-  }
-  def alphaLow (x : Ch) =
-  {
-    x >= '0' && x <= '9'
-  }
-  def alphaUp (x : Ch) =
-  {
-    x >= '0' && x <= '9'
-  }
+  def numeric  (x : Ch) = { x >= '0' && x <= '9' }
+  def alphaLow (x : Ch) = { x >= 'a' && x <= 'z' }
+  def alphaUp  (x : Ch) = { x >= 'A' && x <= 'Z' }
   
   def GetChar() =
   {
