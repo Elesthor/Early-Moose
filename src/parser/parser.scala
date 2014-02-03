@@ -19,19 +19,27 @@ abstract class Input
   var line = 0
   var col = 0
   var peeked: Option[Ch] = None
-  def Peek(expected: Checker): Ch =
+  def GetCharPeekable(expected: Checker): Ch = // if peeked isn't empty, read from it, else read with GetChar
   {
-    val c = GetChar()
-    peeked = Some(c)
+    val c =
+      if(peeked.isEmpty)
+        GetChar()
+      else
+      {
+        val tmp = peeked.get
+        peeked = None
+        tmp
+      }
+    
     if(expected(c))
       c
     else
       throw new Unexpected(c, expected);
   }
-  def GetPeeked () =
+  def Peek(): Ch =
   {
-    val c = peeked.get // throw an exception if peeked is None
-    peeked = None
+    val c = GetChar()
+    peeked = Some(c)
     c
   }
   def GetWord(expected: Checker, delimiters: Checker): String =
@@ -41,7 +49,7 @@ abstract class Input
     var ok = true
     while(ok)
     {
-      val c = Peek(allExpected)
+      val c = GetCharPeekable(allExpected)
       if(expected(c))
         word += c
       else
@@ -64,6 +72,7 @@ abstract class Input
   def AlphaNumeric(x: Ch) = { Alpha(x) || Numeric(x) }
   def IsChar(c: Ch)(x: Ch) = { x == c }
   def Parenthesis(x: Ch) = { x == '(' || x == ')' }
+  def All(x: Ch) = { true }
 }
 
 import java.io.FileInputStream
@@ -92,60 +101,76 @@ class Parser(src: Input)
 {
   case class SyntaxError(line:Int, col:Int) extends Exception
   
-  def CheckPeeked(c: src.Ch)
-  {
-    if(src.GetPeeked() != c)
-      throw SyntaxError(src.line, src.col)
-  }
-  
   def ParseVariable(delimiters: src.Checker) =
   {
     new TVar(src.GetWord(src.Alpha, delimiters))
   }
-  def ParseChannel() =
+  def ParseChannel(delimiters: src.Checker) =
   {
-    new Channel(src.GetNumber())
+    new Channel(src.GetWord(src.Alpha, delimiters))
+  }
+  def ParseConstant(delimiters: src.Checker) =
+  {
+    new VConst(src.GetWord(src.Alpha, delimiters))
   }
   def ParseProcess(): Process =
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
-    val peeked = src.GetPeeked()
+    val peeked = src.GetCharPeekable(src.All)
     (keyword, peeked) match
     {
       case ("in", '(') =>
-        val channel = ParseChannel()
-        CheckPeeked(',')
-        
+        val channel = ParseChannel(src.IsChar(','))
         val variable = ParseVariable(src.IsChar(')'))
-        // no need to check if peeked is Some(')')
-        src.Peek(src.IsChar('.'))
-        
+        src.Peek()
+        src.GetCharPeekable(src.IsChar('.'))
         new PIn(channel, variable, ParseProcess())
         
       case ("in", '^') =>
-        new PTrivial
-        /*
-        val k = src.GetNumber()
-        CheckPeeked('(')
+        new PTrivial()
+        /*val k = src.GetNumber()
+        src.GetCharPeekable(src.IsChar('('))
         
         val channel = ParseChannel()
-        CheckPeeked(',')
+        src.GetCharPeekable(src.IsChar(','))
         
         val variable = ParseVariable(src.IsChar('-'))
         // no need to check if peeked is Some('-')
         src.Peek(src.IsChar('>'))
+        
+        val u = ParseTerm()
+        //...
         */
         
         
         
         
-      case ("out", '(') => new PTrivial
+      case ("out", '(') =>
+        new PTrivial()
+        /*
+        val channel = ParseChannel()
+        src.GetCharPeekable(src.IsChar(','))
+        
+        val message = ParseTerm()
+        // ...
+        */
       case ("if", ' ') => new PTrivial
-      case ("new", ' ') => new PTrivial
+      case ("new", ' ') =>
+        new PNew(ParseConstant(src.IsChar('.')), ParseProcess())
       case ("", '0') => new PTrivial
       case (_, _) => throw SyntaxError(src.line, src.col)
     }
   }
+  
+  /*def parseTerm(delimiters: src.Checker):Term
+  {
+    
+  }
+  
+  def parseList():ListTerm
+  {
+    
+  }*/
 }
 
 object TestParser
