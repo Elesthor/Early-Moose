@@ -9,77 +9,99 @@
 //
 
 
+////////////////////////////////////////////////////////////////////////////////
+//                              Input class                                   //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Utility class to handle a stream
 
 abstract class Input
 {
+
+  // Errors and limit cases
+  case class Unexpected(c:Ch, expected: Checker) extends Exception
+  case class EndOfFile() extends Exception
+
+  // Current position in the file
+  var line                = 0                 // Current line in the file
+  var col                 = 0                 // Current colonm in the file
+
+  // Current char read, waiting for analysing
+  var peeked: Option[Ch]  = None
+
+  // Reading function of the concrete class
   def GetChar(): Ch
 
-  type Ch = Char
-  type Checker = Char => Boolean
-  var line = 0
-  var col = 0
-  var peeked: Option[Ch] = None
-  def GetCharPeekable(expected: Checker): Ch = // if peeked isn't empty, read from it, else read with GetChar
+  type Ch                   = Char
+  type Checker              = Char => Boolean
+
+  // Set of checkers, which decide wether a char belongs to a certain subset of
+  // the printable ascii alphabet.
+  def Numeric       (x: Ch) = { x >= '0' && x <= '9' }
+  def AlphaLow      (x: Ch) = { x >= 'a' && x <= 'z' }
+  def AlphaUp       (x: Ch) = { x >= 'A' && x <= 'Z' }
+  def Alpha         (x: Ch) = { AlphaLow(x) || AlphaUp(x) }
+  def AlphaNumeric  (x: Ch) = { Alpha(x) || Numeric(x) }
+  def Parenthesis   (x: Ch) = { x == '(' || x == ')' }
+  def All           (x: Ch) = { true }
+  def IsChar        (c: Ch)(x: Ch) = { x == c } // Test if input is a given char
+
+  // If peeked isn't empty, read from it, else read with GetChar
+  def GetCharPeekable(expected: Checker): Ch =
   {
     val c =
-      if(peeked.isEmpty)
-        GetChar()
+      if(peeked.isEmpty) GetChar()
       else
       {
         val tmp = peeked.get
         peeked = None
         tmp
       }
-
-    if(expected(c))
-      c
-    else
-      throw new Unexpected(c, expected);
+    if(expected(c)) c
+    else throw new Unexpected(c, expected);
   }
+
+  // Get the next char
   def Peek(): Ch =
   {
     val c = GetChar()
     peeked = Some(c)
     c
   }
+
+  // Get a full word between the delimiters, using only char from expected
   def GetWord(expected: Checker, delimiters: Checker): String =
   {
-    def allExpected = { x: Ch => expected(x) || delimiters(x) }
-    var word = ""
-    var ok = true
-    while(ok)
-    {
-      val c = GetCharPeekable(allExpected)
-      if(expected(c))
-        word += c
-      else
-        ok = false
+    def iterator(): String ={
+      val c = GetCharPeekable({ x: Ch => expected(x) || delimiters(x) })
+      if (expected(c)) c+iterator()
+      else ""
     }
-    word
+    iterator()
   }
+
+  // Get the next number present in the file
   def GetNumber() =
   {
     Integer.parseInt(GetWord(Numeric, {x => true}))
   }
 
-  case class Unexpected(c:Ch, expected: Checker) extends Exception
-  case class EndOfFile() extends Exception
-
-  def Numeric  (x: Ch) = { x >= '0' && x <= '9' }
-  def AlphaLow (x: Ch) = { x >= 'a' && x <= 'z' }
-  def AlphaUp  (x: Ch) = { x >= 'A' && x <= 'Z' }
-  def Alpha(x: Ch) = { AlphaLow(x) || AlphaUp(x) }
-  def AlphaNumeric(x: Ch) = { Alpha(x) || Numeric(x) }
-  def IsChar(c: Ch)(x: Ch) = { x == c }
-  def Parenthesis(x: Ch) = { x == '(' || x == ')' }
-  def All(x: Ch) = { true }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                           InputFrom File class                             //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Utility class to handle an input file
+
 
 import java.io.FileInputStream
 class InputFromFile(file:String) extends Input
 {
   val inStream = new FileInputStream(file)
 
+  // Main reading function
   def GetChar() =
   {
     val c = inStream.read()
@@ -88,31 +110,41 @@ class InputFromFile(file:String) extends Input
       line = line + 1;
       col = 0
     }
-    else
-      col = col + 1
-    if(c== -1)
-      throw EndOfFile()
-
-    Character.toChars(c)(0) // convert Int to Char
+    else col = col + 1
+    if (c== -1) throw EndOfFile()
+    Character.toChars(c)(0)       // convert Int to Char
   }
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                                Parser class                                //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of the parser
+
+
 class Parser(src: Input)
 {
+
   case class SyntaxError(line:Int, col:Int) extends Exception
 
   def ParseVariable(delimiters: src.Checker) =
   {
     new TVar(src.GetWord(src.Alpha, delimiters))
   }
+
   def ParseChannel(delimiters: src.Checker) =
   {
     new Channel(src.GetWord(src.Alpha, delimiters))
   }
+
   def ParseConstant(delimiters: src.Checker) =
   {
     new VConst(src.GetWord(src.Alpha, delimiters))
   }
+
   def ParseProcess(): Process =
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
@@ -146,17 +178,25 @@ class Parser(src: Input)
 
 
       case ("out", '(') =>
-        new PTrivial()
-        /*
-        val channel = ParseChannel()
-        src.GetCharPeekable(src.IsChar(','))
+        val channel = ParseChannel(src.IsChar(','))
+        val message = ParseTerm(src.IsChar(')'))
+        src.Peek()
+        src.GetCharPeekable(src.IsChar('.'))
+        new PIn(channel, message, ParseProcess())
 
-        val message = ParseTerm()
-        // ...
-        */
-      case ("if", ' ') => new PTrivial
+      case ("if", ' ') =>
+        /*val value = ParseTerm(src.IsChar(' '))
+        val then = src.GetWord(src.Alpha, src.IsChar(' '))
+        if (then == "then") throw new SyntaxError(src.line, src.col)
+        val P1 = ParseProcess()
+        src.Peek()
+        src.GetCharPeekable(src.IsChar('.'))
+        new PIf(value, P1, ParseProcess())
+      */
+
+
       case ("new", ' ') =>
-        new PNew(ParseConstant(src.IsChar('.')), ParseProcess())
+        new PNew(ParseConstant(IsChar('.')), ParseProcess())
       case ("", '0') => new PTrivial
       case (_, _) => throw SyntaxError(src.line, src.col)
     }
