@@ -4,11 +4,13 @@
 //           [parser.scala]                                                   //
 //                              https://github.com/Elesthor/Early-Moose       //
 ////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-
-
+//                                              \                             //
+//                                               \   \_\_    _/_/             //
+//                                                \      \__/                 //
+//                                                  ---  (oo)\_______   /     //
+//                                                       (__)\       )\/      //
+//                                                           ||-----||        //
+//                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 //                              Input class                                   //
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,8 +21,8 @@ abstract class Input
 {
 
   // Errors and limit cases
-  case class Unexpected(c:Ch, expected: Checker) extends Exception
-  case class EndOfFile() extends Exception
+  case class Unexpected(c:Ch, expected: Checker)  extends Exception
+  case class EndOfFile()                          extends Exception
 
   // Current position in the file
   var line                  = 0                 // Current line in the file
@@ -32,8 +34,8 @@ abstract class Input
   // Reading function of the concrete class
   def GetChar(): Ch
 
-  type Ch                 = Char
-  type Checker            = Ch => Boolean
+  type Ch                   = Char
+  type Checker              = Ch => Booleanean
 
   // Set of checkers, which decide wether a char belongs to a certain subset of
   // the printable ascii alphabet.
@@ -87,7 +89,7 @@ abstract class Input
   }
 
 
-  def checkNextWord(String: word): Bool = {
+  def checkNextWord(String: word): Boolean = {
     if (word == "") true
     else
     {
@@ -160,8 +162,8 @@ class Parser(src: Input)
   {
     new VConst(src.GetWord(src.Alpha, delimiters))
   }
-  
-  def ParseProcessSeq() : Process = 
+
+  def ParseProcessSeq() : Process =
   {
     if(src.Peek() == '.') // séquence
     {
@@ -171,7 +173,7 @@ class Parser(src: Input)
     else
       new PTrivial()
   }
-  
+
   def ParseProcess(): Process =
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
@@ -278,12 +280,12 @@ class Parser(src: Input)
         val v = parserTerm() // TODO : ça doit etre une valeur
         src.GetCharPeekable(src.IsChar(')'))
         new TSk(v)
-      
+
       // Lists
       case ("", '[') =>
         src.GetCharPeekable(src.IsChar(']'))
         new ListTerm(None)
-      
+
       // Values
       case ("count", '(') =>
         val l = parseList()
@@ -304,7 +306,7 @@ object TestParser
   def main(args: Array[String])
   {
     val p = new Parser(new InputFromFile("test"))
-    //p.ParseProcess().retString()
+    //p.ParseProcess().RetString()
   }
 }
 
