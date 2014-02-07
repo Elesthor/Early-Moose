@@ -16,7 +16,7 @@ abstract class Term{
 //                               Values                                       //
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class Value extends Term{
+abstract class Value{
     def retString (x: Int): String
 }
 

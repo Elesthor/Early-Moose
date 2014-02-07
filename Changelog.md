@@ -13,4 +13,12 @@ ChangeLog
 
 02/02/2014
 --------------------------------------------------------------------------------
-* Ajout du support de TerList au printer
+* Ajout du support de TermList au printer
+
+03/02/2014
+--------------------------------------------------------------------------------
+* Ajouts sur le parser 
+
+04/02/2014
+--------------------------------------------------------------------------------
+* Clean du parser, ajouts de nouveaux tokens parsables. (problème avec le if, il va falloir donner à parsProcess un argument )
