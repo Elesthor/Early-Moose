@@ -29,11 +29,11 @@ abstract class Value{
 
 // Binding class between Term and value to have a case class.
 case class TValue (v: Value) extends Term{
-     def RetString(x: Int): String = " "*x+v.RetString(x)
+     def RetString(x: Int): String = v.RetString(x)
 }
 
 case class VInt  (v: Int) extends Value{
-     def RetString(x: Int): String = return " "*x+v.toString+"\n"
+     def RetString(x: Int): String = " "*x+v.toString+"\n"
 }
 
 case class VCount(l: ListTerm) extends Value{
