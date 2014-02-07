@@ -156,9 +156,9 @@ class Parser(src: Input)
     new Channel(src.GetWord(src.Alpha, delimiters))
   }
 
-  def ParseConstant(delimiters: src.Checker) =
+  def ParseConstant() =
   {
-    new VConst(src.GetWord(src.Alpha, delimiters))
+    new VConst(src.GetWord(src.Alpha, src.All))
   }
   
   def ParseProcessSeq() : Process = 
@@ -180,47 +180,49 @@ class Parser(src: Input)
     {
       case ("in", '(') =>
         val channel = ParseChannel(src.IsChar(','))
+        src.CleanPeek()
+        
         val variable = ParseVariable(src.IsChar(')'))
-        src.Peek()
-        new PIn(channel, variable, ParseProcess())
+        src.CleanPeek()
+        new PIn(channel, variable, ParseProcessSeq())
 
       case ("in", '^') =>
         new PTrivial()
-        /*val k = src.GetNumber()
-        src.GetCharPeekable(src.IsChar('('))
+        val k = src.GetNumber()
+        CheckNextWord("(")
 
-        val channel = ParseChannel()
-        src.GetCharPeekable(src.IsChar(','))
+        val c = ParseChannel(src.IsChar(','))
+        src.CleanPeek()
 
-        val variable = ParseVariable(src.IsChar('-'))
-        // no need to check if peeked is Some('-')
-        src.Peek(src.IsChar('>'))
+        val x = ParseVariable(src.IsChar('-'))
+        src.CleanPeek()
+        CheckNextWord(">")
 
         val u = ParseTerm()
-        //...
-        */
+        ChecknextWord(" as ")
+        
+        val y = ParseVariable(src.IsChar(')'))
+        src.CleanPeek()
 
-
-
+        new Pink(c, x, u, y, k, ParseProcessSeq())
 
       case ("out", '(') =>
         val channel = ParseChannel(src.IsChar(','))
+        src.CleanPeek()
+        
         val message = ParseTerm(src.IsChar(')'))
-        src.Peek()
-        src.GetCharPeekable(src.IsChar('.'))
-        new POut(channel, message, ParseProcess())
+        src.CleanPeek()
+        new POut(channel, message, ParseProcessSeq())
 
       case ("if", ' ') =>
         val value = ParseTerm()
         src.getNextWord(" then ")
         val P1 = ParseProcess()
         src.getNextWord(" else ")
-        new PIf(value, P1, ParseProcess())
-
-
+        new PIf(value, P1, ParseProcessSeq())
 
       case ("new", ' ') =>
-        new PNew(ParseConstant(IsChar('.')), ParseProcess())
+        new PNew(ParseConstant(), ParseProcess())
       case ("", '0') => new PTrivial
       case (_, _) => throw SyntaxError(src.line, src.col)
     }
