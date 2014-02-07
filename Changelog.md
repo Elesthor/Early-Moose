@@ -21,4 +21,10 @@ ChangeLog
 
 04/02/2014
 --------------------------------------------------------------------------------
-* Clean du parser, ajouts de nouveaux tokens parsables. (problème avec le if, il va falloir donner à parsProcess un argument )
+* Clean du parser, ajouts de nouveaux tokens parsables. 
+(problème avec le if, il va falloir donner à parsProcess un argument )
+
+07/02/2014
+--------------------------------------------------------------------------------
+* Modification de la structure du parser: la méthode parseProcess ne cherche plus de "." à la fin des processus pour continuer à parser
+* Ajout de ParseProcessSec pour trouver la fin de procecuss et relancer parseProcess le cas échéant.
