@@ -171,6 +171,63 @@ class Parser(src: Input)
   {
     
   }*/
+  
+  def parseTerm():Value
+  {
+    val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)}  , {x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == ','}) // TODO : rajouter v et ^
+    val peeked = src.GetCharPeekable(src.All)
+    (keyword, peeked) match
+    {
+      case ("pair", '(') =>
+        val left = parseTerm()
+        src.GetCharPeekable(src.IsChar(','))
+        val right = parseTerm()
+        src.GetCharPeekable(src.IsChar(')'))
+        new TPair(left, right)
+      case ("pi1", '(') =>
+        val t = parserTerm()
+        src.GetCharPeekable(src.IsChar(')'))
+        new TPi1(t)
+      case ("pi2", '(') =>
+        val t = parserTerm()
+        src.GetCharPeekable(src.IsChar(')'))
+        new TPi2(t)
+      case ("enc", '(') =>
+        val left = parserTerm()
+        src.GetCharPeekable(src.IsChar(','))
+        val right = parseTerm()
+        src.GetCharPeekable(src.IsChar(')'))
+        new TEnc(left, right)
+      case ("dec", '(') =>
+        val left = parserTerm()
+        src.GetCharPeekable(src.IsChar(','))
+        val right = parseTerm()
+        src.GetCharPeekable(src.IsChar(')'))
+        new TDec(left, right)
+      case ("pk", '(') =>
+        val v = parserTerm() // TODO : ça doit etre une valeur
+        src.GetCharPeekable(src.IsChar(')'))
+        new TPk(v)
+      case ("sk", '(') =>
+        val v = parserTerm() // TODO : ça doit etre une valeur
+        src.GetCharPeekable(src.IsChar(')'))
+        new TSk(v)
+      case ("", '[') =>
+        src.GetCharPeekable(src.IsChar(']'))
+        new ListTerm(None)
+      case ("count", '(') =>
+        val l = parseList()
+        src.GetCharPeekable(src.IsChar(')'))
+        new VCount(l)
+      case ("not", '(') =>
+        val v = parseTerm() // TODO : ça doit etre une valeur
+        src.GetCharPeekable(src.IsChar(')'))
+        new VCount(l)
+      // TODO : comment on différencie les variables des constantes ?
+    }
+    
+    // ici regarder si on a :: (on peut déjà avoir lu le premier :), =, > ... (peuvent etre déjà lus
+  }
 }
 
 object TestParser
