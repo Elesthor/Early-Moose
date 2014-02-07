@@ -23,11 +23,11 @@ abstract class Input
   case class EndOfFile() extends Exception
 
   // Current position in the file
-  var line                = 0                 // Current line in the file
-  var col                 = 0                 // Current colonm in the file
+  var line                  = 0                 // Current line in the file
+  var col                   = 0                 // Current colonm in the file
 
   // Current char read, waiting for analysing
-  var peeked: Option[Ch]  = None
+  var peeked: Option[Ch]    = None
 
   // Reading function of the concrete class
   def GetChar(): Ch
@@ -84,6 +84,16 @@ abstract class Input
       else ""
     }
     iterator()
+  }
+
+
+  def checkNextWord(String: word): Bool = {
+    if (word == "") true
+    else
+    {
+      if (GetCharPeekable(All) == word(0)) checkNextWord(dropLeft(word))
+      else false
+    }
   }
 
   // Get the next number present in the file
@@ -172,7 +182,6 @@ class Parser(src: Input)
         val channel = ParseChannel(src.IsChar(','))
         val variable = ParseVariable(src.IsChar(')'))
         src.Peek()
-        src.GetCharPeekable(src.IsChar('.'))
         new PIn(channel, variable, ParseProcess())
 
       case ("in", '^') =>
@@ -202,14 +211,12 @@ class Parser(src: Input)
         new POut(channel, message, ParseProcess())
 
       case ("if", ' ') =>
-        /*val value = ParseTerm(src.IsChar(' '))
-        val then = src.GetWord(src.Alpha, src.IsChar(' '))
-        if (then == "then") throw new SyntaxError(src.line, src.col)
+        val value = ParseTerm()
+        src.getNextWord(" then ")
         val P1 = ParseProcess()
-        src.Peek()
-        src.GetCharPeekable(src.IsChar('.'))
+        src.getNextWord(" else ")
         new PIf(value, P1, ParseProcess())
-      */
+
 
 
       case ("new", ' ') =>
@@ -228,10 +235,12 @@ class Parser(src: Input)
   {
 
   }*/
-  
+
   def parseTerm():Value
   {
-    val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)}  , {x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == ','}) // TODO : rajouter v et ^
+    val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)}  ,
+    {x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':'
+    || x == '>' || x == '=' || x == ','}) // TODO : rajouter v et ^
     val peeked = src.GetCharPeekable(src.All)
     (keyword, peeked) match
     {
@@ -285,7 +294,7 @@ class Parser(src: Input)
         src.GetCharPeekable(src.IsChar(')'))
         new VCount(l)
     }
-    
+
     // ici regarder si on a :: (on peut déjà avoir lu le premier :), =, > ... (peuvent etre déjà lus
   }
 }
