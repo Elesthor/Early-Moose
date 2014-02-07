@@ -32,8 +32,8 @@ abstract class Input
   // Reading function of the concrete class
   def GetChar(): Ch
 
-  type Ch                   = Char
-  type Checker              = Char => Boolean
+  type Ch                 = Char
+  type Checker            = Ch => Boolean
 
   // Set of checkers, which decide wether a char belongs to a certain subset of
   // the printable ascii alphabet.
@@ -69,6 +69,12 @@ abstract class Input
     c
   }
 
+  // Clean the peeked char
+  def CleanPeek(): Ch =
+  {
+    peeked = None
+  }
+
   // Get a full word between the delimiters, using only char from expected
   def GetWord(expected: Checker, delimiters: Checker): String =
   {
@@ -83,7 +89,7 @@ abstract class Input
   // Get the next number present in the file
   def GetNumber() =
   {
-    Integer.parseInt(GetWord(Numeric, {x => true}))
+    Integer.parseInt(GetWord(Numeric, All))
   }
 
 }
@@ -144,7 +150,18 @@ class Parser(src: Input)
   {
     new VConst(src.GetWord(src.Alpha, delimiters))
   }
-
+  
+  def ParseProcessSeq() : Process = 
+  {
+    if(src.Peek() == '.') // séquence
+    {
+      CleanPeek()
+      ParseProcess()
+    }
+    else
+      new PTrivial()
+  }
+  
   def ParseProcess(): Process =
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
@@ -182,7 +199,7 @@ class Parser(src: Input)
         val message = ParseTerm(src.IsChar(')'))
         src.Peek()
         src.GetCharPeekable(src.IsChar('.'))
-        new PIn(channel, message, ParseProcess())
+        new POut(channel, message, ParseProcess())
 
       case ("if", ' ') =>
         /*val value = ParseTerm(src.IsChar(' '))
@@ -252,9 +269,13 @@ class Parser(src: Input)
         val v = parserTerm() // TODO : ça doit etre une valeur
         src.GetCharPeekable(src.IsChar(')'))
         new TSk(v)
+      
+      // Lists
       case ("", '[') =>
         src.GetCharPeekable(src.IsChar(']'))
         new ListTerm(None)
+      
+      // Values
       case ("count", '(') =>
         val l = parseList()
         src.GetCharPeekable(src.IsChar(')'))
@@ -263,7 +284,6 @@ class Parser(src: Input)
         val v = parseTerm() // TODO : ça doit etre une valeur
         src.GetCharPeekable(src.IsChar(')'))
         new VCount(l)
-      // TODO : comment on différencie les variables des constantes ?
     }
     
     // ici regarder si on a :: (on peut déjà avoir lu le premier :), =, > ... (peuvent etre déjà lus
