@@ -102,6 +102,19 @@ abstract class Input
     Integer.parseInt(GetWord(Numeric, All))
   }
 
+  // Try if EOF (else, char is in peeked)
+  def CheckEOF() = 
+  {
+    try
+    {
+      Peek()
+      false
+    }
+    catch
+    {
+      case e: EndOfFile => true
+    }
+  }
 }
 
 
@@ -127,7 +140,7 @@ class InputFromFile(file:String) extends Input
       col = 0
     }
     else col = col + 1
-    if (c== -1) throw EndOfFile()
+    if (c== -1) throw new EndOfFile()
     Character.toChars(c)(0)       // convert Int to Char
   }
 }
@@ -145,6 +158,33 @@ class Parser(src: Input)
 {
   case class SyntaxError(line:Int, col:Int) extends Exception
 
+  def ParseMetaProc() : MetaProc =
+  {
+    val left = ParseProcess()
+    if(src.CheckEOF())
+      new MetaProc(left, 1, None)
+    else
+    {
+      val c = src.GetCharPeekable({ x:Char => x == '|' || x == '^'})
+      if(c == '|')
+      {
+        src.CheckNextWord("|")
+        new MetaProc(left, 1, Some(ParseMetaProc()))
+      }
+      else // c == '^'
+      {
+        val k = src.GetNumber()
+        if(src.CheckEOF())
+          new MetaProc(left, k, None)
+        else
+        {
+          src.CheckNextWord("||")
+          new MetaProc(left, k, Some(ParseMetaProc()))
+        }
+      }
+    }
+  }  
+  
   def ParseVariable(delimiters: src.Checker) =
   {
     new TVar(src.GetWord(src.Alpha, delimiters))
@@ -223,7 +263,7 @@ class Parser(src: Input)
       case ("new", ' ') =>
         new PNew(ParseConstant(), ParseProcess())
       case ("", '0') => new PTrivial
-      case (_, _) => throw SyntaxError(src.line, src.col)
+      case (_, _) => throw new SyntaxError(src.line, src.col)
     }
   }
 

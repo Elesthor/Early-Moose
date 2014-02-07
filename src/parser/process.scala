@@ -10,6 +10,8 @@
 
 class Channel(c: String) {} // Temporary class to reprend outputs channels.
 
+class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){}
+
 abstract class Process{
     //def retString (x: Int): String
 }
