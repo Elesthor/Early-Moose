@@ -72,7 +72,7 @@ abstract class Input
   }
 
   // Clean the peeked char
-  def CleanPeek(): Ch =
+  def CleanPeek() =
   {
     peeked = None
   }
@@ -89,11 +89,15 @@ abstract class Input
   }
 
 
+<<<<<<< HEAD
   def checkNextWord(String: word): Boolean = {
+=======
+  def CheckNextWord(word: String): Boolean = {
+>>>>>>> cc9bcd9f6c0e43fa6752c556cdf46efaba9fea42
     if (word == "") true
     else
     {
-      if (GetCharPeekable(All) == word(0)) checkNextWord(dropLeft(word))
+      if (GetCharPeekable(All) == word(0)) CheckNextWord(word.reverse.dropRight(1).reverse) // TODO : abominable
       else false
     }
   }
@@ -104,6 +108,19 @@ abstract class Input
     Integer.parseInt(GetWord(Numeric, All))
   }
 
+  // Try if EOF (else, char is in peeked)
+  def CheckEOF() = 
+  {
+    try
+    {
+      Peek()
+      false
+    }
+    catch
+    {
+      case e: EndOfFile => true
+    }
+  }
 }
 
 
@@ -129,7 +146,7 @@ class InputFromFile(file:String) extends Input
       col = 0
     }
     else col = col + 1
-    if (c== -1) throw EndOfFile()
+    if (c== -1) throw new EndOfFile()
     Character.toChars(c)(0)       // convert Int to Char
   }
 }
@@ -145,9 +162,35 @@ class InputFromFile(file:String) extends Input
 
 class Parser(src: Input)
 {
-
   case class SyntaxError(line:Int, col:Int) extends Exception
 
+  def ParseMetaProc() : MetaProc =
+  {
+    val left = ParseProcess()
+    if(src.CheckEOF())
+      new MetaProc(left, 1, None)
+    else
+    {
+      val c = src.GetCharPeekable({ x:Char => x == '|' || x == '^'})
+      if(c == '|')
+      {
+        src.CheckNextWord("|")
+        new MetaProc(left, 1, Some(ParseMetaProc()))
+      }
+      else // c == '^'
+      {
+        val k = src.GetNumber()
+        if(src.CheckEOF())
+          new MetaProc(left, k, None)
+        else
+        {
+          src.CheckNextWord("||")
+          new MetaProc(left, k, Some(ParseMetaProc()))
+        }
+      }
+    }
+  }  
+  
   def ParseVariable(delimiters: src.Checker) =
   {
     new TVar(src.GetWord(src.Alpha, delimiters))
@@ -158,16 +201,16 @@ class Parser(src: Input)
     new Channel(src.GetWord(src.Alpha, delimiters))
   }
 
-  def ParseConstant(delimiters: src.Checker) =
+  def ParseConstant() =
   {
-    new VConst(src.GetWord(src.Alpha, delimiters))
+    new VConst(src.GetWord(src.Alpha, src.All))
   }
 
   def ParseProcessSeq() : Process =
   {
     if(src.Peek() == '.') // séquence
     {
-      CleanPeek()
+      src.CleanPeek()
       ParseProcess()
     }
     else
@@ -182,70 +225,143 @@ class Parser(src: Input)
     {
       case ("in", '(') =>
         val channel = ParseChannel(src.IsChar(','))
+        src.CleanPeek()
+        
         val variable = ParseVariable(src.IsChar(')'))
-        src.Peek()
-        new PIn(channel, variable, ParseProcess())
+        src.CleanPeek()
+        new PIn(channel, variable, ParseProcessSeq())
 
       case ("in", '^') =>
         new PTrivial()
-        /*val k = src.GetNumber()
-        src.GetCharPeekable(src.IsChar('('))
+        val k = src.GetNumber()
+        src.CheckNextWord("(")
 
-        val channel = ParseChannel()
-        src.GetCharPeekable(src.IsChar(','))
+        val c = ParseChannel(src.IsChar(','))
+        src.CleanPeek()
 
-        val variable = ParseVariable(src.IsChar('-'))
-        // no need to check if peeked is Some('-')
-        src.Peek(src.IsChar('>'))
+        val x = ParseVariable(src.IsChar('-'))
+        src.CleanPeek()
+        src.CheckNextWord(">")
 
         val u = ParseTerm()
-        //...
-        */
+        src.CheckNextWord(" as ")
+        
+        val y = ParseVariable(src.IsChar(')'))
+        src.CleanPeek()
 
-
-
+        new PInk(c, x, u, y, k, ParseProcessSeq())
 
       case ("out", '(') =>
         val channel = ParseChannel(src.IsChar(','))
-        val message = ParseTerm(src.IsChar(')'))
-        src.Peek()
-        src.GetCharPeekable(src.IsChar('.'))
-        new POut(channel, message, ParseProcess())
+        src.CleanPeek()
+        
+        val message = ParseTerm()
+        src.CheckNextWord(")")
+        new POut(channel, message, ParseProcessSeq())
 
       case ("if", ' ') =>
         val value = ParseTerm()
-        src.getNextWord(" then ")
+        src.CheckNextWord(" then ")
         val P1 = ParseProcess()
-        src.getNextWord(" else ")
-        new PIf(value, P1, ParseProcess())
-
-
+        src.CheckNextWord(" else ")
+        new PIf(value, P1, ParseProcessSeq())
 
       case ("new", ' ') =>
-        new PNew(ParseConstant(IsChar('.')), ParseProcess())
+        new PNew(ParseConstant(), ParseProcess())
       case ("", '0') => new PTrivial
-      case (_, _) => throw SyntaxError(src.line, src.col)
+      case (_, _) => throw new SyntaxError(src.line, src.col)
     }
   }
 
-  /*def parseTerm(delimiters: src.Checker):Term
+  def ParseList():List[Term] =
   {
-
+    List()
   }
 
-  def parseList():ListTerm
+  def ParseTerm():Term =
   {
-
-  }*/
-
-  def parseTerm():Value
-  {
-    val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)}  ,
-    {x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':'
-    || x == '>' || x == '=' || x == ','}) // TODO : rajouter v et ^
-    val peeked = src.GetCharPeekable(src.All)
-    (keyword, peeked) match
+    val c = src.Peek()
+    val left_term =
+      if(src.Numeric(c))
+        new VInt(src.GetNumber())
+      else
+      {
+        val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)},
+                                  { x: Char => src.Parenthesis(x) || x == ' '|| x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\'})
+        val peeked = src.GetCharPeekable(src.All)
+        (keyword, peeked) match
+        {
+          case ("pair", '(') => 
+            val left = ParseTerm()
+            src.CheckNextWord(",")
+            val right = ParseTerm()
+            src.CheckNextWord(")")
+            new TPair(left, right)
+          case ("pi1", '(') =>
+            val t = ParseTerm()
+            src.CheckNextWord(")")
+            new TPi1(t)
+          case ("pi2", '(') =>
+            val t = ParseTerm()
+            src.CheckNextWord(")")
+            new TPi2(t)
+          case ("enc", '(') =>
+            val left = ParseTerm()
+            src.CheckNextWord(",")
+            val right = ParseTerm()
+            src.CheckNextWord(")")
+            new TEnc(left, right)
+          case ("dec", '(') =>
+            val left = ParseTerm()
+            src.CheckNextWord(",")
+            val right = ParseTerm()
+            src.CheckNextWord(")")
+            new TDec(left, right)
+          case ("pk", '(') =>
+            val v = ParseTerm()
+            src.CheckNextWord(")")
+            new TPk(v)
+          case ("sk", '(') =>
+            val v = ParseTerm()
+            src.CheckNextWord(")")
+            new TSk(v)
+          
+          // Lists
+          case ("", '[') =>
+            src.CheckNextWord("]")
+            new ListTerm(List())
+          
+          // Values
+          case ("count", '(') =>
+            val l = new ListTerm(ParseList())
+            src.CheckNextWord(")")
+            new VCount(l)
+          case ("not", '(') =>
+            val v = ParseTerm()
+            src.CheckNextWord(")")
+            new VNot(v)
+          
+          case (head, ':') => // début de liste avec une variable
+            src.CheckNextWord(":")
+            new ListTerm(new TVar(head) :: ParseList())
+          case (left, '/') => // and avec une variable
+            src.CheckNextWord("\\")
+            new VAnd(new TVar(left), ParseTerm())
+          case (left, '\\') => // or avec une variable
+            src.CheckNextWord("/")
+            new VOr(new TVar(left), ParseTerm())
+          case (left, '=') => // = avec une variable
+            new VEqual(new TVar(left), ParseTerm())
+          case (left, '>') => // > avec une variable
+            new VSup(new TVar(left), ParseTerm())
+        }
+      }
+    
+    // si le caractère suivant est un opérateur binaire
+    val next = src.Peek()
+    next match
     {
+<<<<<<< HEAD
       case ("pair", '(') =>
         val left = parseTerm()
         src.GetCharPeekable(src.IsChar(','))
@@ -295,9 +411,28 @@ class Parser(src: Input)
         val v = parseTerm() // TODO : ça doit etre une valeur
         src.GetCharPeekable(src.IsChar(')'))
         new VCount(l)
+=======
+      case ':'  =>
+        src.CleanPeek()
+        src.CheckNextWord(":")
+        new ListTerm(left_term :: ParseList())
+      case '/'  =>
+        src.CleanPeek()
+        src.CheckNextWord("\\")
+        new VAnd(left_term, ParseTerm())
+      case '\\' =>
+        src.CleanPeek()
+        src.CheckNextWord("/")
+        new VOr(left_term, ParseTerm())
+      case '='  =>
+        src.CleanPeek()
+        new VEqual(left_term, ParseTerm())
+      case '>'  =>
+        src.CleanPeek()
+        new VSup(left_term, ParseTerm())
+      case _    => left_term
+>>>>>>> cc9bcd9f6c0e43fa6752c556cdf46efaba9fea42
     }
-
-    // ici regarder si on a :: (on peut déjà avoir lu le premier :), =, > ... (peuvent etre déjà lus
   }
 }
 

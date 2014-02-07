@@ -142,7 +142,7 @@ def interpretValue(v: Value): Int = v match {
 }
 
 def interpretTerm (t: Term): = t match{
-    case class TVar (p)           =>
+    case class TVar (p)           => p
     case class TPair(left, right) =>
     case class TPi1 (t)           =>
     case class TPi2 (t)           =>
