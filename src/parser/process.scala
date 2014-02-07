@@ -50,7 +50,7 @@ case class POut(c: Channel, t: Term, p: Process) extends Process{
   def RetString(x: Int): String = " "*x+"POut:\n"+c.RetString(x+1)+t.RetString(x+1)+p.RetString(x+1)
 }
 case class PIf (v: Term, pIf: Process, pElse: Process) extends Process{
-  def RetString(x: Int): String = " "*x+"POut:\n"+v.RetString(x+1)+pIf.RetString(x+1)+pElse.RetString(x+1)
+  def RetString(x: Int): String = " "*x+"PIf:\n"+v.RetString(x+1)+pIf.RetString(x+1)+pElse.RetString(x+1)
 }
 case class PNew(s: VConst, p: Process) extends Process{
   def RetString(x: Int): String = " "*x+"PNew:\n"+s.RetString(x+1)+p.RetString(x+1)
