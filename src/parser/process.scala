@@ -25,7 +25,7 @@ class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){
     (
       metaPRight match
       {
-        case None         => " "*x+"None\n"
+        case None         => " "*(x+1)+"None\n"
         case Some(pRight) => pRight.RetString(x+1)
       }
     )

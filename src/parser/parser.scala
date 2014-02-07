@@ -25,7 +25,7 @@ abstract class Input
   case class EndOfFile()                          extends Exception
 
   // Current position in the file
-  var line                  = 0                 // Current line in the file
+  var line                  = 1                 // Current line in the file
   var col                   = 0                 // Current colonm in the file
 
   // Current char read, waiting for analysing
@@ -78,20 +78,25 @@ abstract class Input
     peeked = None
   }
 
-  // Get a full word until a delimiter, using only char from expected. Let the delimiter in peeked
+  // Get a full word until a delimiter, using only char from expected. Let the delimiter in peeked. End on EOF
   def GetWord(expected: Checker, delimiters: Checker): String =
   {
-    def iterator(): String ={
-      val c = Peek()
-      if(expected(c))
-      {
-        CleanPeek()
-        c+iterator()
-      }
-      else if(delimiters(c))
-        ""
+    def iterator(): String =
+    {
+      if(CheckEOF()) ""
       else
-        throw new Unexpected(c, expected);
+      {
+        val c = Peek()
+        if(expected(c))
+        {
+          CleanPeek()
+          c+iterator()
+        }
+        else if(delimiters(c))
+          ""
+        else
+          throw new Unexpected(c, expected);
+      }
     }
     iterator()
   }
@@ -166,7 +171,7 @@ class InputFromFile(file:String) extends Input
 
 class Parser(src: Input)
 {
-  case class SyntaxError(line:Int, col:Int) extends Exception
+  case class SyntaxError() extends Exception
 
   def ParseMetaProc() : MetaProc =
   {
@@ -212,7 +217,9 @@ class Parser(src: Input)
 
   def ParseProcessSeq() : Process =
   {
-    if(src.Peek() == '.') // séquence
+    if(src.CheckEOF())
+      new PTrivial()
+    else if(src.Peek() == '.') // séquence
     {
       src.CleanPeek()
       ParseProcess()
@@ -225,8 +232,6 @@ class Parser(src: Input)
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
     val peeked = src.GetCharPeekable(src.All)
-    println(keyword)
-    println(">"+peeked+"<")
     (keyword, peeked) match
     {
       case ("in", '(') =>
@@ -275,7 +280,7 @@ class Parser(src: Input)
       case ("new", ' ') =>
         new PNew(ParseConstant(), ParseProcessSeq())
       case ("", '0') => new PTrivial
-      case (_, _) => throw new SyntaxError(src.line, src.col)
+      case (_, _) => throw new SyntaxError()
     }
   }
 
@@ -394,14 +399,18 @@ object TestParser
 {
   def main(args: Array[String])
   {
-    val p = new Parser(new InputFromFile("test"))
+    val src = new InputFromFile("test")
+    val p = new Parser(src)
     try
     {
-      p.ParseMetaProc().RetString(0)
+      println(p.ParseMetaProc().RetString(0))
+      println("end of parsing")
     }
     catch
     {
-      case p.SyntaxError(l, c) => println("Syntax Error (line " + l + "; col " + c + ")\n")
+      case p.SyntaxError()     => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
+      case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
+      case src.Unexpected(c, f)  => println("Character '" + c + "' unexpected (line " + src.line + "; col " + src.col + ")\n")
     }
   }
 }
