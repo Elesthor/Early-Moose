@@ -89,11 +89,7 @@ abstract class Input
   }
 
 
-<<<<<<< HEAD
-  def checkNextWord(String: word): Boolean = {
-=======
   def CheckNextWord(word: String): Boolean = {
->>>>>>> cc9bcd9f6c0e43fa6752c556cdf46efaba9fea42
     if (word == "") true
     else
     {
@@ -361,57 +357,6 @@ class Parser(src: Input)
     val next = src.Peek()
     next match
     {
-<<<<<<< HEAD
-      case ("pair", '(') =>
-        val left = parseTerm()
-        src.GetCharPeekable(src.IsChar(','))
-        val right = parseTerm()
-        src.GetCharPeekable(src.IsChar(')'))
-        new TPair(left, right)
-      case ("pi1", '(') =>
-        val t = parserTerm()
-        src.GetCharPeekable(src.IsChar(')'))
-        new TPi1(t)
-      case ("pi2", '(') =>
-        val t = parserTerm()
-        src.GetCharPeekable(src.IsChar(')'))
-        new TPi2(t)
-      case ("enc", '(') =>
-        val left = parserTerm()
-        src.GetCharPeekable(src.IsChar(','))
-        val right = parseTerm()
-        src.GetCharPeekable(src.IsChar(')'))
-        new TEnc(left, right)
-      case ("dec", '(') =>
-        val left = parserTerm()
-        src.GetCharPeekable(src.IsChar(','))
-        val right = parseTerm()
-        src.GetCharPeekable(src.IsChar(')'))
-        new TDec(left, right)
-      case ("pk", '(') =>
-        val v = parserTerm() // TODO : ça doit etre une valeur
-        src.GetCharPeekable(src.IsChar(')'))
-        new TPk(v)
-      case ("sk", '(') =>
-        val v = parserTerm() // TODO : ça doit etre une valeur
-        src.GetCharPeekable(src.IsChar(')'))
-        new TSk(v)
-
-      // Lists
-      case ("", '[') =>
-        src.GetCharPeekable(src.IsChar(']'))
-        new ListTerm(None)
-
-      // Values
-      case ("count", '(') =>
-        val l = parseList()
-        src.GetCharPeekable(src.IsChar(')'))
-        new VCount(l)
-      case ("not", '(') =>
-        val v = parseTerm() // TODO : ça doit etre une valeur
-        src.GetCharPeekable(src.IsChar(')'))
-        new VCount(l)
-=======
       case ':'  =>
         src.CleanPeek()
         src.CheckNextWord(":")
@@ -431,7 +376,6 @@ class Parser(src: Input)
         src.CleanPeek()
         new VSup(left_term, ParseTerm())
       case _    => left_term
->>>>>>> cc9bcd9f6c0e43fa6752c556cdf46efaba9fea42
     }
   }
 }
