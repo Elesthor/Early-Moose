@@ -27,11 +27,6 @@ abstract class Value{
     def RetString (x: Int): String
 }
 
-// Binding class between Term and value to have a case class.
-case class TValue (v: Value) extends Term{
-     def RetString(x: Int): String = " "*x+v.RetString(x)
-}
-
 case class VInt  (v: Int) extends Value{
      def RetString(x: Int): String = return " "*x+v.toString+"\n"
 }
@@ -85,6 +80,11 @@ class ListTerm(content: List[Term]) extends Term{
 
 case class TVar (p: String) extends Term{
     def RetString(x: Int): String = " "*x+p
+}
+
+// Binding class between Term and value to have a case class.
+case class TValue (v: Value) extends Term{
+     def RetString(x: Int): String = " "*x+v.RetString(x)
 }
 
 case class TPair(left: Term, right: Term) extends Term{
@@ -141,15 +141,29 @@ def interpretValue(v: Value): Int = v match {
     case VNot (v)               => BooleanToInt(!IntToBoolean(interpretValue(v)))
 }
 
-def interpretTerm (t: Term): = t match{
-    case class TVar (p)           => p
-    case class TPair(left, right) =>
-    case class TPi1 (t)           =>
-    case class TPi2 (t)           =>
-    case class TEnc (left, right) =>
-    case class TDec (left, right) =>
-    case class TPk  (v)           =>
-    case class TSk  (v)           =>
+case class Pair(left: String, right: String){
+    override def  toString(): String = {"("+left+","+"right"+")"}
+}
+
+def interpretTerm (t: Term): String = t match{
+    case TVar (p)           => p
+    case TValue (v)         => interpretValue(v).toString
+    case TPair(left, right) => {
+        val x = new Pair(interpretTerm(left), interpretTerm (right))
+        x.toString
+    }
+    case TPi1 (t1)          => interpretTerm(t1) match {
+        case Pair(left, right) => left
+        case _ => throw new Exception
+    }
+    case TPi2 (t1)          => interpretTerm(t1) match {
+        case Pair(left, right) => right
+        case _ => throw new Exception
+    }
+    case TEnc (left, right) => "Enc("+interpretTerm(left)+","+ interpretTerm(right)+")"
+    case TDec (left, right) => "Dec("+interpretTerm(left)+","+ interpretTerm(right)+")"
+    case TPk  (v)           => "Tpk("+interpretValue(v)+")"
+    case TSk  (v)           => "Tsk("+interpretValue(v)+")"
 
 }
 
