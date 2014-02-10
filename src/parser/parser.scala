@@ -109,7 +109,7 @@ abstract class Input
       if(c == word(0))
         CheckNextWord(word.reverse.dropRight(1).reverse) // TODO : abominable
       else
-        throw Unexpected(word(0), IsChar(c))
+        throw Unexpected(c, IsChar(word(0)))
     }
   }
 
@@ -298,7 +298,9 @@ class Parser(src: Input)
 
   def ParseList(): List[Term] =
   {
-    List() // TODO
+    // TODO
+    src.CheckNextWord("[]")
+    List()
   }
 
   def ParseTerm(): Term =
@@ -312,8 +314,8 @@ class Parser(src: Input)
         val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)},
                                   { x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\' || x == ' '})
         val peeked = src.Peek()
-        println(peeked)
-        if(peeked == ' ' || peeked == ',') // une constante avant un espace dans un if then else ou un variable en argument : on laisse le caractère
+//if 5>a then 0 else 0^12||if count([])/\2 then 0 else 0||0||out(test, a)
+        if(peeked == ' ' || peeked == '_' || peeked == ')') // une constante avant un espace dans un if then else ou un variable en argument : on laisse le caractère délimiteur
           new TValue(new VConst(keyword))
         else
         {

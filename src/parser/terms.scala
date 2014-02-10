@@ -33,40 +33,40 @@ case class TValue (v: Value) extends Term{
 }
 
 case class VInt  (v: Int) extends Value{
-     def RetString(x: Int): String = " "*x+v.toString+"\n"
+     def RetString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
 }
 
 case class VCount(l: ListTerm) extends Value{
-      def RetString(x: Int): String = " "*x+"Count("+l.RetString(x)+")\n"
+      def RetString(x: Int): String = "| "*x+"Count:\n"+l.RetString(x+1)
 }
 
 case class VSup  (left: Value, right: Value) extends Value{
      def RetString(x: Int): String =
-        " "*x+"Sup:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Sup:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class VEqual(left: Term, right: Term) extends Value{
      def RetString(x: Int): String =
-        " "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class VAnd  (left: Value, right: Value) extends Value{
      def RetString(x: Int): String =
-        " "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class VOr   (left: Value, right: Value) extends Value{
      def RetString(x: Int): String =
-        " "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class VNot  (v: Value) extends Value{
      def RetString(x: Int): String =
-        " "*x+"Not:\n" + v.RetString(x+1)
+        "| "*x+"Not:\n" + v.RetString(x+1)
 }
 
 case class VConst(s: String) extends Value{
-     def RetString(x: Int): String = " "*x+s
+     def RetString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
 }
 
 
@@ -75,8 +75,8 @@ case class VConst(s: String) extends Value{
 ////////////////////////////////////////////////////////////////////////////////
 
 class ListTerm(content: List[Term]) extends Term{
-    def RetString(x: Int): String = " "*x+"\n"+"List"+content.foldLeft(""){
-                                (acc, item) => acc+ item.RetString(x+1)+"\n"}
+    def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
+                                (acc, item) => acc+ item.RetString(x+1)}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,40 +84,40 @@ class ListTerm(content: List[Term]) extends Term{
 ////////////////////////////////////////////////////////////////////////////////
 
 case class TVar (p: String) extends Term{
-    def RetString(x: Int): String = " "*x+p
+    def RetString(x: Int): String = "| "*x+"Var:\n"+"| "*(x+1)+p+"\n"
 }
 
 case class TPair(left: Term, right: Term) extends Term{
     def RetString(x: Int): String =
-        " "*x+"Pair:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Pair:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class TPi1 (t: Term) extends Term{
     def RetString(x: Int): String =
-        " "*x+"Pi1:\n"+t.RetString(x)+"\n"
+        "| "*x+"Pi1:\n"+t.RetString(x+1)
 }
 
 case class TPi2 (t: Term) extends Term{
     def RetString(x: Int): String =
-        " "*x+"Pi2:\n"+t.RetString(x)+"\n"
+        "| "*x+"Pi2:\n"+t.RetString(x+1)
 }
 
 case class TEnc (left: Term, right: Term) extends Term{
     def RetString(x: Int): String =
-        " "*x+"Enc:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Enc:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class TDec (left: Term, right: Term) extends Term{
     def RetString(x: Int): String =
-        " "*x+"Dec:\n"+left.RetString(x+1)+right.RetString(x+1)
+        "| "*x+"Dec:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
 case class TPk  (v: Value) extends Term{
-    def RetString(x: Int): String = " "*x+"Pk:\n"+v.RetString(x+1)+"\n"
+    def RetString(x: Int): String = "| "*x+"Pk:\n"+v.RetString(x+1)
 }
 
 case class TSk  (v: Value) extends Term{
-    def RetString(x: Int): String = " "*x+"Sk:\n"+v.RetString(x+1)+"\n"
+    def RetString(x: Int): String = "| "*x+"Sk:\n"+v.RetString(x+1)
 }
 
 
