@@ -212,19 +212,24 @@ class Parser(src: Input)
     }
   }  
   
+  // parse un identifiant
+  def ParseName(delimiters: src.Checker) =
+  {
+    src.GetCharPeekable(src.Alpha) + src.GetWord({x: Char => src.Alpha(x) || src.Numeric(x) || x == '-' || x == '_'}, delimiters)
+  }
   def ParseVariable(delimiters: src.Checker) =
   {
-    new TVar(src.GetWord(src.Alpha, delimiters))
+    new TVar(ParseName(delimiters))
   }
 
   def ParseChannel(delimiters: src.Checker) =
   {
-    new Channel(src.GetWord(src.Alpha, delimiters))
+    new Channel(ParseName(delimiters))
   }
 
   def ParseConstant() =
   {
-    new VConst(src.GetWord(src.Alpha, src.All))
+    new VConst(ParseName(src.All))
   }
 
   def ParseProcessSeq(): Process =
@@ -298,12 +303,21 @@ class Parser(src: Input)
 
   def ParseList(): List[Term] =
   {
-    // TODO
-    src.CheckNextWord("[]")
-    List()
+    if(src.Peek() == '[')
+    {
+      src.CleanPeek()
+      src.CheckNextWord("]")
+      List()
+    }
+    else
+    {
+      val head = ParseTerm(true)
+      src.CheckNextWord("::")
+      head :: ParseList()
+    }
   }
 
-  def ParseTerm(): Term =
+  def ParseTerm(inList: Boolean = false): Term =
   {
     val c = src.Peek()
     val leftTerm:Term =
@@ -312,11 +326,22 @@ class Parser(src: Input)
       else
       {
         val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)},
-                                  { x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\' || x == ' '})
+                                  { x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\' || x == ' ' || x == ','})
         val peeked = src.Peek()
-//if 5>a then 0 else 0^12||if count([])/\2 then 0 else 0||0||out(test, a)
-        if(peeked == ' ' || peeked == '_' || peeked == ')') // une constante avant un espace dans un if then else ou un variable en argument : on laisse le caractère délimiteur
-          new TValue(new VConst(keyword))
+        
+        if(peeked == ' ' || peeked == ',' || peeked == ')') // une variable avant un espace dans un if then else ou un variable en argument : on laisse le caractère délimiteur
+          new TVar(keyword)
+        else if(peeked == ':') // list
+        {
+          if(inList) // an element
+            return new TVar(keyword)
+          else // new list
+          {
+            src.CleanPeek()
+            src.CheckNextWord(":")
+            return new ListTerm(new TVar(keyword) :: ParseList())
+          }
+        }
         else
         {
           src.CleanPeek()
@@ -357,7 +382,7 @@ class Parser(src: Input)
               src.CheckNextWord(")")
               new TSk(InTValue(v))
             
-            // Lists
+            // empty list
             case ("", '[') =>
               src.CheckNextWord("]")
               new ListTerm(List())
@@ -372,31 +397,35 @@ class Parser(src: Input)
               src.CheckNextWord(")")
               new TValue(new VNot(InTValue(v)))
             
-            case (head, ':') => // début de liste avec une variable
-              src.CheckNextWord(":")
-              new ListTerm(new TVar(head) :: ParseList())
+            // on sait que le premier caractère est une lettre (pour la condition sur les identifiants)
             case (left, '/') => // and avec une constante
               src.CheckNextWord("\\")
-              new TValue(new VAnd(new VConst(left), InTValue(ParseTerm())))
+              return new TValue(new VAnd(new VConst(left), InTValue(ParseTerm())))
             case (left, '\\') => // or avec une constante
               src.CheckNextWord("/")
-              new TValue(new VOr(new VConst(left), InTValue(ParseTerm())))
+              return new TValue(new VOr(new VConst(left), InTValue(ParseTerm())))
             case (left, '=') => // = avec une variable
-              new TValue(new VEqual(new TVar(left), ParseTerm()))
+              return new TValue(new VEqual(new TVar(left), ParseTerm()))
             case (left, '>') => // > avec une constante
-              new TValue(new VSup(new VConst(left), InTValue(ParseTerm())))
+              return new TValue(new VSup(new VConst(left), InTValue(ParseTerm())))
+            
+            case (_, _) => throw new SyntaxError()
           }
         }
       }
-    
     // si le caractère suivant est un opérateur binaire
     val next = src.Peek()
     next match
     {
       case ':'  =>
-        src.CleanPeek()
-        src.CheckNextWord(":")
-        new ListTerm(leftTerm :: ParseList())
+        if(inList) // an element
+          leftTerm
+        else // new list
+        {
+          src.CleanPeek()
+          src.CheckNextWord(":")
+          new ListTerm(leftTerm :: ParseList())
+        }
       case '/'  =>
         src.CleanPeek()
         src.CheckNextWord("\\")
@@ -431,13 +460,13 @@ object TestParser
     }
     catch
     {
-      case p.SyntaxError()     => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
+      case p.SyntaxError()       => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
       case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
       case src.Unexpected(c, f)  => print("Character '" + c + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : ")
         for(i <- 0 to 255)
         {
           val c = Character.toChars(i)(0)
-          if (f(c)) print(c)
+          if(f(c)) print(c)
         }
         println
     }

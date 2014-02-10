@@ -37,7 +37,7 @@ abstract class Process{
 }
 
 case class PTrivial() extends Process{
-  def RetString(x: Int): String = "| "*x+"Trivial\n"
+  def RetString(x: Int): String = "| "*x+"•\n"
     //def RetString (x: Int): String = "Trivial Process: 0"
 }
 case class PIn (c: Channel, v: TVar, p: Process) extends Process{
