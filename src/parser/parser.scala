@@ -174,8 +174,18 @@ class InputFromFile(file:String) extends Input
 class Parser(src: Input)
 {
   case class SyntaxError() extends Exception
-
-  def ParseMetaProc() : MetaProc =
+  case class ValueExpected() extends Exception
+  
+  // return a value nested in a TValue, or throw a ValueExpected
+  def InTValue(t: Term): Value =
+  {
+    t match
+    {
+      case TValue(v) => v
+      case _ => throw new ValueExpected()
+    }
+  }
+  def ParseMetaProc(): MetaProc =
   {
     val left = ParseProcess()
     if(src.CheckEOF())
@@ -217,7 +227,7 @@ class Parser(src: Input)
     new VConst(src.GetWord(src.Alpha, src.All))
   }
 
-  def ParseProcessSeq() : Process =
+  def ParseProcessSeq(): Process =
   {
     if(src.CheckEOF())
       new PTrivial()
@@ -286,12 +296,12 @@ class Parser(src: Input)
     }
   }
 
-  def ParseList():List[Term] =
+  def ParseList(): List[Term] =
   {
-    List()
+    List() // TODO
   }
 
-  def ParseTerm():Term =
+  def ParseTerm(): Term =
   {
     val c = src.Peek()
     val leftTerm:Term =
@@ -302,7 +312,8 @@ class Parser(src: Input)
         val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)},
                                   { x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\' || x == ' '})
         val peeked = src.Peek()
-        if(peeked == ' ') // une constante avant un espace dans un if then else : on laisse l'espace
+        println(peeked)
+        if(peeked == ' ' || peeked == ',') // une constante avant un espace dans un if then else ou un variable en argument : on laisse le caractère
           new TValue(new VConst(keyword))
         else
         {
@@ -338,11 +349,11 @@ class Parser(src: Input)
             case ("pk", '(') =>
               val v = ParseTerm()
               src.CheckNextWord(")")
-              new TPk(v)
+              new TPk(InTValue(v))
             case ("sk", '(') =>
               val v = ParseTerm()
               src.CheckNextWord(")")
-              new TSk(v)
+              new TSk(InTValue(v))
             
             // Lists
             case ("", '[') =>
@@ -357,21 +368,21 @@ class Parser(src: Input)
             case ("not", '(') =>
               val v = ParseTerm()
               src.CheckNextWord(")")
-              new TValue(new VNot(v))
+              new TValue(new VNot(InTValue(v)))
             
             case (head, ':') => // début de liste avec une variable
               src.CheckNextWord(":")
               new ListTerm(new TVar(head) :: ParseList())
             case (left, '/') => // and avec une constante
               src.CheckNextWord("\\")
-              new TValue(new VAnd(new TValue(new VConst(left)), ParseTerm()))
+              new TValue(new VAnd(new VConst(left), InTValue(ParseTerm())))
             case (left, '\\') => // or avec une constante
               src.CheckNextWord("/")
-              new TValue(new VOr(new TValue(new VConst(left)), ParseTerm()))
+              new TValue(new VOr(new VConst(left), InTValue(ParseTerm())))
             case (left, '=') => // = avec une variable
               new TValue(new VEqual(new TVar(left), ParseTerm()))
             case (left, '>') => // > avec une constante
-              new TValue(new VSup(new TValue(new VConst(left)), ParseTerm()))
+              new TValue(new VSup(new VConst(left), InTValue(ParseTerm())))
           }
         }
       }
@@ -387,17 +398,17 @@ class Parser(src: Input)
       case '/'  =>
         src.CleanPeek()
         src.CheckNextWord("\\")
-        new TValue(new VAnd(leftTerm, ParseTerm()))
+        new TValue(new VAnd(InTValue(leftTerm), InTValue(ParseTerm())))
       case '\\' =>
         src.CleanPeek()
         src.CheckNextWord("/")
-        new TValue(new VOr(leftTerm, ParseTerm()))
+        new TValue(new VOr(InTValue(leftTerm), InTValue(ParseTerm())))
       case '='  =>
         src.CleanPeek()
         new TValue(new VEqual(leftTerm, ParseTerm()))
       case '>'  =>
         src.CleanPeek()
-        new TValue(new VSup(leftTerm, ParseTerm()))
+        new TValue(new VSup(InTValue(leftTerm), InTValue(ParseTerm())))
       case _    => leftTerm
     }
   }
