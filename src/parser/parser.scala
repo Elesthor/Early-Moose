@@ -466,7 +466,7 @@ object TestParser
     catch
     {
       case p.SyntaxError()       => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
-      //case p.ValueExpected()   => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
+      case p.ValueExpected()   => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
       case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
       case src.Unexpected(c, f)  => print("Character '" + c + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : ")
         for(i <- 0 to 255)
