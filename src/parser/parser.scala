@@ -288,7 +288,7 @@ class Parser(src: Input)
         new POut(channel, message, ParseProcessSeq())
 
       case ("if", ' ') =>
-        val value = ParseTerm()
+        val value = InTValue(ParseTerm())
         src.CheckNextWord(" then ")
         val P1 = ParseProcess()
         src.CheckNextWord(" else ")
@@ -330,7 +330,7 @@ class Parser(src: Input)
         val peeked = src.Peek()
         
         if(peeked == ' ' || peeked == ',' || peeked == ')') // une variable avant un espace dans un if then else ou un variable en argument : on laisse le caractère délimiteur
-          new TVar(keyword)
+          new TValue(new VConst(keyword))
         else if(peeked == ':') // list
         {
           if(inList) // an element
@@ -409,6 +409,11 @@ class Parser(src: Input)
             case (left, '>') => // > avec une constante
               return new TValue(new VSup(new VConst(left), InTValue(ParseTerm())))
             
+            // sous terme
+            case ("", '(') =>
+              val r = ParseTerm()
+              src.CheckNextWord(")")
+              r
             case (_, _) => throw new SyntaxError()
           }
         }
@@ -461,6 +466,7 @@ object TestParser
     catch
     {
       case p.SyntaxError()       => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
+      //case p.ValueExpected()   => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
       case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
       case src.Unexpected(c, f)  => print("Character '" + c + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : ")
         for(i <- 0 to 255)
