@@ -13,6 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+import scala.util.matching.Regex
 
 abstract class Term{
     def RetString (x: Int): String
@@ -25,11 +26,6 @@ abstract class Term{
 
 abstract class Value{
     def RetString (x: Int): String
-}
-
-// Binding class between Term and value to have a case class.
-case class TValue (v: Value) extends Term{
-     def RetString(x: Int): String = v.RetString(x)
 }
 
 case class VInt  (v: Int) extends Value{
@@ -87,6 +83,11 @@ case class TVar (p: String) extends Term{
     def RetString(x: Int): String = "| "*x+"Var:\n"+"| "*(x+1)+p+"\n"
 }
 
+// Binding class between Term and value to have a case class.
+case class TValue (v: Value) extends Term{
+     def RetString(x: Int): String = " "*x+v.RetString(x)
+}
+
 case class TPair(left: Term, right: Term) extends Term{
     def RetString(x: Int): String =
         "| "*x+"Pair:\n"+left.RetString(x+1)+right.RetString(x+1)
@@ -124,48 +125,64 @@ case class TSk  (v: Value) extends Term{
 ////////////////////////////////////////////////////////////////////////////////
 //                              Interpretor                                   //
 ////////////////////////////////////////////////////////////////////////////////
-/*
-def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
-def IntToBoolean (x: Int): Boolean = if (x==0) false else true
 
-def interpretValue(v: Value): Int = v match {
-    case VInt(x)                => x
-    case VCount(l)              => 0
-    case VSup  (left, right)    => BooleanToInt (interpretValue(left) >
-                                                          interpretValue(right))
-    case VEqual (left, right)   => BooleanToInt (left == right)
-    case VAnd (left, right)     => BooleanToInt(IntToBoolean(interpretValue(left))
-                                         && IntToBoolean(interpretValue(right)))
-    case VOr (left, right)      => BooleanToInt(IntToBoolean(interpretValue(left))
-                                         || IntToBoolean(interpretValue(right)))
-    case VNot (v)               => BooleanToInt(!IntToBoolean(interpretValue(v)))
-}
+// def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
+// def IntToBoolean (x: Int): Boolean = if (x==0) false else true
 
-def interpretTerm (t: Term): = t match{
-    case class TVar (p)           => p
-    case class TPair(left, right) =>
-    case class TPi1 (t)           =>
-    case class TPi2 (t)           =>
-    case class TEnc (left, right) =>
-    case class TDec (left, right) =>
-    case class TPk  (v)           =>
-    case class TSk  (v)           =>
+// def interpretValue(v: Term): Int = v match {
+//     case TValue(va) => va match{
+//     case VInt(x)              => x
+//     case VCount(l)            => 0
+//     case VSup  (left, right)  => BooleanToInt (interpretTerm(left) >
+//                                                         interpretTerm(right))
+//     case VEqual (left, right) => BooleanToInt (left == right)
+//     case VAnd (left, right)   => BooleanToInt(IntToBoolean(interpretTerm(left))
+//                                        && IntToBoolean(interpretTerm(right)))
+//     case VOr (left, right)    => BooleanToInt(IntToBoolean(interpretTerm(left))
+//                                        || IntToBoolean(interpretTerm(right)))
+//     case VNot (v)             => BooleanToInt(!IntToBoolean(interpretTerm(v)))
+//     }
+//     _ => throw new Exception
+// }
 
-}
 
-val a = new VInt(5)
-val b = new VInt(0)
-val x = new VConst("x")
+// def interpretTerm (t: Term): String = t match{
+//     case TVar (p)           => p
+//     case TValue (v)         => interpretValue(v).toString
+//     case TPair(left, right) =>
+//         "Pair("+left.interpretTerm()+","+right.interpretTerm()+")"
 
-val c = new VSup(b,a)
-val d = new VSup(a,b)
+//     case TPi1 (t1) =>
+//         if (t1.matches("""Pair\(.+(,){1}.+\)""".r)) t1.split("""\(|,|,\)""")(1)
+//         else throw new Exception
 
-val e = new VAnd(c,d)
-// val d = new VAnd(a, c)
+//     case TPi2 (t1)          =>
+//         if (t1.matches("""Pair\(.+(,){1}.+\)""".r)) t1.split("""\(|,|,\)""")(2)
+//         else throw new Exception
 
-// val e = new TSk(d)
-// val f = new VEqual(e, a)
-// val g = new ListTerm(Some(List(a,f,x)))
+//     case TEnc (left, right) => "Enc("+interpretTerm(left)+","+ interpretTerm(right)+")"
+//     case TDec (left, right) => "Dec("+interpretTerm(left)+","+ interpretTerm(right)+")"
+//     case TPk  (v)           => "Tpk("+interpretValue(v)+")"
+//     case TSk  (v)           => "Tsk("+interpretValue(v)+")"
 
-println(interpretValue(e))*/
+// }
+
+
+
+// val a = new TValue (new VInt(5))
+// val b = new TValue (new VInt(0))
+// val x = new TValue (new VConst("x"))
+
+// val c = new TValue (new VSup(b,a))
+// val d = new TValue (new VSup(a,b))
+
+// val e = new TValue (new VAnd(c,d))
+
+// // val d = new VAnd(a, c)
+
+// // val e = new TSk(d)
+// // val f = new VEqual(e, a)
+// // val g = new ListTerm(Some(List(a,f,x)))
+
+// println(interpretTerm(e))
 
