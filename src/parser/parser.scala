@@ -78,7 +78,8 @@ abstract class Input
     peeked = None
   }
 
-  // Get a full word until a delimiter, using only char from expected. Let the delimiter in peeked. End on EOF
+  // Get a full word until a delimiter, using only char from expected.
+  // Let the delimiter in peeked. End on EOF
   def GetWord(expected: Checker, delimiters: Checker): String =
   {
     def iterator(): String =
@@ -120,7 +121,7 @@ abstract class Input
   }
 
   // Try if EOF (else, char is in peeked)
-  def CheckEOF() = 
+  def CheckEOF() =
   {
     try
     {
@@ -200,8 +201,8 @@ class Parser(src: Input)
         }
       }
     }
-  }  
-  
+  }
+
   def ParseVariable(delimiters: src.Checker) =
   {
     new TVar(src.GetWord(src.Alpha, delimiters))
@@ -239,7 +240,7 @@ class Parser(src: Input)
       case ("in", '(') =>
         val channel = ParseChannel(src.IsChar(','))
         src.CleanPeek()
-        
+
         val variable = ParseVariable(src.IsChar(')'))
         src.CleanPeek()
         new PIn(channel, variable, ParseProcessSeq())
@@ -258,7 +259,7 @@ class Parser(src: Input)
 
         val u = ParseTerm()
         src.CheckNextWord(" as ")
-        
+
         val y = ParseVariable(src.IsChar(')'))
         src.CleanPeek()
 
@@ -267,7 +268,7 @@ class Parser(src: Input)
       case ("out", '(') =>
         val channel = ParseChannel(src.IsChar(','))
         src.CleanPeek()
-        
+
         val message = ParseTerm()
         src.CheckNextWord(")")
         new POut(channel, message, ParseProcessSeq())
@@ -309,7 +310,7 @@ class Parser(src: Input)
           src.CleanPeek()
           (keyword, peeked) match
           {
-            case ("pair", '(') => 
+            case ("pair", '(') =>
               val left = ParseTerm()
               src.CheckNextWord(",")
               val right = ParseTerm()
@@ -343,12 +344,12 @@ class Parser(src: Input)
               val v = ParseTerm()
               src.CheckNextWord(")")
               new TSk(v)
-            
+
             // Lists
             case ("", '[') =>
               src.CheckNextWord("]")
               new ListTerm(List())
-            
+
             // Values
             case ("count", '(') =>
               val l = new ListTerm(ParseList())
@@ -358,7 +359,7 @@ class Parser(src: Input)
               val v = ParseTerm()
               src.CheckNextWord(")")
               new TValue(new VNot(v))
-            
+
             case (head, ':') => // début de liste avec une variable
               src.CheckNextWord(":")
               new ListTerm(new TVar(head) :: ParseList())
@@ -375,7 +376,7 @@ class Parser(src: Input)
           }
         }
       }
-    
+
     // si le caractère suivant est un opérateur binaire
     val next = src.Peek()
     next match
@@ -413,7 +414,7 @@ object TestParser
     {
       val program = p.ParseMetaProc()
       println("end of parsing")
-      
+
       println(program .RetString(0))
     }
     catch
