@@ -78,7 +78,8 @@ abstract class Input
     peeked = None
   }
 
-  // Get a full word until a delimiter, using only char from expected. Let the delimiter in peeked. End on EOF
+  // Get a full word until a delimiter, using only char from expected.
+  // Let the delimiter in peeked. End on EOF
   def GetWord(expected: Checker, delimiters: Checker): String =
   {
     def iterator(): String =
@@ -120,7 +121,7 @@ abstract class Input
   }
 
   // Try if EOF (else, char is in peeked)
-  def CheckEOF() = 
+  def CheckEOF() =
   {
     try
     {
@@ -175,7 +176,7 @@ class Parser(src: Input)
 {
   case class SyntaxError() extends Exception
   case class ValueExpected() extends Exception
-  
+
   // return a value nested in a TValue, or throw a ValueExpected
   def InTValue(t: Term): Value =
   {
@@ -210,8 +211,9 @@ class Parser(src: Input)
         }
       }
     }
-  }  
-  
+  }
+
+
   // parse un identifiant
   def ParseName(delimiters: src.Checker) =
   {
@@ -254,7 +256,7 @@ class Parser(src: Input)
       case ("in", '(') =>
         val channel = ParseChannel(src.IsChar(','))
         src.CleanPeek()
-        
+
         val variable = ParseVariable(src.IsChar(')'))
         src.CleanPeek()
         new PIn(channel, variable, ParseProcessSeq())
@@ -273,7 +275,7 @@ class Parser(src: Input)
 
         val u = ParseTerm()
         src.CheckNextWord(" as ")
-        
+
         val y = ParseVariable(src.IsChar(')'))
         src.CleanPeek()
 
@@ -282,7 +284,7 @@ class Parser(src: Input)
       case ("out", '(') =>
         val channel = ParseChannel(src.IsChar(','))
         src.CleanPeek()
-        
+
         val message = ParseTerm()
         src.CheckNextWord(")")
         new POut(channel, message, ParseProcessSeq())
@@ -328,7 +330,7 @@ class Parser(src: Input)
         val keyword = src.GetWord({ x: Char => src.Alpha(x) || src.Numeric(x)},
                                   { x: Char => src.Parenthesis(x) || x == ' ' || x == '[' || x == ':' || x == '>' || x == '=' || x == '/' || x == '\\' || x == ' ' || x == ','})
         val peeked = src.Peek()
-        
+
         if(peeked == ' ' || peeked == ',' || peeked == ')') // une variable avant un espace dans un if then else ou un variable en argument : on laisse le caractère délimiteur
           new TValue(new VConst(keyword))
         else if(peeked == ':') // list
@@ -347,7 +349,7 @@ class Parser(src: Input)
           src.CleanPeek()
           (keyword, peeked) match
           {
-            case ("pair", '(') => 
+            case ("pair", '(') =>
               val left = ParseTerm()
               src.CheckNextWord(",")
               val right = ParseTerm()
@@ -381,12 +383,12 @@ class Parser(src: Input)
               val v = ParseTerm()
               src.CheckNextWord(")")
               new TSk(InTValue(v))
-            
+
             // empty list
             case ("", '[') =>
               src.CheckNextWord("]")
               new ListTerm(List())
-            
+
             // Values
             case ("count", '(') =>
               val l = new ListTerm(ParseList())
@@ -396,7 +398,7 @@ class Parser(src: Input)
               val v = ParseTerm()
               src.CheckNextWord(")")
               new TValue(new VNot(InTValue(v)))
-            
+
             // on sait que le premier caractère est une lettre (pour la condition sur les identifiants)
             case (left, '/') => // and avec une constante
               src.CheckNextWord("\\")
@@ -408,7 +410,7 @@ class Parser(src: Input)
               return new TValue(new VEqual(new TVar(left), ParseTerm()))
             case (left, '>') => // > avec une constante
               return new TValue(new VSup(new VConst(left), InTValue(ParseTerm())))
-            
+
             // sous terme
             case ("", '(') =>
               val r = ParseTerm()
@@ -418,6 +420,7 @@ class Parser(src: Input)
           }
         }
       }
+
     // si le caractère suivant est un opérateur binaire
     val next = src.Peek()
     next match
@@ -460,7 +463,7 @@ object TestParser
     {
       val program = p.ParseMetaProc()
       println("end of parsing")
-      
+
       println(program .RetString(0))
     }
     catch
@@ -478,4 +481,3 @@ object TestParser
     }
   }
 }
-
