@@ -250,7 +250,8 @@ class Parser(src: Input)
   def ParseProcess(): Process =
   {
     val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
-    val peeked = src.GetCharPeekable(src.All)
+    val peeked = src.Peek()
+    src.CleanPeek()
     (keyword, peeked) match
     {
       case ("in", '(') =>
@@ -294,11 +295,16 @@ class Parser(src: Input)
         src.CheckNextWord(" then ")
         val P1 = ParseProcess()
         src.CheckNextWord(" else ")
-        new PIf(value, P1, ParseProcess())
+        new PIf(value, P1, ParseProcess(), new PTrivial())
 
       case ("new", ' ') =>
         new PNew(ParseConstant(), ParseProcessSeq())
       case ("", '0') => new PTrivial
+      case ("", '(') => // sous processus
+        val r = ParseProcess()
+        src.CheckNextWord(")")
+        val n = ParseProcessSeq()
+        new PSeq(r, n)
       case (_, _) => throw new SyntaxError()
     }
   }
