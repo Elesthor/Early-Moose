@@ -13,7 +13,6 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-import scala.util.matching.Regex
 
 abstract class Term{
     def RetString (x: Int): String
@@ -70,7 +69,7 @@ case class VConst(s: String) extends Value{
 //                               Lists                                        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class ListTerm(content: List[Term]) extends Term{
+case class ListTerm(content: List[Term]) extends Term{
     def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
                                 (acc, item) => acc+ item.RetString(x+1)}
 }
@@ -126,63 +125,63 @@ case class TSk  (v: Value) extends Term{
 //                              Interpretor                                   //
 ////////////////////////////////////////////////////////////////////////////////
 
-// def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
-// def IntToBoolean (x: Int): Boolean = if (x==0) false else true
 
-// def interpretValue(v: Term): Int = v match {
-//     case TValue(va) => va match{
-//     case VInt(x)              => x
-//     case VCount(l)            => 0
-//     case VSup  (left, right)  => BooleanToInt (interpretTerm(left) >
-//                                                         interpretTerm(right))
-//     case VEqual (left, right) => BooleanToInt (left == right)
-//     case VAnd (left, right)   => BooleanToInt(IntToBoolean(interpretTerm(left))
-//                                        && IntToBoolean(interpretTerm(right)))
-//     case VOr (left, right)    => BooleanToInt(IntToBoolean(interpretTerm(left))
-//                                        || IntToBoolean(interpretTerm(right)))
-//     case VNot (v)             => BooleanToInt(!IntToBoolean(interpretTerm(v)))
-//     }
-//     _ => throw new Exception
-// }
+// Utilities function
+def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
+def IntToBoolean (x: Int): Boolean = if (x==0) false else true
+def isInt        (x: String): Boolean =
+    try x.toInt catch{ case _: Throwable => false}
+
+// Split a string "Pair(.., ..)" at the comma
+// return the two arguments of the pair
+def parseComma(str : String):  Array[String] = {
+    def crawler(s: String, acc: String, parenthesisCount: Int): Array[String] = {
+        if (s(0) == (',') && parenthesisCount == 0)
+            return Array(acc.drop(5), s.substring(1,s.length-1))
+        if (s(0) == ('(')) crawler(s.drop(1), acc+s(0), parenthesisCount+1)
+        else if (s(0) == (')')) crawler(s.drop(1),acc+s(0), parenthesisCount-1)
+        else crawler(s.drop(1),acc+s(0), parenthesisCount)
+    }
+    return crawler(str,"", -1) // The first comma is after "Pair"
+}
+
+// Values interpretor
+def interpretValue(v: Value): Int = v match {
+    case VInt(x)              => x
+    case VCount(li)            => li match{
+        // Remove everything except poisitve integers and count them
+        case ListTerm (l) => (l.map(interpretTerm)).filter
+                                        (x => isPosInt(x) && x.toInt > 0).length
+    }
+    case VSup  (left, right)  => BooleanToInt (interpretValue(left) >
+                                                        interpretValue(right))
+    case VEqual (left, right) => BooleanToInt (interpretTerm(left) == interpretTerm(right))
+    case VAnd (left, right)   => BooleanToInt(IntToBoolean(interpretValue(left))
+                                       && IntToBoolean(interpretValue(right)))
+    case VOr (left, right)    => BooleanToInt(IntToBoolean(interpretValue(left))
+                                       || IntToBoolean(interpretValue(right)))
+    case VNot (v)             => BooleanToInt(!IntToBoolean(interpretValue(v)))
+}
+
+// Term intrpretor
+def interpretTerm (t: Term): String = t match{
+    case TVar (p)           => p
+    case TValue (v)         => interpretValue(v).toString
+    case TPair(left, right) =>
+        "Pair("+interpretTerm(left)+","+interpretTerm(right)+")"
+    case TPi1 (t)           => parseComma(interpretTerm(t))(0)
+    case TPi2 (t)           => parseComma(interpretTerm(t))(1)
+    case TEnc (left, right) =>
+        //"Enc("+interpretTerm(left)+","+interpretTerm(right)+")"
+    case TDec (left, right) =>
+        //if  "Dec("+interpretTerm(left)+","+interpretTerm(right)+")"
+    case TPk  (v)           =>
+        if isInt(v) ("Tpk("+interpretValue(v)+")" else "err"
+    case TSk  (v)           =>
+        if isInt(v) ("Tpk("+interpretValue(v)+")" else "err"
+    case ListTerm (l)       => l.map(interpretTerm).toString
+
+}
 
 
-// def interpretTerm (t: Term): String = t match{
-//     case TVar (p)           => p
-//     case TValue (v)         => interpretValue(v).toString
-//     case TPair(left, right) =>
-//         "Pair("+left.interpretTerm()+","+right.interpretTerm()+")"
-
-//     case TPi1 (t1) =>
-//         if (t1.matches("""Pair\(.+(,){1}.+\)""".r)) t1.split("""\(|,|,\)""")(1)
-//         else throw new Exception
-
-//     case TPi2 (t1)          =>
-//         if (t1.matches("""Pair\(.+(,){1}.+\)""".r)) t1.split("""\(|,|,\)""")(2)
-//         else throw new Exception
-
-//     case TEnc (left, right) => "Enc("+interpretTerm(left)+","+ interpretTerm(right)+")"
-//     case TDec (left, right) => "Dec("+interpretTerm(left)+","+ interpretTerm(right)+")"
-//     case TPk  (v)           => "Tpk("+interpretValue(v)+")"
-//     case TSk  (v)           => "Tsk("+interpretValue(v)+")"
-
-// }
-
-
-
-// val a = new TValue (new VInt(5))
-// val b = new TValue (new VInt(0))
-// val x = new TValue (new VConst("x"))
-
-// val c = new TValue (new VSup(b,a))
-// val d = new TValue (new VSup(a,b))
-
-// val e = new TValue (new VAnd(c,d))
-
-// // val d = new VAnd(a, c)
-
-// // val e = new TSk(d)
-// // val f = new VEqual(e, a)
-// // val g = new ListTerm(Some(List(a,f,x)))
-
-// println(interpretTerm(e))
 
