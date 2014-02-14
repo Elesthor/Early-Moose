@@ -129,8 +129,8 @@ case class TSk  (v: Value) extends Term{
 // Utilities function
 def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
 def IntToBoolean (x: Int): Boolean = if (x==0) false else true
-def isPosInt        (x: String): Boolean = try x.toInt> 0
-catch{ case _: Throwable => false} // Test wether x is an Int and is > 0
+def isInt        (x: String): Boolean =
+    try x.toInt catch{ case _: Throwable => false}
 
 // Split a string "Pair(.., ..)" at the comma
 // return the two arguments of the pair
@@ -150,7 +150,8 @@ def interpretValue(v: Value): Int = v match {
     case VInt(x)              => x
     case VCount(li)            => li match{
         // Remove everything except poisitve integers and count them
-        case ListTerm (l) => (l.map(interpretTerm)).filter(isPosInt).length
+        case ListTerm (l) => (l.map(interpretTerm)).filter
+                                        (x => isPosInt(x) && x.toInt > 0).length
     }
     case VSup  (left, right)  => BooleanToInt (interpretValue(left) >
                                                         interpretValue(right))
@@ -170,10 +171,14 @@ def interpretTerm (t: Term): String = t match{
         "Pair("+interpretTerm(left)+","+interpretTerm(right)+")"
     case TPi1 (t)           => parseComma(interpretTerm(t))(0)
     case TPi2 (t)           => parseComma(interpretTerm(t))(1)
-    case TEnc (left, right) => "Enc("+interpretTerm(left)+","+interpretTerm(right)+")"
-    case TDec (left, right) => "Dec("+interpretTerm(left)+","+interpretTerm(right)+")"
-    case TPk  (v)           => "Tpk("+interpretValue(v)+")"
-    case TSk  (v)           => "Tsk("+interpretValue(v)+")"
+    case TEnc (left, right) =>
+        //"Enc("+interpretTerm(left)+","+interpretTerm(right)+")"
+    case TDec (left, right) =>
+        //if  "Dec("+interpretTerm(left)+","+interpretTerm(right)+")"
+    case TPk  (v)           =>
+        if isInt(v) ("Tpk("+interpretValue(v)+")" else "err"
+    case TSk  (v)           =>
+        if isInt(v) ("Tpk("+interpretValue(v)+")" else "err"
     case ListTerm (l)       => l.map(interpretTerm).toString
 
 }
