@@ -32,8 +32,71 @@ abstract class Input
   var peeked: Option[Ch]    = None
 
   // Reading function of the concrete class
-  def GetChar(): Ch
+  def GetChar_(): Ch
 
+  // Extended reading function : ignores comments and counts line and col
+  def GetChar(): Ch =
+  {
+    GetChar_() match
+    {
+      case '%' =>
+        col = col + 1
+        IgnoreLine()
+        GetChar()
+      case '\n' =>
+        line = line + 1
+        col = 0
+        '\n'
+      case c    =>
+        col = col + 1
+        c
+    }
+  }
+  // Ignore the end of the current line
+  def IgnoreLine()
+  {
+    try
+    {
+      GetChar_() match
+      {
+        case '\n' =>
+          line = line + 1
+          col = 0
+        case c    =>
+          col = col + 1
+          IgnoreLine()
+      }
+    }
+    catch
+    {
+      case EndOfFile() => ()
+    }
+  }
+  // Ignore space characters, returns the number of ' ' ignored
+  def IgnoreSpace(): Int =
+  {
+    try
+    {
+      val c = Peek()
+      if(c == '\n' || c == '\t')
+      {
+        CleanPeek()
+        IgnoreSpace()
+      }
+      else if(c == ' ')
+      {
+        CleanPeek()
+        IgnoreSpace() + 1
+      }
+      else
+        0
+    }
+    catch
+    {
+      case EndOfFile() => 0
+    }
+  }
+  
   type Ch                   = Char
   type Checker              = Ch => Boolean
 
@@ -45,6 +108,7 @@ abstract class Input
   def Alpha         (x: Ch) = { AlphaLow(x) || AlphaUp(x) }
   def AlphaNumeric  (x: Ch) = { Alpha(x) || Numeric(x) }
   def Parenthesis   (x: Ch) = { x == '(' || x == ')' }
+  def Space         (x: Ch) = { x == ' ' || x == '\n' || x == '\t'}
   def All           (x: Ch) = { true }
   def IsChar        (c: Ch)(x: Ch) = { x == c } // Test if input is a given char
 
@@ -130,7 +194,7 @@ abstract class Input
     }
     catch
     {
-      case e: EndOfFile => true
+      case EndOfFile() => true
     }
   }
 }
@@ -149,15 +213,9 @@ class InputFromFile(file:String) extends Input
   val inStream = new FileInputStream(file)
 
   // Main reading function
-  def GetChar() =
+  def GetChar_() =
   {
     val c = inStream.read()
-    if(c == '\n')
-    {
-      line = line + 1;
-      col = 0
-    }
-    else col = col + 1
     if (c== -1) throw new EndOfFile()
     Character.toChars(c)(0)       // convert Int to Char
   }
@@ -186,6 +244,8 @@ class Parser(src: Input)
       case _ => throw new ValueExpected()
     }
   }
+  
+  // parse a proc
   def ParseMetaProc(): MetaProc =
   {
     val left = ParseProcess()
@@ -193,6 +253,7 @@ class Parser(src: Input)
       new MetaProc(left, 1, None)
     else
     {
+      //src.IgnoreSpace()
       val c = src.GetCharPeekable({ x:Char => x == '|' || x == '^'})
       if(c == '|')
       {
@@ -202,6 +263,7 @@ class Parser(src: Input)
       else // c == '^'
       {
         val k = src.GetNumber()
+        //src.IgnoreSpace()
         if(src.CheckEOF())
           new MetaProc(left, k, None)
         else
@@ -214,7 +276,7 @@ class Parser(src: Input)
   }
 
 
-  // parse un identifiant
+  // parse a name
   def ParseName(delimiters: src.Checker) =
   {
     src.GetCharPeekable(src.Alpha) + src.GetWord({x: Char => src.Alpha(x) || src.Numeric(x) || x == '-' || x == '_'}, delimiters)
@@ -236,21 +298,44 @@ class Parser(src: Input)
 
   def ParseProcessSeq(): Process =
   {
-    if(src.CheckEOF())
+    //src.IgnoreSpace()
+    if(src.CheckEOF() || src.Peek != '.')
       new PTrivial()
-    else if(src.Peek() == '.') // séquence
+    else // séquence
     {
       src.CleanPeek()
       ParseProcess()
     }
-    else
-      new PTrivial()
   }
-
+  
+  // check if got is expected, else ignore space and check
+  def CheckAfterSpace(got: Char, expected: src.Checker): Char =
+  {
+    if(expected(got))
+      got
+    else
+    {
+      src.IgnoreSpace()
+      src.GetCharPeekable(expected)
+    }
+  }
   def ParseProcess(): Process =
   {
-    val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || x == ' ' || x == '^' || x == '0'})
-    val peeked = src.Peek()
+    val keyword = src.GetWord(src.Alpha, {x: Char => src.Parenthesis(x) || src.Space(x) || x == '^' || x == '0'})
+    val peeked =
+      /*if(keyword == "if" || keyword == "new") // keyword with a space following
+      {
+        if(src.IgnoreSpace() > 0)
+          ' '
+        else
+          throw new src.Unexpected(src.Peek(), src.IsChar(' '))
+      }
+      else
+      {
+        src.IgnoreSpace()
+        src.Peek()
+      }*/
+      src.Peek()
     src.CleanPeek()
     (keyword, peeked) match
     {
@@ -263,7 +348,6 @@ class Parser(src: Input)
         new PIn(channel, variable, ParseProcessSeq())
 
       case ("in", '^') =>
-        new PTrivial()
         val k = src.GetNumber()
         src.CheckNextWord("(")
 
@@ -475,9 +559,13 @@ object TestParser
     catch
     {
       case p.SyntaxError()       => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
-      case p.ValueExpected()   => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
-      case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
-      case src.Unexpected(c, f)  => print("Character '" + c + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : ")
+      case p.ValueExpected()     => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
+      //case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
+      case src.Unexpected(c, f)  =>
+        print("Character ")
+        if(c == '\n') print("eol")
+        else print("'" + c + "'")
+        print(" unexpected (line " + src.line + "; col " + src.col + ")\nExpected : ")
         for(i <- 0 to 255)
         {
           val c = Character.toChars(i)(0)
