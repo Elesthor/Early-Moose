@@ -23,15 +23,6 @@ class Parser(src: Input)
 {
   case class SyntaxError() extends Exception
   case class ValueExpected() extends Exception
-  
-  // set of channels
-  val channels = Set[Channel]()
-  
-  // test if a channel already exists
-  def TestChannel(name: String)
-  {
-    channels.exists({x => name == x.name})
-  }
 
   // UTILITIES
   // Return a value nested in a TValue, or throw a ValueExpected
@@ -108,10 +99,19 @@ class Parser(src: Input)
   }
 
   // Parse a channel
+  // set of channels
+  var channels = Map[String, Channel]()
   def ParseChannel() =
   {
-    // TODO : faire une map de channel pour renvoyer toujours le meme objet
-    new Channel(ParseName())
+    val name = ParseName()
+    channels.get(name) match
+    {
+      case None =>
+        val c = new Channel(name)
+        channels += (name -> c)
+        c
+      case Some(c) => c
+    }
   }
 
   // Parse a constant
