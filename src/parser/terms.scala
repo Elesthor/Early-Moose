@@ -129,7 +129,7 @@ case class TSk  (v: Value) extends Term{
 
 
 class Interpretor{
-  case class SyntaxError extends Exception
+  case class SyntaxError() extends Exception
 
 
   // Utilities function
