@@ -17,15 +17,27 @@
 //
 // Utility class to handle a stream
 
+class GenericChecker[T](_f: T => Boolean, _serialized: String)
+{
+  val f = _f
+  val serialized = _serialized
+
+  def ||(right : GenericChecker[T]) =
+  {
+    new GenericChecker({x: T => f(x) || right.f(x)}, serialized+right.serialized)
+  }
+  def apply(x: T) = { _f(x) }
+}
+
 abstract class Input
 {
   // Errors and limit cases
   case class Unexpected(c:Ch, expected: Checker)  extends Exception
   case class EndOfFile()                          extends Exception
   
-  // Types
+  // Type of char
   type Ch                   = Char
-  type Checker              = Ch => Boolean
+  type Checker              = GenericChecker[Ch]
 
   // Current position in the file
   var line                  = 1 // Current line in the file
@@ -124,13 +136,13 @@ abstract class Input
       else if(delimiters(c))
         ""
       else
-        throw new Unexpected(c, { x:Ch => expected(x) || delimiters(x) });
+        throw new Unexpected(c, expected || delimiters);
     }
   }
 
   // Consume a word from input
   // Throw Unexpected or End_of_file if it doesn't match
-  def CheckNextWord(word: String) =
+  def CheckNextWord(word: String):Unit =
   {
     if (word != "")
     {
@@ -190,19 +202,28 @@ abstract class Input
     }
   }
 
+  // Link a char to string representation
+  def CharToString(x : Ch) =
+  {
+    x match
+    {
+      case '\n' => "\\n"
+      case '\t' => "\\t"
+      case a    => a.toString()
+    }
+  }
+    
   // Set of checkers, which decide wether a char belongs to a certain subset of
   // the printable ascii alphabet.
-  // TODO : faire une classe Checker, avec un attribut serialized genre "a-z",
-  // le || sur les checker les 'compose', en concatenant les serialized
-  def Numeric       (x: Ch) = { x >= '0' && x <= '9' }
-  def AlphaLow      (x: Ch) = { x >= 'a' && x <= 'z' }
-  def AlphaUp       (x: Ch) = { x >= 'A' && x <= 'Z' }
-  def Alpha         (x: Ch) = { AlphaLow(x) || AlphaUp(x) }
-  def AlphaNumeric  (x: Ch) = { Alpha(x) || Numeric(x) }
-  def Parenthesis   (x: Ch) = { x == '(' || x == ')' }
-  def Space         (x: Ch) = { x == ' ' || x == '\n' || x == '\t'}
-  def All           (x: Ch) = { true }
-  def IsChar        (c: Ch)(x: Ch) = { x == c } // Test if input is a given char
+  val Numeric               = new Checker({x => x >= '0' && x <= '9'}, "0-9")
+  def AlphaLow              = new Checker({x => x >= 'a' && x <= 'z'}, "a-z")
+  def AlphaUp               = new Checker({x => x >= 'A' && x <= 'Z'}, "A-Z")
+  def Alpha                 = AlphaLow    || AlphaUp
+  def AlphaNumeric          = Alpha       || Numeric
+  def Parenthesis           = IsChar('(') || IsChar(')')
+  def Space                 = IsChar(' ') || IsChar('\n') || IsChar('\t')
+  def All                   = new Checker({x => true}, " all ")
+  def IsChar        (c: Ch) = new Checker({x => x == c}, CharToString(c))
 }
 
 

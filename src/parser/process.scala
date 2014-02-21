@@ -76,7 +76,7 @@ case class PInk(c: Channel, v: TVar, u: Term, y: TVar, k: Int, p: Process) exten
 case class POut(c: Channel, t: Term, p: Process) extends Process{
   def RetString(x: Int) = "| "*x+"POut:\n"+c.RetString(x+1)+t.RetString(x+1)+p.RetString(x)
 }
-case class PIf (v: Value, pIf: Process, pElse: Process, p: Process) extends Process{
+case class PIf (v: Value, pIf: Process, pElse: Process) extends Process{
   def RetString(x: Int) = "| "*x+"PIf:\n"+v.RetString(x+1)+pIf.RetString(x+1)+pElse.RetString(x+1)
 }
 case class PNew(s: VConst, p: Process) extends Process{
