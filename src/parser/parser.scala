@@ -34,14 +34,14 @@ class Parser(src: Input)
       case _ => throw new ValueExpected()
     }
   }
-  
+
   // Parse a well-formed name
   def ParseName() =
   {
     // fist letter : alphabetic then alphanumeric and '-' '_'
     src.GetCharPeekable(src.Alpha) + src.GetWord(src.Alpha || src.Numeric || src.IsChar('-') || src.IsChar('_'), src.All)
   }
-  
+
   // Check if a name is well-formed
   def CheckName(word: String) =
   {
@@ -56,7 +56,7 @@ class Parser(src: Input)
     // not empty, first : alphabetic, then alphanumeric ans '-' '_'
     word.length > 0 && src.Alpha(word(0)) && it(word.reverse.dropRight(1).reverse) // TODO : abominable
   }
-  
+
   // PARSERS
   // Parse a program : call ParseProcess between || and manage ^k
   def ParseMetaProc(): MetaProc =
@@ -119,7 +119,7 @@ class Parser(src: Input)
   {
     new VConst(ParseName())
   }
-  
+
   // Parse the gap between two processes
   // if possible consume '.' and parse a new process
   // else return a PTrivial
@@ -134,7 +134,7 @@ class Parser(src: Input)
       ParseProcess()
     }
   }
-  
+
   /*
   // Check if got is expected, else ignore space and check
   def CheckAfterSpace(got: Char, expected: src.Checker): Char =
@@ -148,7 +148,7 @@ class Parser(src: Input)
     }
   }
   */
-  
+
   // Parse a process
   def ParseProcess(): Process =
   {
@@ -218,11 +218,11 @@ class Parser(src: Input)
         new PNew(ParseConstant(), ParseProcessSeq())
 
       case ("", '0') => new PTrivial
-      
+
       case ("", '(') => // processus parenthésé
         val r = ParseProcess()
         src.CheckNextWord(")")
-        
+
         val n = ParseProcessSeq()
         new PSeq(r, n)
       case (_, _) => throw new SyntaxError()

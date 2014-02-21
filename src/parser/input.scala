@@ -34,7 +34,7 @@ abstract class Input
   // Errors and limit cases
   case class Unexpected(c:Ch, expected: Checker)  extends Exception
   case class EndOfFile()                          extends Exception
-  
+
   // Type of char
   type Ch                   = Char
   type Checker              = GenericChecker[Ch]
@@ -212,7 +212,7 @@ abstract class Input
       case a    => a.toString()
     }
   }
-    
+
   // Set of checkers, which decide wether a char belongs to a certain subset of
   // the printable ascii alphabet.
   val Numeric               = new Checker({x => x >= '0' && x <= '9'}, "0-9")
@@ -247,4 +247,3 @@ class InputFromFile(file:String) extends Input
     Character.toChars(c)(0)       // convert Int to Char
   }
 }
-
