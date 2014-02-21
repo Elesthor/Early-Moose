@@ -14,7 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import util.Random
-import scala.collection.mutable
+import scala.collection.mutable.Set
 import scala.collection.mutable.SynchronizedQueue
 
 
@@ -28,15 +28,15 @@ class Channel(c: String)
 
 class ChannelSet
 {
-  val allChannels: Set[Channel] = Set[Channel]()
+  var allChannels: Set[Channel] = Set[Channel]()
   def Contains(x: Channel): Boolean = allChannels.contains(x)
-  def Append(c: Channel): Unit = allChannels += c
+  def Append(c: Channel): Unit = allChannels.add(c)
 }
 
 class Environement
 {
-  var content: Map[String,Int] = Map[String,Int]()
-  def Append(name: String, value: Int): Unit =
+  var content: Map[String, String] = Map[String, String]()
+  def Append(name: String, value: String): Unit =
   {
       content += (name -> value)
   }
@@ -73,7 +73,7 @@ def interpretProcess(b: Branch, channels: ChannelSet): Unit =
     case PTrivial() => ()
     case PNew(name, nextProc) =>
     {
-      b.environement.Append(name.s, Random.nextInt);
+      b.environement.Append(name.s, Random.nextInt.toString);
       b.processList = nextProc;
       interpretProcess(b, channels);
     }
@@ -101,7 +101,7 @@ def interpretProcess(b: Branch, channels: ChannelSet): Unit =
       else
       {
         b.processList = processFalse;
-        interpretProcess(b, channels)
+        interpretProcess(b, channels);
       }
 
     }
