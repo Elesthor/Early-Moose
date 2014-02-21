@@ -127,84 +127,86 @@ case class TSk  (v: Value) extends Term{
 //                              Interpretor                                   //
 ////////////////////////////////////////////////////////////////////////////////
 
-case class SyntaxError extends Exception
+
+class Interpretor{
+  case class SyntaxError extends Exception
 
 
-// Utilities function
-def BooleanToInt (b: Boolean): Int = if (b) 1 else 0
-def IntToBoolean (x: Int): Boolean = if (x==0) false else true
-def isInt        (x: String): Boolean =
-    try {x.toInt;true} catch{ case _: Throwable => false}
-def isPositiveInt(x:String): Boolean = isInt(x) && x.toInt > 0
+  // Utilities function
+  def BoolToInt (b: Boolean): Int = if (b) 1 else 0
+  def IntToBool (x: Int): Boolean = if (x==0) false else true
+  def isInt        (x: String): Boolean =
+      try {x.toInt;true} catch{ case _: Throwable => false}
+  def isPositiveInt(x:String): Boolean = isInt(x) && x.toInt > 0
 
-// Split a string "XXX(.., ..)" at the comma
-// return the two arguments of the pair
-def parseComma(str : String, dropped: Int):  Array[String] = {
-    def crawler(s: String, acc: String, parenthesisCount: Int): Array[String] ={
-        if (s.length == 0) throw new SyntaxError
-        else if (s(0) == (',') && parenthesisCount == 0)
-            return Array(acc.drop(dropped), s.substring(1,s.length-1))
-        else if (s(0) == ('(')) crawler(s.drop(1), acc+s(0), parenthesisCount+1)
-        else if (s(0) == (')')) crawler(s.drop(1),acc+s(0), parenthesisCount-1)
-        else crawler(s.drop(1),acc+s(0), parenthesisCount)
+  // Split a string "XXX(.., ..)" at the comma
+  // return the two arguments of the pair
+  def parseComma(str : String, dropped: Int):  Array[String] = {
+      def crawler(s: String, acc: String, parenthesisCount: Int): Array[String] ={
+          if (s.length == 0) throw new SyntaxError
+          else if (s(0) == (',') && parenthesisCount == 0)
+              return Array(acc.drop(dropped), s.substring(1,s.length-1))
+          else if (s(0) == ('(')) crawler(s.drop(1), acc+s(0), parenthesisCount+1)
+          else if (s(0) == (')')) crawler(s.drop(1),acc+s(0), parenthesisCount-1)
+          else crawler(s.drop(1),acc+s(0), parenthesisCount)
+      }
+      return crawler(str,"", -1) // The first comma is after "XXX"
+  }
+
+  // Values interpretor
+  def interpretValue(v: Value): Int = {
+    v match {
+    case VInt(x)               => x
+    case VCount(li)            => li match{
+      // Remove everything except poisitve integers and count them
+      case ListTerm (l) => ((l.map(interpretTerm)).filter(isPositiveInt)).length
     }
-    return crawler(str,"", -1) // The first comma is after "XXX"
-}
-
-// Values interpretor
-def interpretValue(v: Value): Int = {
-  v match {
-  case VInt(x)               => x
-  case VCount(li)            => li match{
-    // Remove everything except poisitve integers and count them
-    case ListTerm (l) => ((l.map(interpretTerm)).filter(isPositiveInt)).length
-  }
-  case VSup  (left, right)  => BooleanToInt (interpretValue(left) >
-                                                        interpretValue(right))
-  case VEqual (left, right) => BooleanToInt (interpretTerm(left) ==
-                                                         interpretTerm(right))
-  case VAnd (left, right)   => BooleanToInt(IntToBoolean(interpretValue(left))
-                                       && IntToBoolean(interpretValue(right)))
-  case VOr (left, right)    => BooleanToInt(IntToBoolean(interpretValue(left))
-                                      || IntToBoolean(interpretValue(right)))
-  case VNot (v)             => BooleanToInt(!IntToBoolean(interpretValue(v)))
-  }
-}
-
-// Term intrpretor
-def interpretTerm (t: Term): String = {
-  try{
-    t match {
-      case TVar (p)           => p
-      case TValue (v)         => interpretValue(v).toString
-      case TPair(left, right) =>
-        "Pair("+interpretTerm(left)+","+interpretTerm(right)+")"
-      case TPi1 (t)           =>
-        if ((interpretTerm(t)).startsWith("pair(")) parseComma(interpretTerm(t), 5)(0)
-        else throw new SyntaxError
-      case TPi2 (t)           =>
-        if ((interpretTerm(t)).startsWith("pair(")) parseComma(interpretTerm(t), 5)(1)
-        else throw new SyntaxError
-      case TEnc (left, right) =>
-        "Enc("+interpretTerm(left)+","+interpretTerm(right)+")"
-      case TDec (left, right) =>
-        if (interpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)""")) {
-          val splittedLeft = parseComma(interpretTerm(left), 4);
-          val splittedRight = interpretTerm(right);
-          if (splittedRight.matches("""sk\(\d+\)""") &&
-            (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
-                           (splittedRight.substring(3,splittedRight.length-1)).toInt)
-              splittedLeft(0)
-          else throw new SyntaxError
-        }
-          else throw new SyntaxError
-      case TPk  (v)           => "Tpk("+interpretValue(v)+")"
-      case TSk  (v)           => "Tpk("+interpretValue(v)+")"
-      case ListTerm (l)       => l.map(interpretTerm).toString
+    case VSup  (left, right)  => BoolToInt (interpretValue(left) >
+                                                          interpretValue(right))
+    case VEqual (left, right) => BoolToInt (interpretTerm(left) == interpretTerm(right))
+    case VAnd (left, right)   => BoolToInt(IntToBool(interpretValue(left))
+                                                  && IntToBool(interpretValue(right)))
+    case VOr (left, right)    => BoolToInt(IntToBool(interpretValue(left))
+                                        || IntToBool(interpretValue(right)))
+    case VNot (v)             => BoolToInt(!IntToBool(interpretValue(v)))
     }
   }
-  catch {case _: Throwable => return "err"}
-}
 
+  // Term intrpretor
+  def interpretTerm (t: Term): String = {
+    try{
+      t match {
+        case TVar (p)           => p
+        case TValue (v)         => interpretValue(v).toString
+        case TPair(left, right) => "Pair("+interpretTerm(left)+","+interpretTerm(right)+")"
+        case TPi1 (t)           =>
+          if ((interpretTerm(t)).startsWith("pair("))
+            parseComma(interpretTerm(t), 5)(0)
+          else throw new SyntaxError
+        case TPi2 (t)           =>
+          if ((interpretTerm(t)).startsWith("pair("))
+            parseComma(interpretTerm(t), 5)(1)
+          else throw new SyntaxError
+        case TEnc (left, right) =>
+          "Enc("+interpretTerm(left)+","+interpretTerm(right)+")"
+        case TDec (left, right) =>
+          if (interpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)""")) {
+            val splittedLeft = parseComma(interpretTerm(left), 4);
+            val splittedRight = interpretTerm(right);
+            if (splittedRight.matches("""sk\(\d+\)""") &&
+              (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
+                             (splittedRight.substring(3,splittedRight.length-1)).toInt)
+                splittedLeft(0)
+            else throw new SyntaxError
+          }
+            else throw new SyntaxError
+        case TPk  (v)           => "Tpk("+interpretValue(v)+")"
+        case TSk  (v)           => "Tpk("+interpretValue(v)+")"
+        case ListTerm (l)       => l.map(interpretTerm).toString
+      }
+    }
+    catch {case _: Throwable => return "err"}
+  }
+}
 
 

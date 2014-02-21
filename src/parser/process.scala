@@ -14,12 +14,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class Channel(c: String) {
-  def RetString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
-}
 
 class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){
-  def RetString(x: Int): String = 
+
+  def RetString(x: Int): String =
   {
     "| "*x+"MetaProc: (^"+k+")\n"+pLeft.RetString(x+1)+
     (
@@ -33,8 +31,9 @@ class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){
 }
 
 abstract class Process{
+
   def RetString (x: Int): String
-  
+
   /*def Next() : Option[Process] =
   {
     this match
@@ -48,7 +47,7 @@ abstract class Process{
       case PSeq(_, p)             => Some(p)
     }
   }
-  
+
   def Last() : Option[Process] =
   {
     Next() match
