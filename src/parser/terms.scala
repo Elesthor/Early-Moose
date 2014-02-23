@@ -16,6 +16,7 @@
 
 abstract class Term{
     def RetString (x: Int): String
+    def Replace (x: String, t: Term): Term
 }
 
 import scala.util.matching.Regex
@@ -51,19 +52,19 @@ case class VEqual(left: Term, right: Term) extends Value
         "| "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
-case class VAnd  (left: Value, right: Value) extends Value
+case class VAnd(left: Value, right: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
-case class VOr   (left: Value, right: Value) extends Value
+case class VOr (left: Value, right: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
 }
 
-case class VNot  (v: Value) extends Value
+case class VNot (v: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Not:\n" + v.RetString(x+1)
@@ -83,6 +84,9 @@ case class ListTerm(content: List[Term]) extends Term
 {
     def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
                                 (acc, item) => acc+ item.RetString(x+1)}
+    def Replace(x: String , T: Term): Term = {
+      new ListTerm((content.map((p=>p.Replace(x,T)))))
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,52 +96,75 @@ case class ListTerm(content: List[Term]) extends Term
 case class TVar (p: String) extends Term
 {
     def RetString(x: Int): String = "| "*x+"Var:\n"+"| "*(x+1)+p+"\n"
+    def Replace(x: String , T: Term): Term =
+    {
+      if (x==p)
+      {
+        return T
+      }
+      else
+      {
+        return new TVar(p)
+      }
+    }
 }
 
 // Binding class between Term and value to have a case class.
 case class TValue (v: Value) extends Term
 {
-     def RetString(x: Int): String = " "*x+v.RetString(x)
+  def RetString(x: Int): String = " "*x+v.RetString(x)
+  def Replace(x: String ,T: Term): Term = new TValue(v)
 }
 
 case class TPair(left: Term, right: Term) extends Term
 {
-    def RetString(x: Int): String =
+  def RetString(x: Int): String =
         "| "*x+"Pair:\n"+left.RetString(x+1)+right.RetString(x+1)
+  def Replace(x: String, T: Term): Term =
+    new TPair(left.Replace(x,T), right.Replace(x,T))
 }
 
 case class TPi1 (t: Term) extends Term
 {
-    def RetString(x: Int): String =
+  def RetString(x: Int): String =
         "| "*x+"Pi1:\n"+t.RetString(x+1)
+  def Replace(x: String, T: Term): Term = new TPi1(t.Replace(x,T))
 }
 
 case class TPi2 (t: Term) extends Term
 {
-    def RetString(x: Int): String =
+  def RetString(x: Int): String =
         "| "*x+"Pi2:\n"+t.RetString(x+1)
+  def Replace(x: String, T: Term): Term = new TPi2(t.Replace(x,T))
 }
 
 case class TEnc (left: Term, right: Term) extends Term
 {
-    def RetString(x: Int): String =
+  def RetString(x: Int): String =
         "| "*x+"Enc:\n"+left.RetString(x+1)+right.RetString(x+1)
+  def Replace(x: String, T: Term): Term =
+    new TEnc(left.Replace(x,T), right.Replace(x,T))
 }
 
 case class TDec (left: Term, right: Term) extends Term
 {
-    def RetString(x: Int): String =
+  def RetString(x: Int): String =
         "| "*x+"Dec:\n"+left.RetString(x+1)+right.RetString(x+1)
+  def Replace(x: String, T: Term): Term =
+    new TDec(left.Replace(x,T), right.Replace(x,T))
 }
 
 case class TPk  (v: Value) extends Term
 {
-    def RetString(x: Int): String = "| "*x+"Pk:\n"+v.RetString(x+1)
+  def RetString(x: Int): String = "| "*x+"Pk:\n"+v.RetString(x+1)
+  def Replace(x: String, T: Term): Term = new TPk(v)
 }
 
 case class TSk  (v: Value) extends Term
 {
-    def RetString(x: Int): String = "| "*x+"Sk:\n"+v.RetString(x+1)
+  def RetString(x: Int): String = "| "*x+"Sk:\n"+v.RetString(x+1)
+  def Replace(x: String, T: Term): Term = new TSk(v)
+
 }
 
 
@@ -149,7 +176,6 @@ case class TSk  (v: Value) extends Term
 class Interpretor
 {
   case class SyntaxError() extends Exception
-
 
   // Utilities function
   def BoolToInt (b: Boolean): Int = if (b) 1 else 0
@@ -182,7 +208,7 @@ class Interpretor
     case VInt(x)               => x
     case VCount(li)            => li match
     {
-      // Remove everything except poisitve integers and count them
+      // Remove everything except positve integers and count them
       case ListTerm (l) => ((l.map(interpretTerm)).filter(isPositiveInt)).length
     }
     case VSup  (left, right)  => BoolToInt (interpretValue(left) >
@@ -207,13 +233,13 @@ class Interpretor
         case TPair(left, right) => "Pair("+interpretTerm(left)+","+interpretTerm(right)+")"
         case TPi1 (t)           =>
         {
-          if ((interpretTerm(t)).startsWith("pair("))
+          if ((interpretTerm(t)).startsWith("Pair("))
             parseComma(interpretTerm(t), 5)(0)
           else throw new SyntaxError
         }
         case TPi2 (t)           =>
         {
-          if ((interpretTerm(t)).startsWith("pair("))
+          if ((interpretTerm(t)).startsWith("Pair("))
             parseComma(interpretTerm(t), 5)(1)
           else throw new SyntaxError
         }
@@ -223,11 +249,11 @@ class Interpretor
         }
         case TDec (left, right) =>
         {
-          if (interpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)"""))
+          if (interpretTerm(left).matches("""Enc\(.*,Pk\(\d+\)\)"""))
           {
             val splittedLeft = parseComma(interpretTerm(left), 4);
             val splittedRight = interpretTerm(right);
-            if (splittedRight.matches("""sk\(\d+\)""") &&
+            if (splittedRight.matches("""Sk\(\d+\)""") &&
               (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
                              (splittedRight.substring(3,splittedRight.length-1)).toInt)
                 splittedLeft(0)
@@ -235,13 +261,11 @@ class Interpretor
           }
             else throw new SyntaxError
         }
-        case TPk  (v)           => "Tpk("+interpretValue(v)+")"
-        case TSk  (v)           => "Tpk("+interpretValue(v)+")"
+        case TPk  (v)           => "Pk("+interpretValue(v)+")"
+        case TSk  (v)           => "Sk("+interpretValue(v)+")"
         case ListTerm (l)       => l.map(interpretTerm).toString
       }
     }
     catch {case _: Throwable => return "err"}
   }
 }
-
-
