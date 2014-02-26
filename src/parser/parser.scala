@@ -45,11 +45,11 @@ class Parser(src: Input)
       w.length == 0 ||
       (
         (src.Alpha || src.Numeric || src.IsChar('-') || src.IsChar('_')) (w(0))
-        && it(w.reverse.dropRight(1).reverse) // TODO : abominable
+        && it(w.drop(1))
       )
     }
     // not empty and first char is alphabetic, and then alphanumeric or '-' '_'
-    if(word.length == 0 || !src.Alpha(word(0)) || !it(word.reverse.dropRight(1).reverse)) // TODO : abominable
+    if(word.length == 0 || !src.Alpha(word(0)) || !it(word.drop(1)))
       throw new NameMalformed(word)
   }
 

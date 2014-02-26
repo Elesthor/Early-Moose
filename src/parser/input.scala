@@ -157,7 +157,7 @@ abstract class Input
       val c = Peek()
       CleanPeek()
       if(c == word(0))
-        CheckNextWord(word.reverse.dropRight(1).reverse, false) // TODO : abominable
+        CheckNextWord(word.drop(1), false)
       else
         throw Unexpected(c, IsChar(word(0)))
     }

@@ -166,7 +166,7 @@ class Interpretor()
         case TSk  (v)           => "Sk("+InterpretValue(v)+")"
         case ListTerm (l)       =>
           "List("+l.foldLeft(""){
-                                (acc, item) => acc+ InterpretTerm(item)+","}+")"
+                                (acc, item) => acc+ InterpretTerm(item)+","}.dropRight(1)+")"
         case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
 
       }
