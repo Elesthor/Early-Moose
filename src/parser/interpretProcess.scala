@@ -164,7 +164,9 @@ class Interpretor()
         }
         case TPk  (v)           => "Pk("+InterpretValue(v)+")"
         case TSk  (v)           => "Sk("+InterpretValue(v)+")"
-        case ListTerm (l)       => l.map(InterpretTerm).toString
+        case ListTerm (l)       =>
+          "List("+l.foldLeft(""){
+                                (acc, item) => acc+ InterpretTerm(item)+","}+")"
         case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
 
       }
@@ -241,15 +243,15 @@ class Interpretor()
         //  next = new PInk(currentChannel, x, u, y, (k-1), last);
 
 
-        if (!channels.Contains(currentChannel)) ()//throw new InterpretationError
+        if (!channels.Contains(currentChannel)) ()
         var li = new ListTerm(List[Term]())
 
         for(i <- 1 to k)
         {
           val t = new TVar(currentChannel.content.dequeue())
-          li.content =  u.Replace(x.p,t)::li.content
-          println(li.RetString(0))
+          li =  new ListTerm((u.Replace(x.p,t))::li.content)
         }
+        println(InterpretTerm(li))
         var next = nextProc.Replace(y.p, li);
         InterpretProcess(next, channels);
 
