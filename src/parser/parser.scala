@@ -446,6 +446,11 @@ class Parser(src: Input)
       case _    => leftTerm
     }
   }
+  
+  def Parse() =
+  {
+    ParseMetaProc()
+  }
 }
 
 object TestParser
@@ -457,7 +462,7 @@ object TestParser
     val p = new Parser(src)
     try
     {
-      val program = p.ParseMetaProc()
+      val program = p.Parse()
       println("end of parsing")
       println(program .RetString(0))
     }
