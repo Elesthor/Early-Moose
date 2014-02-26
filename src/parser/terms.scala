@@ -80,8 +80,9 @@ case class VConst(s: String) extends Value
 //                               Lists                                        //
 ////////////////////////////////////////////////////////////////////////////////
 
-case class ListTerm(content: List[Term]) extends Term
+case class ListTerm(c: List[Term]) extends Term
 {
+    var content = c
     def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
                                 (acc, item) => acc+ item.RetString(x+1)}
     def Replace(x: String , T: Term): ListTerm =
@@ -97,11 +98,35 @@ case class ListTerm(content: List[Term]) extends Term
         case (head: ListTerm) :: tail => aux(head.content) ++ aux(tail)
         case head :: tail => head :: aux(tail)
       }
-
       new ListTerm( content )
     }
 }
 
+case class Cons(head: Term, tail: Option[Cons]) extends Term
+{
+  def Replace(x: String , T: Term): Cons =
+  {
+    if (tail.isDefined)
+    {
+      new Cons(head.Replace(x,T), Some(tail.get.Replace(x,T)))
+    }
+    else
+    {
+      new Cons(head.Replace(x,T), None)
+    }
+  }
+  def toList(): ListTerm =
+  {
+    def aux(h: Term, t: Option[Cons]): List[Term] =
+      {
+        if (t.isDefined) h::aux(t.get.head, t.get.tail)
+        else List(h)
+      }
+    new ListTerm(aux(head,tail))
+  }
+
+  def RetString(x: Int): String =  ""
+}
 ////////////////////////////////////////////////////////////////////////////////
 //                               Terms                                        //
 ////////////////////////////////////////////////////////////////////////////////

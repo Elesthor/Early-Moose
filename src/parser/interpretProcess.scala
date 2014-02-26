@@ -63,7 +63,8 @@ class InterpretThread(interpreter: Interpretor, proc: Process, channels: Channel
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class Interpretor(){
+class Interpretor()
+{
 
   case class SyntaxError() extends Exception
   case class InterpretationError() extends Exception
@@ -104,15 +105,14 @@ class Interpretor(){
     {
       // Remove everything except nul integers and count them
       case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length // FIXME : j'ai remplacé isPositiveInt par IsTrueInt, car top <=> x!=0 et non x>0
+      case Cons(h,t)    => InterpretValue(new VCount((new Cons(h,t)).toList))
       case _            => throw new ListExpected() // TODO : donner des infos
     }
     case VSup  (left, right)  => BoolToInt (InterpretValue(left) >
                                             InterpretValue(right))
     case VEqual (left, right) =>
-      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err")
-        1
-      else
-        BoolToInt (InterpretTerm(left) == InterpretTerm(right))
+      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err") throw new SyntaxError
+      BoolToInt (InterpretTerm(left) == InterpretTerm(right))
     case VAnd (left, right)   => BoolToInt(IntToBool(InterpretValue(left))
                                         && IntToBool(InterpretValue(right)))
     case VOr (left, right)    => BoolToInt(IntToBool(InterpretValue(left))
@@ -165,11 +165,12 @@ class Interpretor(){
         case TPk  (v)           => "Pk("+InterpretValue(v)+")"
         case TSk  (v)           => "Sk("+InterpretValue(v)+")"
         case ListTerm (l)       => l.map(InterpretTerm).toString
+        case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
+
       }
     }
     catch {case _: Throwable => return "err"}
   }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //                             InterpretProcess                               //
@@ -217,23 +218,41 @@ class Interpretor(){
       }
       case PInk(currentChannel, x, u, y, k, nextProc) =>
       {
-        var next: Process = new PTrivial();
-        if (k==0)
-        {
-          next = nextProc.Replace(y.p, new ListTerm(List[Term]()));
-        }
-        else
-        {
-          if (!channels.Contains(currentChannel)) throw new InterpretationError
-          val t = new TVar(currentChannel.content.dequeue());
-         // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+        //var next: Process = new PTrivial();
+        //if (k==1)
+        //{
+        //  if (!channels.Contains(currentChannel)) throw new InterpretationError
+        //  val t = new TVar(currentChannel.content.dequeue());
+        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+//
+        //  val uReplaced = u.Replace(x.p,t)
+        //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
+        //  val next = nextProc.Replace(y.p, tmp);
+        //}
+        //else
+        //{
+        //  if (!channels.Contains(currentChannel)) throw new InterpretationError
+        //  val t = new TVar(currentChannel.content.dequeue());
+        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+//
+        //  val uReplaced = u.Replace(x.p,t)
+        //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
+        //  val last = nextProc.Replace(y.p, tmp);
+        //  next = new PInk(currentChannel, x, u, y, (k-1), last);
 
-          val uReplaced = u.Replace(x.p,t)
-          val tmp = new ListTerm(List(uReplaced, new TVar(y.p)))
-          val last = nextProc.Replace(y.p, tmp);
-          next = new PInk(currentChannel, x, u, y, (k-1), last);
+
+        if (!channels.Contains(currentChannel)) ()//throw new InterpretationError
+        var li = new ListTerm(List[Term]())
+
+        for(i <- 1 to k)
+        {
+          val t = new TVar(currentChannel.content.dequeue())
+          li.content =  u.Replace(x.p,t)::li.content
+          println(li.RetString(0))
         }
+        var next = nextProc.Replace(y.p, li);
         InterpretProcess(next, channels);
+
       }
     }
   }
