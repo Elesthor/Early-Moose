@@ -17,6 +17,8 @@
 //
 // Utility class to handle a stream
 
+// Class of T=>Boolean functions, composable with ||
+// that concatenate serialized
 class GenericChecker[T](_f: T => Boolean, _serialized: String)
 {
   val f = _f
@@ -26,7 +28,7 @@ class GenericChecker[T](_f: T => Boolean, _serialized: String)
   {
     new GenericChecker({x: T => f(x) || right.f(x)}, serialized+right.serialized)
   }
-  def apply(x: T) = { _f(x) }
+  def apply(x: T) = { f(x) }
 }
 
 abstract class Input
@@ -120,10 +122,13 @@ abstract class Input
       throw new Unexpected(c, expected);
   }
 
-  // Get a full word until a delimiter, using only char from expected
+  // Ignore space at beginning if ignoreSpace
+  // then get a full word until a delimiter, using only char from expected
   // Let the delimiter in peeked. End on EOF
-  def GetWord(expected: Checker, delimiters: Checker): String =
+  def GetWord(expected: Checker, delimiters: Checker, ignoreSpace:Boolean = true): String =
   {
+    if(ignoreSpace) IgnoreSpace()
+    
     if(CheckEOF()) ""
     else
     {
@@ -131,7 +136,7 @@ abstract class Input
       if(expected(c))
       {
         CleanPeek()
-        c+GetWord(expected, delimiters)
+        c+GetWord(expected, delimiters, false)
       }
       else if(delimiters(c))
         ""
@@ -140,16 +145,19 @@ abstract class Input
     }
   }
 
-  // Consume a word from input
+  // Ignore space at beginning if ignoreSpace
+  // then consume a word from input
   // Throw Unexpected or End_of_file if it doesn't match
-  def CheckNextWord(word: String):Unit =
+  def CheckNextWord(word: String, ignoreSpace:Boolean = true):Unit =
   {
+    if(ignoreSpace) IgnoreSpace()
+    
     if (word != "")
     {
       val c = Peek()
       CleanPeek()
       if(c == word(0))
-        CheckNextWord(word.reverse.dropRight(1).reverse) // TODO : abominable
+        CheckNextWord(word.reverse.dropRight(1).reverse, false) // TODO : abominable
       else
         throw Unexpected(c, IsChar(word(0)))
     }
@@ -176,19 +184,14 @@ abstract class Input
     }
   }
 
-  // Ignore space characters, returns the number of ' ' ignored
+  // Ignore space characters, returns the number of chars ignored
   // Let first non-space in peeked
   def IgnoreSpace(): Int =
   {
     try
     {
       val c = Peek()
-      if(c == '\n' || c == '\t')
-      {
-        CleanPeek()
-        IgnoreSpace()
-      }
-      else if(c == ' ')
+      if(c == '\n' || c == '\t' || c == ' ')
       {
         CleanPeek()
         IgnoreSpace() + 1
@@ -209,6 +212,7 @@ abstract class Input
     {
       case '\n' => "\\n"
       case '\t' => "\\t"
+      case ' '  => "␣"
       case a    => a.toString()
     }
   }
