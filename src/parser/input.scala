@@ -166,7 +166,7 @@ abstract class Input
   // Get a number from input
   def GetNumber() =
   {
-    Integer.parseInt(GetWord(Numeric, All))
+    Integer.parseInt(GetWord(Numeric || IsChar('-'), All))
   }
 
   // Try if EOF

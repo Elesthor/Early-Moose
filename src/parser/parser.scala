@@ -44,7 +44,7 @@ class Parser(src: Input)
     {
       w.length == 0 ||
       (
-        (src.Alpha || src.Numeric || src.IsChar('-') || src.IsChar('_')) (w(0))
+        (src.AlphaNumeric || src.IsChar('-') || src.IsChar('_')) (w(0))
         && it(w.drop(1))
       )
     }
@@ -58,7 +58,7 @@ class Parser(src: Input)
   def ParseName() =
   {
     // non empty and first char is alphabetic, and then alphanumeric or '-' '_'
-    val name = src.GetWord(src.Alpha || src.Numeric || src.IsChar('-') || src.IsChar('_'), src.All)
+    val name = src.GetWord(src.AlphaNumeric || src.IsChar('-') || src.IsChar('_'), src.All)
     if(name.length == 0 || !src.Alpha(name(0))) throw new NameMalformed(name)
     name
   }
@@ -259,11 +259,11 @@ class Parser(src: Input)
     src.IgnoreSpace()
     val c = src.Peek()
     val leftTerm:Term =
-      if(src.Numeric(c)) // a number
+      if(src.Numeric(c) || src.IsChar('-')(c)) // a number
         new TValue(new VInt(src.GetNumber()))
       else
       {
-        val keyword = src.GetWord(src.Alpha || src.Numeric || src.IsChar('-') || src.IsChar('_'),
+        val keyword = src.GetWord(src.AlphaNumeric || src.IsChar('-') || src.IsChar('_'),
                                   src.Parenthesis || src.Space || src.IsChar('[') || src.IsChar(':') || src.IsChar('>') || src.IsChar('=') || src.IsChar('/') || src.IsChar('\\') || src.IsChar(','))
         val spaces = src.IgnoreSpace()
         val peeked = src.Peek()
