@@ -35,7 +35,7 @@ case class VInt  (v: Int) extends Value
      def RetString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
 }
 
-case class VCount(l: ListTerm) extends Value
+case class VCount(l: Term) extends Value
 {
       def RetString(x: Int): String = "| "*x+"Count:\n"+l.RetString(x+1)
 }
@@ -112,7 +112,7 @@ case class TVar (p: String) extends Term
 // Binding class between Term and value to have a case class.
 case class TValue (v: Value) extends Term
 {
-  def RetString(x: Int): String = " "*x+v.RetString(x)
+  def RetString(x: Int): String = v.RetString(x)
   def Replace(x: String ,T: Term): Term = new TValue(v)
 }
 
