@@ -74,7 +74,7 @@ class Interpretor(){
   def IntToBool (x: Int): Boolean = if (x==0) false else true
   def IsInt        (x: String): Boolean =
       try {x.toInt;true} catch{ case _: Throwable => false}
-  def IsPositiveInt(x:String): Boolean = IsInt(x) && x.toInt > 0
+  def IsTrueInt(x:String): Boolean = IsInt(x) && x.toInt != 0
 
   // Split a string "XXX(.., ..)" at the comma
   // return the two arguments of the pair
@@ -102,14 +102,16 @@ class Interpretor(){
     case VInt(x)               => x
     case VCount(li)            => li match
     {
-      // Remove everything except positve integers and count them
-      case ListTerm (l) => ((l.map(InterpretTerm)).filter({x => IntToBool(x.toInt)})).length // FIXME : j'ai remplacé isPositiveInt par IntToBool, car top <=> x!=0 et non x>0
+      // Remove everything except nul integers and count them
+      case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length // FIXME : j'ai remplacé isPositiveInt par IsTrueInt, car top <=> x!=0 et non x>0
       case _            => throw new ListExpected() // TODO : donner des infos
     }
     case VSup  (left, right)  => BoolToInt (InterpretValue(left) >
                                             InterpretValue(right))
     case VEqual (left, right) =>
-      if (InterpretTerm(left) == "err" || InterpretTerm(right) == err)
+      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err")
+        1
+      else
         BoolToInt (InterpretTerm(left) == InterpretTerm(right))
     case VAnd (left, right)   => BoolToInt(IntToBool(InterpretValue(left))
                                         && IntToBool(InterpretValue(right)))
