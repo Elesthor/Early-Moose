@@ -104,7 +104,7 @@ class Interpretor()
     case VCount(li)            => li match
     {
       // Remove everything except nul integers and count them
-      case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length // FIXME : j'ai remplacé isPositiveInt par IsTrueInt, car top <=> x!=0 et non x>0
+      case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length
       case Cons(h,t)    => InterpretValue(new VCount((new Cons(h,t)).toList))
       case _            => throw new ListExpected() // TODO : donner des infos
     }
