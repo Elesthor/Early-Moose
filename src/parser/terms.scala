@@ -80,9 +80,8 @@ case class VConst(s: String) extends Value
 //                               Lists                                        //
 ////////////////////////////////////////////////////////////////////////////////
 
-case class ListTerm(c: List[Term]) extends Term
+case class ListTerm(content: List[Term]) extends Term
 {
-    var content = c
     def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
                                 (acc, item) => acc+ item.RetString(x+1)}
     def Replace(x: String , T: Term): ListTerm =
