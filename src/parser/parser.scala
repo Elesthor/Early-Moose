@@ -32,6 +32,7 @@ class Parser(src: Input)
     t match
     {
       case TValue(v) => v
+      case TVar(v) => new VConst(v)
       case _ => throw new ValueExpected()
     }
   }
@@ -271,7 +272,7 @@ class Parser(src: Input)
         if(peeked == ',' || peeked == ')')
         {
           CheckName(keyword)
-          new TValue(new VConst(keyword))
+          new TVar(keyword)
         }
 
         // a variable/constant in a list, RETURN the term
