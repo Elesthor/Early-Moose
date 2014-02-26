@@ -232,7 +232,7 @@ abstract class Input
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//                           InputFrom File class                             //
+//                           InputFromFile class                              //
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Utility class to handle an input file
@@ -251,3 +251,23 @@ class InputFromFile(file:String) extends Input
     Character.toChars(c)(0)       // convert Int to Char
   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                           InputFromString class                            //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Utility class to handle an input string
+
+class InputFromString(data:String) extends Input
+{
+  var pos = 0
+  // Main reading function
+  def GetChar_() =
+  {
+    if (pos == data.length) throw new EndOfFile()
+    pos = pos + 1
+    data(pos - 1) // badly pos++ doesn't work
+  }
+}
+

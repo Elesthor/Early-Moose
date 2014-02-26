@@ -452,7 +452,8 @@ object TestParser
 {
   def main(args: Array[String])
   {
-    val src = new InputFromFile("test")
+    //val src = new InputFromFile("test")
+    val src = new InputFromString("(new v).out(c,enc(v,pk(1)))^15 || in^15(c,x -> dec(x,sk(1)) as y).out(stdout,count(y))")
     val p = new Parser(src)
     try
     {
