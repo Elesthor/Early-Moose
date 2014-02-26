@@ -38,33 +38,6 @@ abstract class Process
 {
   def RetString (x: Int): String
   def Replace(x: String , T: Term): Process
-  /*def Next() : Option[Process] =
-  {
-    this match
-    {
-      case PTrivial()             => None
-      case PIn(_, _, p)           => Some(p)
-      case PInk(_, _, _, _, _, p) => Some(p)
-      case POut(_, _, p)          => Some(p)
-      case PIf(_, _, _, p)        => Some(p)
-      case PNew(_, p)             => Some(p)
-      case PSeq(_, p)             => Some(p)
-    }
-  }
-
-  def Last() : Option[Process] =
-  {
-    Next() match
-    {
-      case None    => None // PTrivial
-      case Some(p) =>
-        p.Next() match
-        {
-          case None     => Some(this) // next is PTrivial
-          case Some(p2) => p.Next()
-        }
-    }
-  }*/
 }
 
 case class PTrivial() extends Process
