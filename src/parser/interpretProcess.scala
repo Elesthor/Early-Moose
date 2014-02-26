@@ -215,14 +215,23 @@ class Interpretor(){
         var next: Process = new PTrivial();
         if (k==0)
         {
-          next = nextProc.Replace(x.p, new ListTerm(List[Term]()));
+          next = nextProc.Replace(y.p, new ListTerm(List[Term]()));
         }
         else
         {
           if (!channels.Contains(currentChannel)) throw new InterpretationError
           val t = new TVar(currentChannel.content.dequeue());
-          val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t),y)));
-          next = new PInk(currentChannel, x, u , y, (k-1), last);
+         // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+
+          val uReplaced = u.Replace(x.p,t)
+          println(u.RetString(0))
+          val tmp = (uReplaced match
+          {
+            case ListTerm(l) => println("bite"); new ListTerm(new TVar(y.p)::l)
+            case  _ => new ListTerm(List(new TVar(y.p), uReplaced))
+          })
+          val last = nextProc.Replace(y.p, tmp);
+          next = new PInk(currentChannel, x, u, y, (k-1), last);
         }
         interpretProcess(next, channels);
       }

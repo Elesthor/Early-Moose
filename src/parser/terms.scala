@@ -84,7 +84,8 @@ case class ListTerm(content: List[Term]) extends Term
 {
     def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
                                 (acc, item) => acc+ item.RetString(x+1)}
-    def Replace(x: String , T: Term): Term = {
+    def Replace(x: String , T: Term): ListTerm =
+    {
       new ListTerm((content.map((p=>p.Replace(x,T)))))
     }
 }
