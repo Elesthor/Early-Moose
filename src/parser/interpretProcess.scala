@@ -159,7 +159,9 @@ class Interpretor(){
         }
         case TPk  (v)           => "Pk("+interpretValue(v)+")"
         case TSk  (v)           => "Sk("+interpretValue(v)+")"
-        case ListTerm (l)       => l.map(interpretTerm).toString
+        case ListTerm (l)       =>
+        println((new ListTerm(l)).flatten.RetString(0))
+        (new ListTerm(l)).flatten.content.map(interpretTerm).toString
       }
     }
     catch {case _: Throwable => return "err"}
@@ -224,12 +226,7 @@ class Interpretor(){
          // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
 
           val uReplaced = u.Replace(x.p,t)
-          println(u.RetString(0))
-          val tmp = (uReplaced match
-          {
-            case ListTerm(l) => println("bite"); new ListTerm(new TVar(y.p)::l)
-            case  _ => new ListTerm(List(new TVar(y.p), uReplaced))
-          })
+          val tmp = new ListTerm(List(uReplaced, new TVar(y.p)))
           val last = nextProc.Replace(y.p, tmp);
           next = new PInk(currentChannel, x, u, y, (k-1), last);
         }

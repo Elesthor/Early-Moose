@@ -88,6 +88,18 @@ case class ListTerm(content: List[Term]) extends Term
     {
       new ListTerm((content.map((p=>p.Replace(x,T)))))
     }
+
+    def flatten(): ListTerm =
+    {
+      def aux(l: List[Term]): List[Term] = l match
+      {
+        case Nil => Nil
+        case (head: ListTerm) :: tail => aux(head.content) ++ aux(tail)
+        case head :: tail => head :: aux(tail)
+      }
+
+      new ListTerm( content )
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
