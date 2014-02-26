@@ -83,7 +83,7 @@ case class PIn (c: Channel, v: TVar, p: Process) extends Process
 }
 case class PInk(c: Channel, v: TVar, u: Term, y: TVar, k: Int, p: Process) extends Process
 {
-  def RetString(x: Int) = "| "*x+"PInk:\n"+c.RetString(x+1)+v.RetString(x+1)+u.RetString(x+1)+y.RetString(x+1)+"| "*x+k+"\n"+p.RetString(x)
+  def RetString(x: Int) = "| "*x+"PInk: "+k+"\n"+c.RetString(x+1)+v.RetString(x+1)+u.RetString(x+1)+y.RetString(x+1)+p.RetString(x)
   def Replace(x: String , T: Term): Process =
   {
     new PInk(c, v, u.Replace(x,T),y ,k, p.Replace(x,T))
