@@ -15,7 +15,11 @@
 
 
 
-class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){
+class MetaProc(pLefta: Process, ka: Int, metaPRighta: Option[MetaProc])
+{
+  val pLeft = pLefta
+  val k = ka
+  val metaPRight = metaPRighta
 
   def RetString(x: Int): String =
   {
@@ -30,8 +34,8 @@ class MetaProc(pLeft: Process, k: Int, metaPRight: Option[MetaProc]){
   }
 }
 
-abstract class Process{
-
+abstract class Process
+{
   def RetString (x: Int): String
   def Replace(x: String , T: Term): Process
   /*def Next() : Option[Process] =
