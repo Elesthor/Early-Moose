@@ -79,7 +79,7 @@ class Interpretor()
 
   // Split a string "XXX(.., ..)" at the comma
   // return the two arguments of the pair
-  def ParseComma(str : String, dropped: Int):  Array[String] =
+  /*def ParseComma(str : String, dropped: Int):  Array[String] =
   {
       def crawler(s: String, acc: String, parenthesisCount: Int): Array[String] =
       {
@@ -91,11 +91,11 @@ class Interpretor()
           else crawler(s.drop(1),acc+s(0), parenthesisCount)
       }
       return crawler(str,"", -1) // The first comma is after "XXX"
-  }
+  }*/
   
   def ParseTermFromString(s: String):Term =
   {
-    (new Parser(new InputFromString(s))).ParseTerm()
+    (new Parser(new InputFromString(s+")"))).ParseTerm() // les termes ne peuvent pas être collé à la fin de l'input, d'où la ) qui est ignorée
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,39 +136,61 @@ class Interpretor()
       t match {
         case TVar (p)           => p
         case TValue (v)         => InterpretValue(v).toString
-        case TPair(left, right) => "Pair("+InterpretTerm(left)+","+InterpretTerm(right)+")" // FIXME : je pense qu'il ne faut pas de majuscule à Pair
+        case TPair(left, right) => "pair("+InterpretTerm(left)+","+InterpretTerm(right)+")"
         case TPi1 (t)           =>
         {
-          if ((InterpretTerm(t)).startsWith("Pair("))
+          ParseTermFromString(InterpretTerm(t)) match
+          {
+            case TPair(u1, _) => InterpretTerm(u1) // FIXME cf case TDec
+            case _ => throw new SyntaxError()
+          }
+          /*
+          if ((InterpretTerm(t)).startsWith("pair("))
             ParseComma(InterpretTerm(t), 5)(0)
           else throw new SyntaxError()
+          */
         }
         case TPi2 (t)           =>
         {
-          if ((InterpretTerm(t)).startsWith("Pair("))
+          ParseTermFromString(InterpretTerm(t)) match
+          {
+            case TPair(_, u2) => InterpretTerm(u2) // FIXME cf case TDec
+            case _ => throw new SyntaxError()
+          }
+          /*
+          if ((InterpretTerm(t)).startsWith("pair("))
             ParseComma(InterpretTerm(t), 5)(1)
           else throw new SyntaxError()
+          */
         }
         case TEnc (left, right) =>
         {
-          "Enc("+InterpretTerm(left)+","+InterpretTerm(right)+")"
+          "enc("+InterpretTerm(left)+","+InterpretTerm(right)+")"
         }
         case TDec (left, right) =>
         {
-          if (InterpretTerm(left).matches("""Enc\(.*,Pk\(\d+\)\)""")) // FIXME : pourquoi ne pas appeler Parser.ParseTerm, vérfier que ça a la bonne tete et utiliser l'objet créé ? je te fais un InputFromString pour l'occaz'
+          (ParseTermFromString(InterpretTerm(left)), ParseTermFromString(InterpretTerm(right))) match
+          {
+            case (TEnc(msg, TPk(VInt(n1))), TSk(VInt(n2))) =>
+              if(n1!=n2) throw new SyntaxError()
+              InterpretTerm(msg) // FIXME : le InterpretTerm va bien renvoyer ce qu'on veut, puisque left a été interprété à fond ? // TODO un tostring serait mieux
+            case _ => throw new SyntaxError()
+          }
+          
+          /*if (InterpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)"""))
           {
             val splittedLeft = ParseComma(InterpretTerm(left), 4)
             val splittedRight = InterpretTerm(right)
-            if (splittedRight.matches("""Sk\(\d+\)""") &&
+            if (splittedRight.matches("""sk\(\d+\)""") &&
               (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
                              (splittedRight.substring(3,splittedRight.length-1)).toInt)
                 splittedLeft(0)
             else throw new SyntaxError()
           }
-            else throw new SyntaxError()
+            else throw new SyntaxError()*/
         }
-        case TPk  (v)           => "Pk("+InterpretValue(v)+")"
-        case TSk  (v)           => "Sk("+InterpretValue(v)+")"
+        case TPk  (v)           => "pk("+InterpretValue(v)+")"
+        case TSk  (v)           => "sk("+InterpretValue(v)+")"
         case ListTerm (l)       =>
           l.foldLeft(""){
                                 (acc, item) => acc+"("+InterpretTerm(item)+")::"}.dropRight(2)
