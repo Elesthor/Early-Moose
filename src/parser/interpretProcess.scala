@@ -106,12 +106,12 @@ class Interpretor()
       // Remove everything except nul integers and count them
       case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length
       case Cons(h,t)    => InterpretValue(new VCount((new Cons(h,t)).toList))
-      case _            => throw new ListExpected() // TODO : donner des infos
+      case _            => throw new ListExpected()
     }
     case VSup  (left, right)  => BoolToInt (InterpretValue(left) >
                                             InterpretValue(right))
     case VEqual (left, right) =>
-      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err") throw new SyntaxError
+      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err") throw new SyntaxError()
       BoolToInt (InterpretTerm(left) == InterpretTerm(right))
     case VAnd (left, right)   => BoolToInt(IntToBool(InterpretValue(left))
                                         && IntToBool(InterpretValue(right)))
@@ -158,15 +158,15 @@ class Interpretor()
               (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
                              (splittedRight.substring(3,splittedRight.length-1)).toInt)
                 splittedLeft(0)
-            else throw new SyntaxError
+            else throw new SyntaxError()
           }
-            else throw new SyntaxError
+            else throw new SyntaxError()
         }
         case TPk  (v)           => "Pk("+InterpretValue(v)+")"
         case TSk  (v)           => "Sk("+InterpretValue(v)+")"
         case ListTerm (l)       =>
-          "List("+l.foldLeft(""){
-                                (acc, item) => acc+ InterpretTerm(item)+","}.dropRight(1)+")"
+          l.foldLeft(""){
+                                (acc, item) => acc+"("+InterpretTerm(item)+")::"}.dropRight(2)
         case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
 
       }
