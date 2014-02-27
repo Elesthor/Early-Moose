@@ -17,6 +17,7 @@
 abstract class Term{
     def RetString (x: Int): String
     def Replace (x: String, t: Term): Term
+    def toString: String
 }
 
 import scala.util.matching.Regex
@@ -28,51 +29,60 @@ import scala.util.matching.Regex
 
 abstract class Value{
     def RetString (x: Int): String
+    def toString: String
 }
 
 case class VInt  (v: Int) extends Value
 {
      def RetString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
+     override def toString: String = v.toString
 }
 
 case class VCount(l: Term) extends Value
 {
       def RetString(x: Int): String = "| "*x+"Count:\n"+l.RetString(x+1)
+      override def toString: String = "count("+l.toString+")"
 }
 
 case class VSup  (left: Value, right: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Sup:\n"+left.RetString(x+1)+right.RetString(x+1)
+      override def toString: String = "("+left.toString+")>("+right.toString+")"
 }
 
 case class VEqual(left: Term, right: Term) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
+      override def toString: String = "("+left.toString+")=("+right.toString+")"
 }
 
 case class VAnd(left: Value, right: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
+      override def toString: String = "("+left.toString+")/\\("+right.toString+")"
 }
 
 case class VOr (left: Value, right: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
+      override def toString: String = "("+left.toString+")\\/("+right.toString+")"
 }
 
 case class VNot (v: Value) extends Value
 {
      def RetString(x: Int): String =
         "| "*x+"Not:\n" + v.RetString(x+1)
+      override def toString: String = "not("+v.toString+")"
 }
 
 case class VConst(s: String) extends Value
 {
      def RetString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
+      override def toString: String = s
 }
 
 
@@ -99,6 +109,7 @@ case class ListTerm(content: List[Term]) extends Term
       }
       new ListTerm( content )
     }
+    override def toString: String = content.foldLeft(""){(acc, item) => acc+"("+item.toString+")::"}.dropRight(2)
 }
 
 case class Cons(head: Term, tail: Option[Cons]) extends Term
@@ -125,6 +136,11 @@ case class Cons(head: Term, tail: Option[Cons]) extends Term
   }
 
   def RetString(x: Int): String =  ""
+  override def toString: String = "("+head.toString+")"+(tail match
+    {
+      case None    => "[]"
+      case Some(t) => "::"+t.toString
+    })
 }
 ////////////////////////////////////////////////////////////////////////////////
 //                               Terms                                        //
@@ -144,6 +160,7 @@ case class TVar (p: String) extends Term
         return new TVar(p)
       }
     }
+    override def toString: String = p
 }
 
 // Binding class between Term and value to have a case class.
@@ -151,6 +168,7 @@ case class TValue (v: Value) extends Term
 {
   def RetString(x: Int): String = v.RetString(x)
   def Replace(x: String ,T: Term): Term = new TValue(v)
+  override def toString: String = v.toString
 }
 
 case class TPair(left: Term, right: Term) extends Term
@@ -159,6 +177,7 @@ case class TPair(left: Term, right: Term) extends Term
         "| "*x+"Pair:\n"+left.RetString(x+1)+right.RetString(x+1)
   def Replace(x: String, T: Term): Term =
     new TPair(left.Replace(x,T), right.Replace(x,T))
+  override def toString: String = "pair("+left.toString+","+right.toString+")"
 }
 
 case class TPi1 (t: Term) extends Term
@@ -166,6 +185,7 @@ case class TPi1 (t: Term) extends Term
   def RetString(x: Int): String =
         "| "*x+"Pi1:\n"+t.RetString(x+1)
   def Replace(x: String, T: Term): Term = new TPi1(t.Replace(x,T))
+  override def toString: String = "pi1("+t.toString+")"
 }
 
 case class TPi2 (t: Term) extends Term
@@ -173,6 +193,7 @@ case class TPi2 (t: Term) extends Term
   def RetString(x: Int): String =
         "| "*x+"Pi2:\n"+t.RetString(x+1)
   def Replace(x: String, T: Term): Term = new TPi2(t.Replace(x,T))
+  override def toString: String = "pi2("+t.toString+")"
 }
 
 case class TEnc (left: Term, right: Term) extends Term
@@ -181,6 +202,7 @@ case class TEnc (left: Term, right: Term) extends Term
         "| "*x+"Enc:\n"+left.RetString(x+1)+right.RetString(x+1)
   def Replace(x: String, T: Term): Term =
     new TEnc(left.Replace(x,T), right.Replace(x,T))
+  override def toString: String = "enc("+left.toString+","+right.toString+")"
 }
 
 case class TDec (left: Term, right: Term) extends Term
@@ -189,18 +211,21 @@ case class TDec (left: Term, right: Term) extends Term
         "| "*x+"Dec:\n"+left.RetString(x+1)+right.RetString(x+1)
   def Replace(x: String, T: Term): Term =
     new TDec(left.Replace(x,T), right.Replace(x,T))
+  override def toString: String = "dec("+left.toString+","+right.toString+")"
 }
 
 case class TPk  (v: Value) extends Term
 {
   def RetString(x: Int): String = "| "*x+"Pk:\n"+v.RetString(x+1)
   def Replace(x: String, T: Term): Term = new TPk(v)
+  override def toString: String = "pk("+v.toString+")"
 }
 
 case class TSk  (v: Value) extends Term
 {
   def RetString(x: Int): String = "| "*x+"Sk:\n"+v.RetString(x+1)
   def Replace(x: String, T: Term): Term = new TSk(v)
+  override def toString: String = "sk("+v.toString+")"
 
 }
 
