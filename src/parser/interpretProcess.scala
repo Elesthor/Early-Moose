@@ -141,7 +141,7 @@ class Interpretor()
         {
           ParseTermFromString(InterpretTerm(t)) match
           {
-            case TPair(u1, _) => InterpretTerm(u1) // FIXME cf case TDec
+            case TPair(u1, _) => u1.toString
             case _ => throw new SyntaxError()
           }
           /*
@@ -154,7 +154,7 @@ class Interpretor()
         {
           ParseTermFromString(InterpretTerm(t)) match
           {
-            case TPair(_, u2) => InterpretTerm(u2) // FIXME cf case TDec
+            case TPair(_, u2) => u2.toString
             case _ => throw new SyntaxError()
           }
           /*
@@ -173,7 +173,7 @@ class Interpretor()
           {
             case (TEnc(msg, TPk(VInt(n1))), TSk(VInt(n2))) =>
               if(n1!=n2) throw new SyntaxError()
-              InterpretTerm(msg) // FIXME : le InterpretTerm va bien renvoyer ce qu'on veut, puisque left a été interprété à fond ? // TODO un tostring serait mieux
+              msg.toString
             case _ => throw new SyntaxError()
           }
           
@@ -192,8 +192,7 @@ class Interpretor()
         case TPk  (v)           => "pk("+InterpretValue(v)+")"
         case TSk  (v)           => "sk("+InterpretValue(v)+")"
         case ListTerm (l)       =>
-          l.foldLeft(""){
-                                (acc, item) => acc+"("+InterpretTerm(item)+")::"}.dropRight(2)
+          l.foldLeft(""){(acc, item) => acc+"("+InterpretTerm(item)+")::"}.dropRight(2)
         case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
 
       }
