@@ -63,7 +63,7 @@ class InterpretThread(interpreter: Interpretor, proc: Process, channels: Channel
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class Interpretor()
+class Interpretor(synchrone: Boolean)
 {
 
   case class SyntaxError() extends Exception
@@ -295,7 +295,7 @@ class Interpretor()
   def InterpretMetaProc(metaP: MetaProc)
   {
     println("-- Interpreting --")
-    val interpret = new Interpretor()
+    val interpret = new Interpretor(synchrone)
     var initialSet = Set[Channel]()
     val localChannelSet = new ChannelSet(initialSet)
 

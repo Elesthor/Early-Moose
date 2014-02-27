@@ -454,27 +454,3 @@ class Parser(src: Input)
   }
 }
 
-object TestParser
-{
-  def main(args: Array[String])
-  {
-    //val src = new InputFromFile("test")
-    val src = new InputFromString("(new v).out(c,enc(v,pk(1)))^15 || in^15(c,x -> dec(x,sk(1)) as y).out(stdout,count(y))")
-    val p = new Parser(src)
-    try
-    {
-      val program = p.Parse()
-      println("end of parsing")
-      println(program .RetString(0))
-    }
-    catch
-    {
-      case p.SyntaxError()       => println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
-      case p.ValueExpected()     => println("A value was expected (line " + src.line + "; col " + src.col + ")\n")
-      case p.NameMalformed(name) => println("Malformed name : '" + name + "' (line " + src.line + "; col " + src.col + ")\n")
-      case src.EndOfFile()       => println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
-      case src.Unexpected(c, f)  =>
-        println("Character '" + src.CharToString(c) + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : " + f.serialized)
-    }
-  }
-}
