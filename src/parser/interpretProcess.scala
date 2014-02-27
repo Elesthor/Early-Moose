@@ -74,7 +74,7 @@ class Interpretor()
   def BoolToInt (b: Boolean): Int = if (b) 1 else 0
   def IntToBool (x: Int): Boolean = if (x==0) false else true
   def IsInt        (x: String): Boolean =
-      try {x.toInt;true} catch{ case _: Throwable => false}
+      try {x.toInt; true} catch{ case _: Throwable => false}
   def IsTrueInt(x:String): Boolean = IsInt(x) && x.toInt != 0
 
   // Split a string "XXX(.., ..)" at the comma
@@ -91,6 +91,11 @@ class Interpretor()
           else crawler(s.drop(1),acc+s(0), parenthesisCount)
       }
       return crawler(str,"", -1) // The first comma is after "XXX"
+  }
+  
+  def ParseTermFromString(s: String):Term =
+  {
+    (new Parser(new InputFromString(s))).ParseTerm()
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,8 +157,8 @@ class Interpretor()
         {
           if (InterpretTerm(left).matches("""Enc\(.*,Pk\(\d+\)\)""")) // FIXME : pourquoi ne pas appeler Parser.ParseTerm, vérfier que ça a la bonne tete et utiliser l'objet créé ? je te fais un InputFromString pour l'occaz'
           {
-            val splittedLeft = ParseComma(InterpretTerm(left), 4);
-            val splittedRight = InterpretTerm(right);
+            val splittedLeft = ParseComma(InterpretTerm(left), 4)
+            val splittedRight = InterpretTerm(right)
             if (splittedRight.matches("""Sk\(\d+\)""") &&
               (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
                              (splittedRight.substring(3,splittedRight.length-1)).toInt)
@@ -171,7 +176,7 @@ class Interpretor()
 
       }
     }
-    catch {case _: Throwable => return "err"}
+    catch {case _: Throwable => "err"}
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,62 +189,62 @@ class Interpretor()
       case PTrivial() => ()
       case PNew(name, nextProc) =>
       {
-        val next = nextProc.Replace(name.s, new TValue(new VInt (Random.nextInt))); // FIXME : confusion entre TVar et VConst lors du parsing
-        InterpretProcess(next, channels);
+        val next = nextProc.Replace(name.s, new TValue(new VInt (Random.nextInt))) // FIXME : remplacer les constantes dans les valeurs
+        InterpretProcess(next, channels)
       }
       case POut(currentChannel, term, nextProc) =>
       {
-        channels.Append(currentChannel); // If already exists overides it.
+        channels.Append(currentChannel) // If already exists overides it.
         if (currentChannel.name == "stdout")
         {
           println(InterpretTerm(term))
         }
         else
         {
-          currentChannel.content += InterpretTerm(term);
+          currentChannel.content += InterpretTerm(term)
         }
-        InterpretProcess(nextProc, channels);
+        InterpretProcess(nextProc, channels)
       }
       case PIn(currentChannel, vari, nextProc) =>
       {
         if (!channels.Contains(currentChannel)) ()//throw new InterpretationError
-        val next = nextProc.Replace(vari.p, new TVar(currentChannel.content.dequeue()));
-        InterpretProcess(next, channels);
+        val next = nextProc.Replace(vari.p, ParseTermFromString(currentChannel.content.dequeue()))
+        InterpretProcess(next, channels)
       }
       case PIf (value, procTrue, procFalse) =>
       {
         if (IntToBool(InterpretValue(value)))
         {
-          InterpretProcess(procTrue, channels);
+          InterpretProcess(procTrue, channels)
         }
         else
         {
-          InterpretProcess(procFalse, channels);
+          InterpretProcess(procFalse, channels)
         }
       }
       case PInk(currentChannel, x, u, y, k, nextProc) =>
       {
-        //var next: Process = new PTrivial();
+        //var next: Process = new PTrivial()
         //if (k==1)
         //{
         //  if (!channels.Contains(currentChannel)) throw new InterpretationError
-        //  val t = new TVar(currentChannel.content.dequeue());
-        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+        //  val t = new TVar(currentChannel.content.dequeue())
+        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))))
 //
         //  val uReplaced = u.Replace(x.p,t)
         //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
-        //  val next = nextProc.Replace(y.p, tmp);
+        //  val next = nextProc.Replace(y.p, tmp)
         //}
         //else
         //{
         //  if (!channels.Contains(currentChannel)) throw new InterpretationError
-        //  val t = new TVar(currentChannel.content.dequeue());
-        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))));
+        //  val t = new TVar(currentChannel.content.dequeue())
+        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))))
 //
         //  val uReplaced = u.Replace(x.p,t)
         //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
-        //  val last = nextProc.Replace(y.p, tmp);
-        //  next = new PInk(currentChannel, x, u, y, (k-1), last);
+        //  val last = nextProc.Replace(y.p, tmp)
+        //  next = new PInk(currentChannel, x, u, y, (k-1), last)
         //}
 
 
@@ -248,17 +253,17 @@ class Interpretor()
 
         for(i <- 1 to k)
         {
-          val t = new TVar(currentChannel.content.dequeue()) // FIXME : pourquoi c'est une variable ??
+          val t = ParseTermFromString(currentChannel.content.dequeue())
           li = (u.Replace(x.p,t))::li
         }
         println(InterpretTerm(new ListTerm(li)))
-        var next = nextProc.Replace(y.p, new ListTerm(li));
-        InterpretProcess(next, channels);
+        var next = nextProc.Replace(y.p, new ListTerm(li))
+        InterpretProcess(next, channels)
       }
       case PSeq(left, right) =>
       {
-        InterpretProcess(left, channels);
-        InterpretProcess(right, channels);
+        InterpretProcess(left, channels)
+        InterpretProcess(right, channels)
       }
     }
   }
@@ -268,14 +273,14 @@ class Interpretor()
 ////////////////////////////////////////////////////////////////////////////////
   def InterpretMetaProc(metaP: MetaProc)
   {
-    println("-- Interpreting --");
+    println("-- Interpreting --")
     val interpret = new Interpretor()
     var initialSet = Set[Channel]()
     val localChannelSet = new ChannelSet(initialSet)
 
     def AuxInterpretor(metaP: MetaProc, channels: ChannelSet)
     {
-      var i = 0;
+      var i = 0
       for (i <- 1 to metaP.k)
       {
         val left = new InterpretThread(interpret, metaP.pLeft, localChannelSet)
