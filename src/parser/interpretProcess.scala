@@ -216,7 +216,6 @@ class Interpretor()
         {
           InterpretProcess(procFalse, channels);
         }
-
       }
       case PInk(currentChannel, x, u, y, k, nextProc) =>
       {
@@ -241,6 +240,7 @@ class Interpretor()
         //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
         //  val last = nextProc.Replace(y.p, tmp);
         //  next = new PInk(currentChannel, x, u, y, (k-1), last);
+        //}
 
 
         if (!channels.Contains(currentChannel)) ()
@@ -254,6 +254,11 @@ class Interpretor()
         println(InterpretTerm(new ListTerm(li)))
         var next = nextProc.Replace(y.p, new ListTerm(li));
         InterpretProcess(next, channels);
+      }
+      case PSeq(left, right) =>
+      {
+        InterpretProcess(left, channels);
+        InterpretProcess(right, channels);
       }
     }
   }
