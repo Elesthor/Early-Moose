@@ -38,22 +38,22 @@ import scala.collection.mutable.SynchronizedQueue
 class Channel(c: String)
 {
   val name: String = c
-  def RetString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
+  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
   var content: SynchronizedQueue[String] = new SynchronizedQueue()
 }
 
 class ChannelSet(initialSet: Set[Channel])
 {
   var allChannels: Set[Channel] = initialSet
-  def Contains(x: Channel): Boolean = allChannels.contains(x)
-  def Append(c: Channel): Unit = allChannels.add(c)
+  def contains(x: Channel): Boolean = allChannels.contains(x)
+  def append(c: Channel): Unit = allChannels.add(c)
 }
 
 class InterpretThread(interpreter: Interpretor, proc: Process, channels: ChannelSet) extends Thread
 {
   override def run()
   {
-    interpreter.InterpretProcess(proc, channels)
+    interpreter.interpretProcess(proc, channels)
   }
 }
 
@@ -71,15 +71,15 @@ class Interpretor(synchrone: Boolean)
   case class ListExpected() extends Exception
 
   // Utilities function
-  def BoolToInt (b: Boolean): Int = if (b) 1 else 0
-  def IntToBool (x: Int): Boolean = if (x==0) false else true
-  def IsInt        (x: String): Boolean =
+  def boolToInt (b: Boolean): Int = if (b) 1 else 0
+  def intToBool (x: Int): Boolean = if (x==0) false else true
+  def isInt        (x: String): Boolean =
       try {x.toInt; true} catch{ case _: Throwable => false}
-  def IsTrueInt(x:String): Boolean = IsInt(x) && x.toInt != 0
+  def isTrueInt(x:String): Boolean = isInt(x) && x.toInt != 0
 
   // Split a string "XXX(.., ..)" at the comma
   // return the two arguments of the pair
-  /*def ParseComma(str : String, dropped: Int):  Array[String] =
+  /*def PparseComma(str : String, dropped: Int):  Array[String] =
   {
       def crawler(s: String, acc: String, parenthesisCount: Int): Array[String] =
       {
@@ -93,15 +93,15 @@ class Interpretor(synchrone: Boolean)
       return crawler(str,"", -1) // The first comma is after "XXX"
   }*/
   
-  def ParseTermFromString(s: String):Term =
+  def parseTermFromString(s: String):Term =
   {
-    (new Parser(new InputFromString(s+")"))).ParseTerm() // les termes ne peuvent pas être collé à la fin de l'input, d'où la ) qui est ignorée
+    (new Parser(new InputFromString(s+")"))).parseTerm() // les termes ne peuvent pas être collé à la fin de l'input, d'où la ) qui est ignorée
   }
 
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 /////////////////////////////// /////////////////////////////////////////////////
-  def InterpretValue(v: Value): Int =
+  def interpretValue(v: Value): Int =
   {
     v match
     {
@@ -109,67 +109,67 @@ class Interpretor(synchrone: Boolean)
     case VCount(li)            => li match
     {
       // Remove everything except nul integers and count them
-      case ListTerm (l) => ((l.map(InterpretTerm)).filter(IsTrueInt)).length
-      case Cons(h,t)    => InterpretValue(new VCount((new Cons(h,t)).toList))
+      case ListTerm (l) => ((l.map(interpretTerm)).filter(isTrueInt)).length
+      case Cons(h,t)    => interpretValue(new VCount((new Cons(h,t)).toList))
       case _            => throw new ListExpected()
     }
-    case VSup  (left, right)  => BoolToInt (InterpretValue(left) >
-                                            InterpretValue(right))
+    case VSup  (left, right)  => boolToInt (interpretValue(left) >
+                                            interpretValue(right))
     case VEqual (left, right) =>
-      if (InterpretTerm(left) == "err" || InterpretTerm(right) == "err") throw new SyntaxError()
-      BoolToInt (InterpretTerm(left) == InterpretTerm(right))
-    case VAnd (left, right)   => BoolToInt(IntToBool(InterpretValue(left))
-                                        && IntToBool(InterpretValue(right)))
-    case VOr (left, right)    => BoolToInt(IntToBool(InterpretValue(left))
-                                        || IntToBool(InterpretValue(right)))
-    case VNot (v)             => BoolToInt(!IntToBool(InterpretValue(v)))
+      if (interpretTerm(left) == "err" || interpretTerm(right) == "err") throw new SyntaxError()
+      boolToInt (interpretTerm(left) == interpretTerm(right))
+    case VAnd (left, right)   => boolToInt(intToBool(interpretValue(left))
+                                        && intToBool(interpretValue(right)))
+    case VOr (left, right)    => boolToInt(intToBool(interpretValue(left))
+                                        || intToBool(interpretValue(right)))
+    case VNot (v)             => boolToInt(!intToBool(interpretValue(v)))
     }
   }
 
 ////////////////////////////////////////////////////////////////////////////////
 //                               InterpretTerm                                //
 ////////////////////////////////////////////////////////////////////////////////
-  def InterpretTerm (t: Term): String =
+  def interpretTerm (t: Term): String =
   {
     try
     {
       t match {
         case TVar (p)           => p
-        case TValue (v)         => InterpretValue(v).toString
-        case TPair(left, right) => "pair("+InterpretTerm(left)+","+InterpretTerm(right)+")"
+        case TValue (v)         => interpretValue(v).toString
+        case TPair(left, right) => "pair("+interpretTerm(left)+","+interpretTerm(right)+")"
         case TPi1 (t)           =>
         {
-          ParseTermFromString(InterpretTerm(t)) match
+          parseTermFromString(interpretTerm(t)) match
           {
             case TPair(u1, _) => u1.toString
             case _ => throw new SyntaxError()
           }
           /*
-          if ((InterpretTerm(t)).startsWith("pair("))
-            ParseComma(InterpretTerm(t), 5)(0)
+          if ((interpretTerm(t)).startsWith("pair("))
+            ParseComma(interpretTerm(t), 5)(0)
           else throw new SyntaxError()
           */
         }
         case TPi2 (t)           =>
         {
-          ParseTermFromString(InterpretTerm(t)) match
+          parseTermFromString(interpretTerm(t)) match
           {
             case TPair(_, u2) => u2.toString
             case _ => throw new SyntaxError()
           }
           /*
-          if ((InterpretTerm(t)).startsWith("pair("))
-            ParseComma(InterpretTerm(t), 5)(1)
+          if ((interpretTerm(t)).startsWith("pair("))
+            ParseComma(interpretTerm(t), 5)(1)
           else throw new SyntaxError()
           */
         }
         case TEnc (left, right) =>
         {
-          "enc("+InterpretTerm(left)+","+InterpretTerm(right)+")"
+          "enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
         case TDec (left, right) =>
         {
-          (ParseTermFromString(InterpretTerm(left)), ParseTermFromString(InterpretTerm(right))) match
+          (parseTermFromString(interpretTerm(left)), parseTermFromString(interpretTerm(right))) match
           {
             case (TEnc(msg, TPk(VInt(n1))), TSk(VInt(n2))) =>
               if(n1!=n2) throw new SyntaxError()
@@ -177,10 +177,10 @@ class Interpretor(synchrone: Boolean)
             case _ => throw new SyntaxError()
           }
           
-          /*if (InterpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)"""))
+          /*if (interpretTerm(left).matches("""enc\(.*,pk\(\d+\)\)"""))
           {
-            val splittedLeft = ParseComma(InterpretTerm(left), 4)
-            val splittedRight = InterpretTerm(right)
+            val splittedLeft = ParseComma(interpretTerm(left), 4)
+            val splittedRight = interpretTerm(right)
             if (splittedRight.matches("""sk\(\d+\)""") &&
               (splittedLeft(1).substring(3,splittedLeft(1).length-1)).toInt==
                              (splittedRight.substring(3,splittedRight.length-1)).toInt)
@@ -189,11 +189,11 @@ class Interpretor(synchrone: Boolean)
           }
             else throw new SyntaxError()*/
         }
-        case TPk  (v)           => "pk("+InterpretValue(v)+")"
-        case TSk  (v)           => "sk("+InterpretValue(v)+")"
+        case TPk  (v)           => "pk("+interpretValue(v)+")"
+        case TSk  (v)           => "sk("+interpretValue(v)+")"
         case ListTerm (l)       =>
-          l.foldLeft(""){(acc, item) => acc+"("+InterpretTerm(item)+")::"}.dropRight(2)
-        case Cons(h, t)         => InterpretTerm((new Cons(h,t)).toList)
+          l.foldLeft(""){(acc, item) => acc+"("+interpretTerm(item)+")::"}.dropRight(2)
+        case Cons(h, t)         => interpretTerm((new Cons(h,t)).toList)
 
       }
     }
@@ -203,44 +203,44 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                             InterpretProcess                               //
 ////////////////////////////////////////////////////////////////////////////////
-  def InterpretProcess(proc: Process, channels: ChannelSet): Unit =
+  def interpretProcess(proc: Process, channels: ChannelSet): Unit =
   {
     proc match
     {
       case PTrivial() => ()
       case PNew(name, nextProc) =>
       {
-        val next = nextProc.Replace(name.s, new TValue(new VInt (Random.nextInt))) // FIXME : remplacer les constantes dans les valeurs
-        InterpretProcess(next, channels)
+        val next = nextProc.replace(name.s, new TValue(new VInt (Random.nextInt))) // FIXME : remplacer les constantes dans les valeurs
+        interpretProcess(next, channels)
       }
       case POut(currentChannel, term, nextProc) =>
       {
-        channels.Append(currentChannel) // If already exists overides it.
+        channels.append(currentChannel) // If already exists overides it.
         if (currentChannel.name == "stdout")
         {
-          println(InterpretTerm(term))
+          println(interpretTerm(term))
         }
         else
         {
-          currentChannel.content += InterpretTerm(term)
+          currentChannel.content += interpretTerm(term)
         }
-        InterpretProcess(nextProc, channels)
+        interpretProcess(nextProc, channels)
       }
       case PIn(currentChannel, vari, nextProc) =>
       {
-        if (!channels.Contains(currentChannel)) ()//throw new InterpretationError
-        val next = nextProc.Replace(vari.p, ParseTermFromString(currentChannel.content.dequeue()))
-        InterpretProcess(next, channels)
+        if (!channels.contains(currentChannel)) ()//throw new InterpretationError
+        val next = nextProc.replace(vari.p, parseTermFromString(currentChannel.content.dequeue()))
+        interpretProcess(next, channels)
       }
       case PIf (value, procTrue, procFalse) =>
       {
-        if (IntToBool(InterpretValue(value)))
+        if (intToBool(interpretValue(value)))
         {
-          InterpretProcess(procTrue, channels)
+          interpretProcess(procTrue, channels)
         }
         else
         {
-          InterpretProcess(procFalse, channels)
+          interpretProcess(procFalse, channels)
         }
       }
       case PInk(currentChannel, x, u, y, k, nextProc) =>
@@ -248,43 +248,43 @@ class Interpretor(synchrone: Boolean)
         //var next: Process = new PTrivial()
         //if (k==1)
         //{
-        //  if (!channels.Contains(currentChannel)) throw new InterpretationError
+        //  if (!channels.contains(currentChannel)) throw new InterpretationError
         //  val t = new TVar(currentChannel.content.dequeue())
-        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))))
+        // // val last = nextProc.replace(y.p, new ListTerm(List(u.replace(x.p,t), (new TVar(y.p)))))
 //
-        //  val uReplaced = u.Replace(x.p,t)
-        //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
-        //  val next = nextProc.Replace(y.p, tmp)
+        //  val ureplaced = u.replace(x.p,t)
+        //  val tmp = new Cons(ureplaced, Some(new Cons(new TVar(y.p), None)))
+        //  val next = nextProc.replace(y.p, tmp)
         //}
         //else
         //{
-        //  if (!channels.Contains(currentChannel)) throw new InterpretationError
+        //  if (!channels.contains(currentChannel)) throw new InterpretationError
         //  val t = new TVar(currentChannel.content.dequeue())
-        // // val last = nextProc.Replace(y.p, new ListTerm(List(u.Replace(x.p,t), (new TVar(y.p)))))
+        // // val last = nextProc.replace(y.p, new ListTerm(List(u.replace(x.p,t), (new TVar(y.p)))))
 //
-        //  val uReplaced = u.Replace(x.p,t)
-        //  val tmp = new Cons(uReplaced, Some(new Cons(new TVar(y.p), None)))
-        //  val last = nextProc.Replace(y.p, tmp)
+        //  val ureplaced = u.replace(x.p,t)
+        //  val tmp = new Cons(ureplaced, Some(new Cons(new TVar(y.p), None)))
+        //  val last = nextProc.replace(y.p, tmp)
         //  next = new PInk(currentChannel, x, u, y, (k-1), last)
         //}
 
 
-        if (!channels.Contains(currentChannel)) ()
+        if (!channels.contains(currentChannel)) ()
         var li = List[Term]()
 
         for(i <- 1 to k)
         {
-          val t = ParseTermFromString(currentChannel.content.dequeue())
-          li = (u.Replace(x.p,t))::li
+          val t = parseTermFromString(currentChannel.content.dequeue())
+          li = (u.replace(x.p,t))::li
         }
-        println(InterpretTerm(new ListTerm(li)))
-        var next = nextProc.Replace(y.p, new ListTerm(li))
-        InterpretProcess(next, channels)
+        println(interpretTerm(new ListTerm(li)))
+        var next = nextProc.replace(y.p, new ListTerm(li))
+        interpretProcess(next, channels)
       }
       case PSeq(left, right) =>
       {
-        InterpretProcess(left, channels)
-        InterpretProcess(right, channels)
+        interpretProcess(left, channels)
+        interpretProcess(right, channels)
       }
     }
   }
@@ -292,14 +292,14 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                             InterpretMetaProc                              //
 ////////////////////////////////////////////////////////////////////////////////
-  def InterpretMetaProc(metaP: MetaProc)
+  def interpretMetaProc(metaP: MetaProc)
   {
     println("-- Interpreting --")
     val interpret = new Interpretor(synchrone)
     var initialSet = Set[Channel]()
     val localChannelSet = new ChannelSet(initialSet)
 
-    def AuxInterpretor(metaP: MetaProc, channels: ChannelSet)
+    def auxInterpretor(metaP: MetaProc, channels: ChannelSet)
     {
       var i = 0
       for (i <- 1 to metaP.k)
@@ -309,9 +309,9 @@ class Interpretor(synchrone: Boolean)
       }
       if (metaP.metaPRight.isDefined)
       {
-        AuxInterpretor(metaP.metaPRight.get, channels)
+        auxInterpretor(metaP.metaPRight.get, channels)
       }
     }
-    AuxInterpretor(metaP, localChannelSet)
+    auxInterpretor(metaP, localChannelSet)
   }
 }

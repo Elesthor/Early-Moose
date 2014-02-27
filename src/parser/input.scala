@@ -49,17 +49,17 @@ abstract class Input
   var peeked: Option[Ch]    = None
 
   // Reading function of the concrete class
-  def GetChar_(): Ch
+  def getChar_(): Ch
 
   // Extended reading function : ignores comments and counts line and col
-  def GetChar(): Ch =
+  def getChar(): Ch =
   {
-    GetChar_() match
+    getChar_() match
     {
       case '%' =>
         col = col + 1
-        IgnoreLine()
-        GetChar()
+        ignoreLine()
+        getChar()
       case '\n' =>
         line = line + 1
         col = 0
@@ -71,18 +71,18 @@ abstract class Input
   }
 
   // Ignore the end of the current line, for comments
-  def IgnoreLine()
+  def ignoreLine()
   {
     try
     {
-      GetChar_() match
+      getChar_() match
       {
         case '\n' =>
           line = line + 1
           col = 0
         case c    =>
           col = col + 1
-          IgnoreLine()
+          ignoreLine()
       }
     }
     catch
@@ -93,50 +93,50 @@ abstract class Input
 
   // Get the next char from peeked or input
   // Store it in peeked and return it
-  def Peek(): Ch =
+  def peek(): Ch =
   {
     peeked match
     {
       case Some(c) => c
       case None    =>
-        val c = GetChar()
+        val c = getChar()
         peeked = Some(c)
         c
     }
   }
 
   // Clean the peeked char
-  def CleanPeek() =
+  def cleanPeek() =
   {
     peeked = None
   }
 
   // Consume next char and check if it is expected
-  def GetCharPeekable(expected: Checker): Ch =
+  def getCharPeekable(expected: Checker): Ch =
   {
-    val c = Peek()
-    CleanPeek()
+    val c = peek()
+    cleanPeek()
     if(expected(c))
       c
     else
       throw new Unexpected(c, expected);
   }
 
-  // Ignore space at beginning if ignoreSpace
+  // Ignore space at beginning if ignSpace
   // then get a full word until a delimiter, using only char from expected
   // Let the delimiter in peeked. End on EOF
-  def GetWord(expected: Checker, delimiters: Checker, ignoreSpace:Boolean = true): String =
+  def getWord(expected: Checker, delimiters: Checker, ignSpace:Boolean = true): String =
   {
-    if(ignoreSpace) IgnoreSpace()
+    if(ignSpace) ignoreSpace()
     
-    if(CheckEOF()) ""
+    if(checkEOF()) ""
     else
     {
-      val c = Peek()
+      val c = peek()
       if(expected(c))
       {
-        CleanPeek()
-        c+GetWord(expected, delimiters, false)
+        cleanPeek()
+        c+getWord(expected, delimiters, false)
       }
       else if(delimiters(c))
         ""
@@ -145,37 +145,37 @@ abstract class Input
     }
   }
 
-  // Ignore space at beginning if ignoreSpace
+  // Ignore space at beginning if ignSpace
   // then consume a word from input
   // Throw Unexpected or End_of_file if it doesn't match
-  def CheckNextWord(word: String, ignoreSpace:Boolean = true):Unit =
+  def checkNextWord(word: String, ignSpace:Boolean = true):Unit =
   {
-    if(ignoreSpace) IgnoreSpace()
+    if(ignSpace) ignoreSpace()
     
     if (word != "")
     {
-      val c = Peek()
-      CleanPeek()
+      val c = peek()
+      cleanPeek()
       if(c == word(0))
-        CheckNextWord(word.drop(1), false)
+        checkNextWord(word.drop(1), false)
       else
-        throw Unexpected(c, IsChar(word(0)))
+        throw Unexpected(c, isChar(word(0)))
     }
   }
 
   // Get a number from input
-  def GetNumber() =
+  def getNumber() =
   {
-    Integer.parseInt(GetWord(Numeric || IsChar('-'), All))
+    Integer.parseInt(getWord(numeric || isChar('-'), all))
   }
 
   // Try if EOF
   // else, let next char in peeked
-  def CheckEOF() =
+  def checkEOF() =
   {
     try
     {
-      Peek()
+      peek()
       false
     }
     catch
@@ -186,15 +186,15 @@ abstract class Input
 
   // Ignore space characters, returns the number of chars ignored
   // Let first non-space in peeked
-  def IgnoreSpace(): Int =
+  def ignoreSpace(): Int =
   {
     try
     {
-      val c = Peek()
+      val c = peek()
       if(c == '\n' || c == '\t' || c == ' ')
       {
-        CleanPeek()
-        IgnoreSpace() + 1
+        cleanPeek()
+        ignoreSpace() + 1
       }
       else
         0
@@ -206,7 +206,7 @@ abstract class Input
   }
 
   // Link a char to string representation
-  def CharToString(x : Ch) =
+  def charToString(x : Ch) =
   {
     x match
     {
@@ -219,15 +219,15 @@ abstract class Input
 
   // Set of checkers, which decide wether a char belongs to a certain subset of
   // the printable ascii alphabet.
-  val Numeric               = new Checker({x => x >= '0' && x <= '9'}, "0-9")
-  def AlphaLow              = new Checker({x => x >= 'a' && x <= 'z'}, "a-z")
-  def AlphaUp               = new Checker({x => x >= 'A' && x <= 'Z'}, "A-Z")
-  def Alpha                 = AlphaLow    || AlphaUp
-  def AlphaNumeric          = Alpha       || Numeric
-  def Parenthesis           = IsChar('(') || IsChar(')')
-  def Space                 = IsChar(' ') || IsChar('\n') || IsChar('\t')
-  def All                   = new Checker({x => true}, " all ")
-  def IsChar        (c: Ch) = new Checker({x => x == c}, CharToString(c))
+  val numeric               = new Checker({x => x >= '0' && x <= '9'}, "0-9")
+  def alphaLow              = new Checker({x => x >= 'a' && x <= 'z'}, "a-z")
+  def alphaUp               = new Checker({x => x >= 'A' && x <= 'Z'}, "A-Z")
+  def alpha                 = alphaLow    || alphaUp
+  def alphaNumeric          = alpha       || numeric
+  def parenthesis           = isChar('(') || isChar(')')
+  def space                 = isChar(' ') || isChar('\n') || isChar('\t')
+  def all                   = new Checker({x => true}, " all ")
+  def isChar        (c: Ch) = new Checker({x => x == c}, charToString(c))
 }
 
 
@@ -244,7 +244,7 @@ class InputFromFile(file:String) extends Input
   val inStream = new FileInputStream(file)
 
   // Main reading function
-  def GetChar_() =
+  def getChar_() =
   {
     val c = inStream.read()
     if (c== -1) throw new EndOfFile()
@@ -263,7 +263,7 @@ class InputFromString(data:String) extends Input
 {
   var pos = 0
   // Main reading function
-  def GetChar_() =
+  def getChar_() =
   {
     if (pos == data.length) throw new EndOfFile()
     pos = pos + 1

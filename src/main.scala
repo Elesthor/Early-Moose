@@ -26,11 +26,11 @@ object Application
         try
         {
           // parsing
-          val program = p.Parse()
+          val program = p.parse()
           println("end of parsing")
           
           // playing
-          (new Interpretor(args(0) == "-sync")).InterpretMetaProc(program)
+          (new Interpretor(args(0) == "-sync")).interpretMetaProc(program)
         }
         catch
         {
@@ -39,7 +39,7 @@ object Application
           case p.NameMalformed(name) => System.err.println("Malformed name : '" + name + "' (line " + src.line + "; col " + src.col + ")\n")
           case src.EndOfFile()       => System.err.println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
           case src.Unexpected(c, f)  =>
-            System.err.println("Character '" + src.CharToString(c) + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : " + f.serialized)
+            System.err.println("Character '" + src.charToString(c) + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : " + f.serialized)
         }
       }
       catch
