@@ -14,10 +14,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-abstract class Term{
-    def RetString (x: Int): String
-    def Replace (x: String, t: Term): Term
-    def toString: String
+abstract class Term
+{
+  def RetString (x: Int): String
+  def Replace (x: String, t: Term): Term
+  def toString: String
 }
 
 import scala.util.matching.Regex
@@ -27,62 +28,63 @@ import scala.util.matching.Regex
 ////////////////////////////////////////////////////////////////////////////////
 
 
-abstract class Value{
-    def RetString (x: Int): String
-    def toString: String
+abstract class Value
+{
+  def RetString (x: Int): String
+  def toString: String
 }
 
 case class VInt  (v: Int) extends Value
 {
-     def RetString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
-     override def toString: String = v.toString
+  def RetString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
+  override def toString: String = v.toString
 }
 
 case class VCount(l: Term) extends Value
 {
-      def RetString(x: Int): String = "| "*x+"Count:\n"+l.RetString(x+1)
-      override def toString: String = "count("+l.toString+")"
+  def RetString(x: Int): String = "| "*x+"Count:\n"+l.RetString(x+1)
+  override def toString: String = "count("+l.toString+")"
 }
 
 case class VSup  (left: Value, right: Value) extends Value
 {
-     def RetString(x: Int): String =
-        "| "*x+"Sup:\n"+left.RetString(x+1)+right.RetString(x+1)
-      override def toString: String = "("+left.toString+")>("+right.toString+")"
+  def RetString(x: Int): String =
+    "| "*x+"Sup:\n"+left.RetString(x+1)+right.RetString(x+1)
+  override def toString: String = "("+left.toString+")>("+right.toString+")"
 }
 
 case class VEqual(left: Term, right: Term) extends Value
 {
-     def RetString(x: Int): String =
-        "| "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
-      override def toString: String = "("+left.toString+")=("+right.toString+")"
+  def RetString(x: Int): String =
+    "| "*x+"Equal:\n"+left.RetString(x+1)+right.RetString(x+1)
+  override def toString: String = "("+left.toString+")=("+right.toString+")"
 }
 
 case class VAnd(left: Value, right: Value) extends Value
 {
-     def RetString(x: Int): String =
-        "| "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
-      override def toString: String = "("+left.toString+")/\\("+right.toString+")"
+  def RetString(x: Int): String =
+    "| "*x+"And:\n"+left.RetString(x+1)+right.RetString(x+1)
+  override def toString: String = "("+left.toString+")/\\("+right.toString+")"
 }
 
 case class VOr (left: Value, right: Value) extends Value
 {
-     def RetString(x: Int): String =
-        "| "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
-      override def toString: String = "("+left.toString+")\\/("+right.toString+")"
+  def RetString(x: Int): String =
+    "| "*x+"Or:\n"+left.RetString(x+1)+right.RetString(x+1)
+  override def toString: String = "("+left.toString+")\\/("+right.toString+")"
 }
 
 case class VNot (v: Value) extends Value
 {
-     def RetString(x: Int): String =
-        "| "*x+"Not:\n" + v.RetString(x+1)
-      override def toString: String = "not("+v.toString+")"
+  def RetString(x: Int): String =
+    "| "*x+"Not:\n" + v.RetString(x+1)
+  override def toString: String = "not("+v.toString+")"
 }
 
 case class VConst(s: String) extends Value
 {
-     def RetString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
-      override def toString: String = s
+  def RetString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
+  override def toString: String = s
 }
 
 
@@ -92,24 +94,24 @@ case class VConst(s: String) extends Value
 
 case class ListTerm(content: List[Term]) extends Term
 {
-    def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
-                                (acc, item) => acc+ item.RetString(x+1)}
-    def Replace(x: String , T: Term): ListTerm =
-    {
-      new ListTerm((content.map((p=>p.Replace(x,T)))))
-    }
+  def RetString(x: Int): String = "| "*x+"List:\n"+content.foldLeft(""){
+                              (acc, item) => acc+ item.RetString(x+1)}
+  def Replace(x: String , T: Term): ListTerm =
+  {
+    new ListTerm((content.map((p=>p.Replace(x,T)))))
+  }
 
-    def flatten(): ListTerm =
+  def flatten(): ListTerm =
+  {
+    def aux(l: List[Term]): List[Term] = l match
     {
-      def aux(l: List[Term]): List[Term] = l match
-      {
-        case Nil => Nil
-        case (head: ListTerm) :: tail => aux(head.content) ++ aux(tail)
-        case head :: tail => head :: aux(tail)
-      }
-      new ListTerm( content )
+      case Nil => Nil
+      case (head: ListTerm) :: tail => aux(head.content) ++ aux(tail)
+      case head :: tail => head :: aux(tail)
     }
-    override def toString: String = content.foldLeft(""){(acc, item) => acc+"("+item.toString+")::"}.dropRight(2)
+    new ListTerm( content )
+  }
+  override def toString: String = content.foldLeft(""){(acc, item) => acc+"("+item.toString+")::"}.dropRight(2)
 }
 
 case class Cons(head: Term, tail: Option[Cons]) extends Term
@@ -148,19 +150,19 @@ case class Cons(head: Term, tail: Option[Cons]) extends Term
 
 case class TVar (p: String) extends Term
 {
-    def RetString(x: Int): String = "| "*x+"Var:\n"+"| "*(x+1)+p+"\n"
-    def Replace(x: String , T: Term): Term =
+  def RetString(x: Int): String = "| "*x+"Var:\n"+"| "*(x+1)+p+"\n"
+  def Replace(x: String , T: Term): Term =
+  {
+    if (x==p)
     {
-      if (x==p)
-      {
-        return T
-      }
-      else
-      {
-        return new TVar(p)
-      }
+      return T
     }
-    override def toString: String = p
+    else
+    {
+      return new TVar(p)
+    }
+  }
+  override def toString: String = p
 }
 
 // Binding class between Term and value to have a case class.
@@ -226,6 +228,5 @@ case class TSk  (v: Value) extends Term
   def RetString(x: Int): String = "| "*x+"Sk:\n"+v.RetString(x+1)
   def Replace(x: String, T: Term): Term = new TSk(v)
   override def toString: String = "sk("+v.toString+")"
-
 }
 
