@@ -244,17 +244,16 @@ class Interpretor()
 
 
         if (!channels.Contains(currentChannel)) ()
-        var li = new ListTerm(List[Term]())
+        var li = List[Term]()
 
         for(i <- 1 to k)
         {
-          val t = new TVar(currentChannel.content.dequeue())
-          li =  new ListTerm((u.Replace(x.p,t))::li.content)
+          val t = new TVar(currentChannel.content.dequeue()) // FIXME : pourquoi c'est une variable ??
+          li = (u.Replace(x.p,t))::li
         }
-        println(InterpretTerm(li))
-        var next = nextProc.Replace(y.p, li);
+        println(InterpretTerm(new ListTerm(li)))
+        var next = nextProc.Replace(y.p, new ListTerm(li));
         InterpretProcess(next, channels);
-
       }
     }
   }
