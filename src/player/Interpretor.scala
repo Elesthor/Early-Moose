@@ -15,7 +15,6 @@
 
 import util.Random
 import scala.collection.mutable.Set
-import scala.collection.mutable.SynchronizedQueue
 
 //type Strategy = (Int, Int) => Int
 //
@@ -31,16 +30,9 @@ import scala.collection.mutable.SynchronizedQueue
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                               Channels                                     //
+//                               ChannelsSet                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-
-class Channel(c: String)
-{
-  val name: String = c
-  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
-  var content: SynchronizedQueue[String] = new SynchronizedQueue()
-}
 
 class ChannelSet(initialSet: Set[Channel])
 {
@@ -277,7 +269,6 @@ class Interpretor(synchrone: Boolean)
           val t = parseTermFromString(currentChannel.content.dequeue())
           li = (u.replace(x.p,t))::li
         }
-        println(interpretTerm(new ListTerm(li)))
         var next = nextProc.replace(y.p, new ListTerm(li))
         interpretProcess(next, channels)
       }

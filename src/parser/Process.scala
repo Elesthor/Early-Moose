@@ -14,6 +14,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+import scala.collection.mutable.SynchronizedQueue
+
+class Channel(c: String)
+{
+  val name: String = c
+  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
+  var content: SynchronizedQueue[String] = new SynchronizedQueue()
+}
 
 class MetaProc(pLefta: Process, ka: Int, metaPRighta: Option[MetaProc])
 {
