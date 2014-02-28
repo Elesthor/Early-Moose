@@ -21,4 +21,4 @@ Application.class: $(CLASSPARSER) $(CLASSPLAYER)
 	scalac -d $(shell dirname $*) -classpath $(DIRS) $*.scala
 
 clean:
-	@rm -f $(CLASS) $(SRC:.scala=.scala~)
+	@rm -f *.class parser/*.class player/*.class $(SRC:.scala=.scala~)
