@@ -14,39 +14,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import util.Random
-import scala.collection.mutable.Set
-
-//type Strategy = (Int, Int) => Int
-//
-//class Context(computer: Strategy) {
-//  def interpret(a: Int, b: Int)  { computer(a, b) }
-//}
-
-//val add: Strategy = _ + _
-//val multiply: Strategy = _ * _
-
-//new Context(multiply).interpret(2, 3)
-
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                               ChannelSet                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Represents a set of channel. Used to access to channels while interpreting.
-
-class ChannelSet(initialSet: Set[Channel])
-{
-  // Content of Set, may be initialized with a non-void set.
-  var allChannels: Set[Channel] = initialSet
-
-  def contains(x: Channel): Boolean = allChannels.contains(x)
-  // If c already exists, don't append it again.
-  def append(c: Channel): Unit = allChannels.add(c)
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -228,7 +195,7 @@ class Interpretor(synchrone: Boolean)
         }
         else
         {
-          currentChannel.content += interpretTerm(term)
+          currentChannel.push(interpretTerm(term))
         }
         interpretProcess(nextProc, channels, fellow)
       }
@@ -238,7 +205,7 @@ class Interpretor(synchrone: Boolean)
         {
           throw new SyntaxError()
         }
-        val varIn = parseTermFromString(currentChannel.content.dequeue())
+        val varIn = parseTermFromString(currentChannel.pop())
         val next = nextProc.replace(vari.p, varIn)
         interpretProcess(next, channels, fellow.map({x => x.replace(vari.p, varIn)}))
       }
@@ -264,7 +231,7 @@ class Interpretor(synchrone: Boolean)
         var li = List[Term]()
         for(i <- 1 to k)
         {
-          val t = parseTermFromString(currentChannel.content.dequeue())
+          val t = parseTermFromString(currentChannel.pop())
           li = (u.replace(x.p,t))::li
         }
         val liTerm = new ListTerm(li)
