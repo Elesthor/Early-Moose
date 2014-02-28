@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                             [ Early Moose ]                                //
 //                                                                            //
-//           [main.scala]                                                     //
+//           [Application.scala]                                              //
 //                              https://github.com/Elesthor/Early-Moose       //
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -28,9 +28,9 @@ object Application
           // parsing
           val program = p.parse()
           println("end of parsing")
-          
+
           // playing
-          (new Interpretor(args(0) == "-sync")).interpretMetaProc(program)
+          (new Interpretor((args(0) == "-sync"))).interpretMetaProc(program)
         }
         catch
         {

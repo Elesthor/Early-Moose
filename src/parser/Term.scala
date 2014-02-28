@@ -21,8 +21,6 @@ abstract class Term
   def toString: String
 }
 
-import scala.util.matching.Regex
-
 ////////////////////////////////////////////////////////////////////////////////
 //                               Values                                       //
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,49 +117,6 @@ case class ListTerm(content: List[Term]) extends Term
   {
     new ListTerm((content.map((p=>p.replace(x,T)))))
   }
-
-  def flatten(): ListTerm =
-  {
-    def aux(l: List[Term]): List[Term] = l match
-    {
-      case Nil => Nil
-      case (head: ListTerm) :: tail => aux(head.content) ++ aux(tail)
-      case head :: tail => head :: aux(tail)
-    }
-    new ListTerm( content )
-  }
-  override def toString: String = content.foldLeft(""){(acc, item) => acc+"("+item.toString+")::"}.dropRight(2)
-}
-
-case class Cons(head: Term, tail: Option[Cons]) extends Term
-{
-  def replace(x: String , T: Term): Cons =
-  {
-    if (tail.isDefined)
-    {
-      new Cons(head.replace(x,T), Some(tail.get.replace(x,T)))
-    }
-    else
-    {
-      new Cons(head.replace(x,T), None)
-    }
-  }
-  def toList(): ListTerm =
-  {
-    def aux(h: Term, t: Option[Cons]): List[Term] =
-      {
-        if (t.isDefined) h::aux(t.get.head, t.get.tail)
-        else List(h)
-      }
-    new ListTerm(aux(head,tail))
-  }
-
-  def retString(x: Int): String =  ""
-  override def toString: String = "("+head.toString+")"+(tail match
-    {
-      case None    => "[]"
-      case Some(t) => "::"+t.toString
-    })
 }
 ////////////////////////////////////////////////////////////////////////////////
 //                               Terms                                        //
@@ -178,7 +133,7 @@ case class TVar (p: String) extends Term
     }
     else
     {
-      return new TVar(p)
+      return this
     }
   }
   override def toString: String = p
