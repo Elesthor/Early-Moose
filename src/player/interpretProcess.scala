@@ -284,7 +284,7 @@ class Interpretor(synchrone: Boolean)
       case PSeq(left, right) =>
       {
         interpretProcess(left, channels)
-        interpretProcess(right, channels)
+        interpretProcess(right, channels) // TODO : les beta réductions faites par left doivent s'appliquer à right
       }
     }
   }

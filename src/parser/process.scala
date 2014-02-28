@@ -59,7 +59,7 @@ case class PInk(c: Channel, v: TVar, u: Term, y: TVar, k: Int, p: Process) exten
   def retString(x: Int) = "| "*x+"PInk: "+k+"\n"+c.retString(x+1)+v.retString(x+1)+u.retString(x+1)+y.retString(x+1)+p.retString(x)
   def replace(x: String , T: Term): Process =
   {
-    new PInk(c, v, u.replace(x,T),y ,k, p.replace(x,T))
+    new PInk(c, v, u.replace(x,T), y, k, p.replace(x,T))
   }
 }
 case class POut(c: Channel, t: Term, p: Process) extends Process
@@ -75,7 +75,7 @@ case class PIf (v: Value, pIf: Process, pElse: Process) extends Process
   def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)
   def replace(x: String , T: Term): Process =
   {
-    new PIf(v, pIf.replace(x,T), pElse.replace(x,T))
+    new PIf(v.replace(x,T), pIf.replace(x,T), pElse.replace(x,T))
   }
 }
 case class PNew(s: VConst, p: Process) extends Process
