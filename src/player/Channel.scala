@@ -17,6 +17,8 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.SynchronizedQueue
 
 
+case class VoidList() extends Exception
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                             Channel handler                                //
@@ -25,34 +27,6 @@ import scala.collection.mutable.SynchronizedQueue
 //
 // Implement the pattern strategy for channels
 
-
-
-class Channel(c: String)
-{
-  val name: String = c
-  var content: SynchronizedQueue[String] = new SynchronizedQueue()
-  var strategy: ChannelHandler = NoneStrategy
-
-  def setStrategy(s: ChannelHandler) =
-  {
-    strategy = s
-  }
-
-  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
-
-  def push(msg: String) =
-  {
-    strategy.push(content, msg)
-  }
-
-  def pop(): String =
-  {
-    strategy.pop(content)
-  }
-}
-
-case class VoidList() extends Exception
-
 trait ChannelHandler
 {
 
@@ -60,12 +34,26 @@ trait ChannelHandler
   def pop(content: SynchronizedQueue[String]): String
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                              None Strategy                                 //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Dummy strategy, only used when initializing the channel.
 
 object NoneStrategy extends ChannelHandler
 {
   def push(content: SynchronizedQueue[String], msg:String) = ()
   def pop(content: SynchronizedQueue[String]): String = ""
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//                         Asynchoneous Strategy                              //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of the asynchone channel:
+//    * pushing is always allowed
+//    * a process who wants to get a message have to wait for some while the
+//      channel is empty.
 
 object AsynchroneStrategy extends ChannelHandler
 {
@@ -79,15 +67,26 @@ object AsynchroneStrategy extends ChannelHandler
   {
     try
     {
-      Thread.sleep(20)
-      return content.dequeue()
+      Thread.sleep(20) // Avoid to get a 100% CPU infinite loop: let some time
+      return content.dequeue() // for other threads to put a msg
     }
     catch
     {
-      case _ : Throwable => pop(content)
+      case _ : Throwable => pop(content) // Try again...
     }
   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                            Synchroneous Strategy                           //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of the synchone channel:
+//    * pushing is allowed only if the channel is void
+//    * the pushing process will stop until the message is read.
+//    * a process who wants to get a message have to wait for some while the
+//      channel is empty( ie wait for a process to push a msg )
 
 object SynchroneStrategy extends ChannelHandler
 {
@@ -98,13 +97,13 @@ object SynchroneStrategy extends ChannelHandler
     {
       if (content.length > 0)
       {
-        Thread.sleep(20)
-        throw new VoidList()
+        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop and let some
+        throw new VoidList() //  time for another process to read the channel
       }
       else
       {
         content.enqueue(msg)
-        while (content.length > 0)
+        while (content.length > 0) // Wait for someone to read the message
         {
           Thread.sleep(20)
         }
@@ -125,6 +124,43 @@ object SynchroneStrategy extends ChannelHandler
     {
       case _ : Throwable => pop(content)
     }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                                Channel                                     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implements a channel, using a given strategy
+
+class Channel(c: String)
+{
+  val name: String = c
+  // Queue to stock the diffrent messages (in synchrone mode, juste an element
+  // is needed).
+  var content: SynchronizedQueue[String] = new SynchronizedQueue()
+  // Initialize the channel with a trivial strategy
+  //    (when creating the channel while parsing)
+  var strategy: ChannelHandler = NoneStrategy
+
+  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
+
+  def setStrategy(s: ChannelHandler) =
+  {
+    strategy = s
+  }
+
+  // Enqueue an element in the queue
+  def push(msg: String) =
+  {
+    strategy.push(content, msg)
+  }
+  // Dequeue an element
+  def pop(): String =
+  {
+    strategy.pop(content)
   }
 }
 
