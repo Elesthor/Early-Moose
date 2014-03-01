@@ -68,7 +68,7 @@ class AsynchroneousStrategy extends ChannelHandler
     }
     catch
     {
-      case _ : Throwable => read(sq)
+      case _ : Throwable => pop(content)
     }
   }
 }
