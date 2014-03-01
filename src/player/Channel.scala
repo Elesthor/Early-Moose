@@ -27,33 +27,48 @@ import scala.collection.mutable.SynchronizedQueue
 
 
 
-class Channel(c: String, strategy: ChannelHandler)
+class Channel(c: String)
 {
   val name: String = c
   var content: SynchronizedQueue[String] = new SynchronizedQueue()
+  var strategy: ChannelHandler = NoneStrategy
 
-  def push(msg: String)
+  def setStrategy(s: ChannelHandler) =
   {
-    strategy.push(msg, content)
+    strategy = s
   }
 
-  def pop()
+  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
+
+  def push(msg: String) =
+  {
+    strategy.push(content, msg)
+  }
+
+  def pop(): String =
   {
     strategy.pop(content)
   }
 }
 
+case class VoidList() extends Exception
+
 trait ChannelHandler
 {
 
-  def retString(x: Int): String
-  def push : (String,SynchronizedQueue[String]) => Unit
-  def pop : SynchronizedQueue[String] => String
+  def push(content: SynchronizedQueue[String], msg: String): Unit
+  def pop(content: SynchronizedQueue[String]): String
 }
 
-class AsynchroneousStrategy extends ChannelHandler
+
+object NoneStrategy extends ChannelHandler
 {
-  def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+c+"\n"
+  def push(content: SynchronizedQueue[String], msg:String) = ()
+  def pop(content: SynchronizedQueue[String]): String = ""
+}
+
+object AsynchroneStrategy extends ChannelHandler
+{
 
   def push(content: SynchronizedQueue[String], msg:String) =
   {
@@ -64,6 +79,7 @@ class AsynchroneousStrategy extends ChannelHandler
   {
     try
     {
+      Thread.sleep(20)
       return content.dequeue()
     }
     catch
@@ -72,6 +88,46 @@ class AsynchroneousStrategy extends ChannelHandler
     }
   }
 }
+
+object SynchroneStrategy extends ChannelHandler
+{
+
+  def push(content: SynchronizedQueue[String], msg:String) =
+  {
+    try
+    {
+      if (content.length > 0)
+      {
+        Thread.sleep(20)
+        throw new VoidList()
+      }
+      else
+      {
+        content.enqueue(msg)
+        while (content.length > 0)
+        {
+          Thread.sleep(20)
+        }
+      }
+    } catch
+    {
+      case _: Throwable => push(content, msg)
+    }
+  }
+
+  def pop(content: SynchronizedQueue[String]): String =
+  {
+    try
+    {
+      Thread.sleep(20)
+      return content.dequeue()
+    } catch
+    {
+      case _ : Throwable => pop(content)
+    }
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

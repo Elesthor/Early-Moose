@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import util.Random
+import scala.collection.mutable.Set
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -86,6 +87,17 @@ class Interpretor(synchrone: Boolean)
     (new Parser(new InputFromString(s+")"))).parseTerm()
   }
 
+  def strategy(): ChannelHandler =
+  {
+    if (synchrone)
+    {
+      SynchroneStrategy
+    }
+    else
+    {
+      AsynchroneStrategy
+    }
+  }
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 /////////////////////////////// ////////////////////////////////////////////////
@@ -161,8 +173,6 @@ class Interpretor(synchrone: Boolean)
         case TPk  (v) => "pk("+interpretValue(v)+")"
         case TSk  (v) => "sk("+interpretValue(v)+")"
         case ListTerm (l) => l.map(interpretTerm).toString
-        case Cons(h, t) => interpretTerm((new Cons(h,t)).toList)
-
       }
     }
     catch {case _: Throwable => "err"}
@@ -188,6 +198,7 @@ class Interpretor(synchrone: Boolean)
       }
       case POut(currentChannel, term, nextProc) =>
       {
+        currentChannel.setStrategy(strategy())
         channels.append(currentChannel)
         if (currentChannel.name == "stdout") // Stdout puts the msg on the screen.
         {
@@ -205,7 +216,7 @@ class Interpretor(synchrone: Boolean)
         {
           throw new SyntaxError()
         }
-        val varIn = parseTermFromString(currentChannel.pop())
+        val varIn = parseTermFromString(currentChannel.pop)
         val next = nextProc.replace(vari.p, varIn)
         interpretProcess(next, channels, fellow.map({x => x.replace(vari.p, varIn)}))
       }
@@ -231,7 +242,7 @@ class Interpretor(synchrone: Boolean)
         var li = List[Term]()
         for(i <- 1 to k)
         {
-          val t = parseTermFromString(currentChannel.pop())
+          val t = parseTermFromString(currentChannel.pop)
           li = (u.replace(x.p,t))::li
         }
         val liTerm = new ListTerm(li)
@@ -254,7 +265,7 @@ class Interpretor(synchrone: Boolean)
     println("-- Interpreting --")
     val interpret = new Interpretor(synchrone)
     var initialSet = Set[Channel]()
-    val localChannelSet = new ChannelSet(initialSet)
+    var localChannelSet = new ChannelSet(initialSet)
 
     def auxInterpretor(metaP: MetaProc, channels: ChannelSet)
     {
