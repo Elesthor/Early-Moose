@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import scala.collection.mutable.Set
+import scala.collection.mutable.SynchronizedQueue
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +47,8 @@ trait ChannelHandler
 {
 
   def retString(x: Int): String
-  def push = (String,SynchronizedQueue[String]) => Unit
-  def pop = SynchronizedQueue[String] => String
+  def push : (String,SynchronizedQueue[String]) => Unit
+  def pop : SynchronizedQueue[String] => String
 }
 
 class AsynchroneousStrategy extends ChannelHandler
