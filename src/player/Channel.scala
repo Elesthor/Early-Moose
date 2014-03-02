@@ -69,12 +69,12 @@ object AsynchroneStrategy extends ChannelHandler
   {
     try
     {
-      content.dequeue() // for other threads to put a msg
+      content.dequeue()
     } catch
     {
       case _ : Throwable =>
             println("coucou")
-        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop: let some time
+        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
         pop(content) // Try again...
     }
   }
@@ -98,10 +98,13 @@ object SynchroneStrategy extends ChannelHandler
   {
     try
     {
-      //this.synchronised
+      this.synchronized
       {
         if (content.length == 0)
+        {
+          token.acquire()
           content.enqueue(msg)
+        }
         else
           throw new VoidList()
       }
@@ -109,6 +112,7 @@ object SynchroneStrategy extends ChannelHandler
       {
         Thread.sleep(20)
       }
+      token.release() // release the token when we know that the msg is read
     } catch
     {
       case _: Throwable =>
