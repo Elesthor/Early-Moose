@@ -27,7 +27,7 @@ object Application
       try
       {
         val src = new InputFromFile(args(1))
-        val p = new Parser(src)
+        val p = new Parser(src, (args(0) == "-sync"))
         try
         {
           // parsing

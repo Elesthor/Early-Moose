@@ -13,13 +13,9 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-import scala.collection.mutable.Set
 import scala.collection.mutable.SynchronizedQueue
-
 import java.util.concurrent.Semaphore
 
-
-case class VoidList() extends Exception
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -31,21 +27,8 @@ case class VoidList() extends Exception
 
 trait ChannelHandler
 {
-
-  def push(content: SynchronizedQueue[String], msg: String): Unit
-  def pop(content: SynchronizedQueue[String]): String
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//                              None Strategy                                 //
-////////////////////////////////////////////////////////////////////////////////
-//
-// Dummy strategy, only used when initializing the channel.
-
-object NoneStrategy extends ChannelHandler
-{
-  def push(content: SynchronizedQueue[String], msg:String) = ()
-  def pop(content: SynchronizedQueue[String]): String = ""
+  def push(msg: String): Unit
+  def pop(): String
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,26 +40,20 @@ object NoneStrategy extends ChannelHandler
 //    * a process who wants to get a message have to wait for some while the
 //      channel is empty.
 
-object AsynchroneStrategy extends ChannelHandler
+class AsynchroneStrategy extends ChannelHandler
 {
-
-  def push(content: SynchronizedQueue[String], msg:String) =
+  val content = new SynchronizedQueue[String]()
+  val size = new Semaphore(0, true) // Size of the queue
+  def push(msg:String) =
   {
     content.enqueue(msg)
+    size.release()
   }
 
-  def pop(content: SynchronizedQueue[String]): String =
+  def pop(): String =
   {
-    try
-    {
-      content.dequeue()
-    } catch
-    {
-      case _ : Throwable =>
-            println("coucou")
-        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
-        pop(content) // Try again...
-    }
+    size.acquire()
+    content.dequeue()
   }
 }
 
@@ -91,46 +68,27 @@ object AsynchroneStrategy extends ChannelHandler
 //    * a process who wants to get a message have to wait for some while the
 //      channel is empty( ie wait for a process to push a msg )
 
-object SynchroneStrategy extends ChannelHandler
+class SynchroneStrategy extends ChannelHandler
 {
-  val token = new Semaphore(1, true) // Will protect the access to push
-  def push(content: SynchronizedQueue[String], msg:String) =
+  var content:String = ""
+  val ready          = new Semaphore(0, true)
+  val got            = new Semaphore(0, true)
+  def push(msg:String) =
   {
-    try
+    this.synchronized
     {
-      this.synchronized
-      {
-        if (content.length == 0)
-        {
-          token.acquire()
-          content.enqueue(msg)
-        }
-        else
-          throw new VoidList()
-      }
-      while (content.length > 0) // Wait for someone to read the message
-      {
-        Thread.sleep(20)
-      }
-      token.release() // release the token when we know that the msg is read
-    } catch
-    {
-      case _: Throwable =>
-        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
-        push(content, msg)
+      content = msg
+      ready.release()
+      got.acquire()
     }
   }
 
-  def pop(content: SynchronizedQueue[String]): String =
+  def pop(): String =
   {
-    try
-    {
-      Thread.sleep(20)
-      return content.dequeue()
-    } catch
-    {
-      case _ : Throwable => pop(content)
-    }
+    ready.acquire()
+    val r = content
+    got.release()
+    return r
   }
 }
 
@@ -142,32 +100,20 @@ object SynchroneStrategy extends ChannelHandler
 //
 // Implements a channel, using a given strategy
 
-class Channel(c: String)
+class Channel(c: String, synchrone: Boolean)
 {
   val name: String = c
-  // Queue to stock the diffrent messages (in synchrone mode, juste an element
-  // is needed).
-  var content: SynchronizedQueue[String] = new SynchronizedQueue()
   // Initialize the channel with a trivial strategy
   //    (when creating the channel while parsing)
-  var strategy: ChannelHandler = NoneStrategy
+  var strategy: ChannelHandler =
+    if(synchrone) new SynchroneStrategy()
+    else          new AsynchroneStrategy()
 
   def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
 
-  def setStrategy(s: ChannelHandler) =
-  {
-    strategy = s
-  }
-
-  // Enqueue an element in the queue
-  def push(msg: String) =
-  {
-    strategy.push(content, msg)
-  }
+  // Enqueue an element
+  def push(msg: String) = strategy.push(msg)
   // Dequeue an element
-  def pop(): String =
-  {
-    strategy.pop(content)
-  }
+  def pop() = strategy.pop()
 }
 

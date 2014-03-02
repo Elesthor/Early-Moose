@@ -85,14 +85,7 @@ class Interpretor(synchrone: Boolean)
   {
     if(s == "err" || s == "")
       throw SyntaxError()
-    (new Parser(new InputFromString(s+")"))).parseTerm()
-  }
-
-  // Return the strategy to use according to the option fiven to the interpretor
-  def strategy(): ChannelHandler =
-  {
-    if (synchrone)  SynchroneStrategy
-    else            AsynchroneStrategy
+    (new Parser(new InputFromString(s+")"), synchrone)).parseTerm()
   }
 
   // Return a value nested in a TValue, or throw a ValueExpected
@@ -221,7 +214,6 @@ class Interpretor(synchrone: Boolean)
 
       case POut(currentChannel, term, nextProc) =>
       {
-        currentChannel.setStrategy(strategy())
         if (currentChannel.name == "stdout") // Stdout puts the msg on the screen.
         {
           println(interpretTerm(term))

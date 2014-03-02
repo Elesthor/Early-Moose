@@ -25,7 +25,7 @@ import scala.collection.mutable
 //
 // Implementation of the parser
 
-class Parser(src: Input)
+class Parser(src: Input, synchrone: Boolean)
 {
 
   // Definition of errors
@@ -117,7 +117,7 @@ class Parser(src: Input)
     channels.get(name) match
     {
       case None =>
-        val c = new Channel(name)
+        val c = new Channel(name, synchrone)
         channels += (name -> c)
         return c
       case Some(c) => c
