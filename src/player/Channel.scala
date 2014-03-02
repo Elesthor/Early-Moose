@@ -47,12 +47,12 @@ class AsynchroneStrategy extends ChannelHandler
   def push(msg:String) =
   {
     content.enqueue(msg)
-    size.release()
+    size.release() // increase size
   }
 
   def pop(): String =
   {
-    size.acquire()
+    size.acquire() // wait until size is positive, then reduce it by one
     content.dequeue()
   }
 }
@@ -71,23 +71,23 @@ class AsynchroneStrategy extends ChannelHandler
 class SynchroneStrategy extends ChannelHandler
 {
   var content:String = ""
-  val ready          = new Semaphore(0, true)
-  val got            = new Semaphore(0, true)
+  val ready          = new Semaphore(0, true) // the content is available
+  val got            = new Semaphore(0, true) // the content was got
   def push(msg:String) =
   {
-    this.synchronized
+    this.synchronized // only one thread by channel can enter here at once
     {
       content = msg
-      ready.release()
-      got.acquire()
+      ready.release() // content availabe
+      got.acquire() // wait until it is gotten
     }
   }
 
   def pop(): String =
   {
-    ready.acquire()
+    ready.acquire() // wait until a content is available
     val r = content
-    got.release()
+    got.release() // we got it
     return r
   }
 }
