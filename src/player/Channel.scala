@@ -94,27 +94,25 @@ object SynchroneStrategy extends ChannelHandler
   val token = new Semaphore(1, true) // Will protect the access to push
   def push(content: SynchronizedQueue[String], msg:String) =
   {
-    token.acquire() // Only one thread can write in the channel at one time
     try
     {
-      if (content.length > 0)
+      this.synchronised
       {
-        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
-        throw new VoidList()
+        if (content.length == 0)
+          content.enqueue(msg)
+        else
+          throw new VoidList()
       }
-      else
+      while (content.length > 0) // Wait for someone to read the message
       {
-        content.enqueue(msg)
-        while (content.length > 0) // Wait for someone to read the message
-        {
-          Thread.sleep(20)
-        }
+        Thread.sleep(20)
       }
     } catch
     {
-      case _: Throwable => token.release(); push(content, msg)
+      case _: Throwable =>
+        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
+        push(content, msg)
     }
-    token.release()
   }
 
   def pop(content: SynchronizedQueue[String]): String =
