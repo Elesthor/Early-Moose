@@ -16,6 +16,8 @@
 import scala.collection.mutable.Set
 import scala.collection.mutable.SynchronizedQueue
 
+import java.util.concurrent.Semaphore
+
 
 case class VoidList() extends Exception
 
@@ -89,9 +91,10 @@ object AsynchroneStrategy extends ChannelHandler
 
 object SynchroneStrategy extends ChannelHandler
 {
-
+  val token = new Semaphore(1, true) // Will protect the access to push
   def push(content: SynchronizedQueue[String], msg:String) =
   {
+    token.acquire() // Only one thread can write in the channel at one time
     try
     {
       if (content.length > 0)
@@ -109,15 +112,16 @@ object SynchroneStrategy extends ChannelHandler
       }
     } catch
     {
-      case _: Throwable => push(content, msg)
+      case _: Throwable => token.release(); push(content, msg)
     }
+    token.release()
   }
 
   def pop(content: SynchronizedQueue[String]): String =
   {
     try
     {
-      Thread.sleep(20)
+      Thread.sleep(2)
       return content.dequeue()
     } catch
     {
@@ -163,22 +167,3 @@ class Channel(c: String)
   }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                               ChannelSet                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Represents a set of channel. Used to access to channels while interpreting.
-
-class ChannelSet(initialSet: Set[Channel])
-{
-  // Content of Set, may be initialized with a non-void set.
-  var allChannels: Set[Channel] = initialSet
-
-  def contains(x: Channel): Boolean = allChannels.contains(x)
-  // If c already exists, don't append it again.
-  def append(c: Channel): Unit = allChannels.add(c)
-}
