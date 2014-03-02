@@ -121,7 +121,7 @@ class StdoutStrategy extends ChannelHandler
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Implements a channel, using a given strategy
+// Implements a channel, using the right strategy
 
 class Channel(c: String, synchrone: Boolean)
 {
