@@ -91,10 +91,10 @@ object AsynchroneStrategy extends ChannelHandler
 
 object SynchroneStrategy extends ChannelHandler
 {
-  val token = new Semaphore(1, true)
+  val token = new Semaphore(1, true) // Will protect the access to push
   def push(content: SynchronizedQueue[String], msg:String) =
   {
-    token.acquire()
+    token.acquire() // Only one thread can write in the channel at one time
     try
     {
       if (content.length > 0)
