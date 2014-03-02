@@ -118,7 +118,7 @@ object SynchroneStrategy extends ChannelHandler
   {
     try
     {
-      Thread.sleep(20)
+      Thread.sleep(2)
       return content.dequeue()
     } catch
     {
@@ -164,22 +164,3 @@ class Channel(c: String)
   }
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//                               ChannelSet                                   //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Represents a set of channel. Used to access to channels while interpreting.
-
-class ChannelSet(initialSet: Set[Channel])
-{
-  // Content of Set, may be initialized with a non-void set.
-  var allChannels: Set[Channel] = initialSet
-
-  def contains(x: Channel): Boolean = allChannels.contains(x)
-  // If c already exists, don't append it again.
-  def append(c: Channel): Unit = allChannels.add(c)
-}

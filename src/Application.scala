@@ -4,9 +4,14 @@
 //           [Application.scala]                                              //
 //                              https://github.com/Elesthor/Early-Moose       //
 ////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
+//                                              \                             //
+//                                               \   \_\_    _/_/             //
+//                                                \      \__/                 //
+//                                                  ---  (oo)\_______   /     //
+//                                                       (__)\       )\/      //
+//                                                           ||-----||        //
+//                                                           ||     ||        //
+////////////////////////////////////////////////////////////////////////////////
 
 object Application
 {
@@ -15,7 +20,7 @@ object Application
     // option ligne de commande
     if(args.length < 2 || (args(0) != "-sync" && args(0) != "-async"))
     {
-      System.err.println("please precise -sync or -async and then a source file")
+      System.err.println("Please precise -sync or -async and then a source file")
     }
     else
     {
@@ -27,7 +32,7 @@ object Application
         {
           // parsing
           val program = p.parse()
-          println("end of parsing")
+          println("End of parsing")
 
           // playing
           (new Interpretor((args(0) == "-sync"))).interpretMetaProc(program)
@@ -47,5 +52,20 @@ object Application
         case _:java.io.FileNotFoundException => System.err.println("file " + args(1) + " not found")
       }
     }
-  }
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
