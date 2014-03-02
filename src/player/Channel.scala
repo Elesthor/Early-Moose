@@ -16,6 +16,8 @@
 import scala.collection.mutable.Set
 import scala.collection.mutable.SynchronizedQueue
 
+import java.util.concurrent.Semaphore
+
 
 case class VoidList() extends Exception
 
@@ -89,9 +91,10 @@ object AsynchroneStrategy extends ChannelHandler
 
 object SynchroneStrategy extends ChannelHandler
 {
-
+  val token = new Semaphore(1, true)
   def push(content: SynchronizedQueue[String], msg:String) =
   {
+    token.acquire()
     try
     {
       if (content.length > 0)
@@ -109,8 +112,9 @@ object SynchroneStrategy extends ChannelHandler
       }
     } catch
     {
-      case _: Throwable => push(content, msg)
+      case _: Throwable => token.release(); push(content, msg)
     }
+    token.release()
   }
 
   def pop(content: SynchronizedQueue[String]): String =
