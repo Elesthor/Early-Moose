@@ -83,6 +83,8 @@ class Interpretor(synchrone: Boolean)
   // Used to extract args from terms in the form : XXX(.., ..)
   def parseTermFromString(s: String):Term =
   {
+    if(s == "err" || s == "")
+      throw SyntaxError()
     (new Parser(new InputFromString(s+")"))).parseTerm()
   }
 
@@ -181,8 +183,7 @@ class Interpretor(synchrone: Boolean)
           ( parseTermFromString(interpretTerm(left)),
             parseTermFromString(interpretTerm(right)) ) match
           {
-            case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) =>
-              if(n1!=n2) throw new SyntaxError()
+            case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) if n1 == n2 =>
               msg.toString
             case _ => throw new SyntaxError()
           }
