@@ -146,7 +146,6 @@ class Parser(src: Input)
     }
   }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //                             Parse List                                     //
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,13 +290,13 @@ class Parser(src: Input)
               src.cleanPeek()
               src.checkNextWord("\\")
               checkName(left)
-              return new TValue(new VAnd(new VConst(left), inTValue(parseTerm())))
+              return new TValue(new VAnd(new TVar(left), parseTerm()))
 
             case (left, '\\') =>
               src.cleanPeek()
               src.checkNextWord("/")
               checkName(left)
-              return new TValue(new VOr(new VConst(left), inTValue(parseTerm())))
+              return new TValue(new VOr(new TVar(left), parseTerm()))
 
             case (left, '=') =>
               src.cleanPeek()
@@ -307,7 +306,7 @@ class Parser(src: Input)
             case (left, '>') =>
               src.cleanPeek()
               checkName(left)
-              return new TValue(new VSup(new VConst(left), inTValue(parseTerm())))
+              return new TValue(new VSup(new TVar(left), parseTerm()))
 
             // term between parentheses
             case ("", '(') =>
@@ -338,17 +337,17 @@ class Parser(src: Input)
       case '/'  =>
         src.cleanPeek()
         src.checkNextWord("\\")
-        new TValue(new VAnd(inTValue(leftTerm), inTValue(parseTerm())))
+        new TValue(new VAnd(leftTerm, parseTerm()))
       case '\\' =>
         src.cleanPeek()
         src.checkNextWord("/")
-        new TValue(new VOr(inTValue(leftTerm), inTValue(parseTerm())))
+        new TValue(new VOr(leftTerm, parseTerm()))
       case '='  =>
         src.cleanPeek()
         new TValue(new VEqual(leftTerm, parseTerm()))
       case '>'  =>
         src.cleanPeek()
-        new TValue(new VSup(inTValue(leftTerm), inTValue(parseTerm())))
+        new TValue(new VSup(leftTerm, parseTerm()))
       case _    => leftTerm
     }
   }
@@ -404,7 +403,7 @@ class Parser(src: Input)
       case ("if", p) =>
         if(spaces == 0) throw new src.Unexpected(p, src.space)
 
-        val value = inTValue(parseTerm())
+        val value = parseTerm()
         src.checkNextWord("then")
 
         val pif = parseProcess()

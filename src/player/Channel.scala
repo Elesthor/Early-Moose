@@ -69,8 +69,7 @@ object AsynchroneStrategy extends ChannelHandler
     {
       Thread.sleep(20) // Avoid to get a 100% CPU infinite loop: let some time
       return content.dequeue() // for other threads to put a msg
-    }
-    catch
+    } catch
     {
       case _ : Throwable => pop(content) // Try again...
     }
@@ -97,8 +96,8 @@ object SynchroneStrategy extends ChannelHandler
     {
       if (content.length > 0)
       {
-        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop and let some
-        throw new VoidList() //  time for another process to read the channel
+        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop
+        throw new VoidList()
       }
       else
       {

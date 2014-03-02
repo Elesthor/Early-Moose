@@ -47,7 +47,7 @@ case class VCount(l: Term) extends Value
   override def toString: String = "count("+l.toString+")"
 }
 
-case class VSup  (left: Value, right: Value) extends Value
+case class VSup  (left: Term, right: Term) extends Value
 {
   def retString(x: Int): String =
     "| "*x+"Sup:\n"+left.retString(x+1)+right.retString(x+1)
@@ -63,7 +63,7 @@ case class VEqual(left: Term, right: Term) extends Value
   override def toString: String = "("+left.toString+")=("+right.toString+")"
 }
 
-case class VAnd(left: Value, right: Value) extends Value
+case class VAnd(left: Term, right: Term) extends Value
 {
   def retString(x: Int): String =
     "| "*x+"And:\n"+left.retString(x+1)+right.retString(x+1)
@@ -71,7 +71,7 @@ case class VAnd(left: Value, right: Value) extends Value
   override def toString: String = "("+left.toString+")/\\("+right.toString+")"
 }
 
-case class VOr (left: Value, right: Value) extends Value
+case class VOr (left: Term, right: Term) extends Value
 {
   def retString(x: Int): String =
     "| "*x+"Or:\n"+left.retString(x+1)+right.retString(x+1)
@@ -79,7 +79,7 @@ case class VOr (left: Value, right: Value) extends Value
   override def toString: String = "("+left.toString+")\\/("+right.toString+")"
 }
 
-case class VNot (v: Value) extends Value
+case class VNot (v: Term) extends Value
 {
   def retString(x: Int): String =
     "| "*x+"Not:\n" + v.retString(x+1)
@@ -90,17 +90,7 @@ case class VNot (v: Value) extends Value
 case class VConst(s: String) extends Value
 {
   def retString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
-  def replace (x: String, t: Term): Value =
-  {
-    /*if (x==s)
-    {
-      return t // TODO : mauvais type :(
-    }
-    else
-    {*/
-      return this
-    //}
-  }
+  def replace (x: String, t: Term): Value = return this
   override def toString: String = s
 }
 
@@ -190,14 +180,14 @@ case class TDec (left: Term, right: Term) extends Term
   override def toString: String = "dec("+left.toString+","+right.toString+")"
 }
 
-case class TPk  (v: Value) extends Term
+case class TPk  (v: Term) extends Term
 {
   def retString(x: Int): String = "| "*x+"Pk:\n"+v.retString(x+1)
   def replace(x: String, T: Term): Term = new TPk(v.replace(x,T))
   override def toString: String = "pk("+v.toString+")"
 }
 
-case class TSk  (v: Value) extends Term
+case class TSk  (v: Term) extends Term
 {
   def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)
   def replace(x: String, T: Term): Term = new TSk(v.replace(x,T))
