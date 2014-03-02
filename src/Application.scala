@@ -33,6 +33,7 @@ object Application
           // parsing
           val program = p.parse()
           println("End of parsing")
+          //println(program.retString(2))
 
           // playing
           (new Interpretor((args(0) == "-sync"))).interpretMetaProc(program)

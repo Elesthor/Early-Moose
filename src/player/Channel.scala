@@ -69,11 +69,13 @@ object AsynchroneStrategy extends ChannelHandler
   {
     try
     {
-      Thread.sleep(20) // Avoid to get a 100% CPU infinite loop: let some time
-      return content.dequeue() // for other threads to put a msg
+      content.dequeue() // for other threads to put a msg
     } catch
     {
-      case _ : Throwable => pop(content) // Try again...
+      case _ : Throwable =>
+            println("coucou")
+        Thread.sleep(20) // Avoid to get a 100% CPU infinite loop: let some time
+        pop(content) // Try again...
     }
   }
 }
@@ -96,7 +98,7 @@ object SynchroneStrategy extends ChannelHandler
   {
     try
     {
-      this.synchronised
+      //this.synchronised
       {
         if (content.length == 0)
           content.enqueue(msg)
@@ -119,7 +121,7 @@ object SynchroneStrategy extends ChannelHandler
   {
     try
     {
-      Thread.sleep(2)
+      Thread.sleep(20)
       return content.dequeue()
     } catch
     {
