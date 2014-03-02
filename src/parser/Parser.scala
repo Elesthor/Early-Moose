@@ -400,7 +400,7 @@ class Parser(src: Input)
               r
 
             case (name, _) =>
-              return new TVar(name)
+              return new TVar(name) // TODO : pourquoi un return ici ?
           }
         }
       }
