@@ -255,14 +255,14 @@ class Parser(src: Input)
               src.cleanPeek()
               val v = parseTerm()
               src.checkNextWord(")")
-              new TPk(inTValue(v))
+              new TPk(v)
 
             case ("sk", d) =>
               if(d != '(') throw new src.Unexpected(d, src.isChar('('))
               src.cleanPeek()
               val v = parseTerm()
               src.checkNextWord(")")
-              new TSk(inTValue(v))
+              new TSk(v)
 
             // empty list
             case ("", '[') =>
@@ -283,7 +283,7 @@ class Parser(src: Input)
               src.cleanPeek()
               val v = parseTerm()
               src.checkNextWord(")")
-              new TValue(new VNot(inTValue(v)))
+              new TValue(new VNot(v))
 
             // operator with variable/constant : RETURN the term
             case (left, '/') =>
