@@ -92,6 +92,29 @@ class SynchroneStrategy extends ChannelHandler
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//                            Stdout Strategy                                 //
+////////////////////////////////////////////////////////////////////////////////
+//
+// Implementation of the stdout channel:
+//    * pushing redirect to stdout
+//    * popping throw an exception
+
+class StdoutStrategy extends ChannelHandler
+{
+  case class PopStdout() extends Exception
+  def push(msg:String) =
+  {
+    println(msg)
+  }
+
+  def pop(): String =
+  {
+    throw new PopStdout()
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                                Channel                                     //
@@ -106,8 +129,9 @@ class Channel(c: String, synchrone: Boolean)
   // Initialize the channel with a trivial strategy
   //    (when creating the channel while parsing)
   var strategy: ChannelHandler =
-    if(synchrone) new SynchroneStrategy()
-    else          new AsynchroneStrategy()
+    if(name == "stdout") new StdoutStrategy()
+    else if(synchrone)   new SynchroneStrategy()
+    else                 new AsynchroneStrategy()
 
   def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
 

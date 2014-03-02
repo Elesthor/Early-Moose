@@ -214,14 +214,7 @@ class Interpretor(synchrone: Boolean)
 
       case POut(currentChannel, term, nextProc) =>
       {
-        if (currentChannel.name == "stdout") // Stdout puts the msg on the screen.
-        {
-          println(interpretTerm(term))
-        }
-        else
-        {
-          currentChannel.push(interpretTerm(term))
-        }
+        currentChannel.push(interpretTerm(term))
         interpretProcess(nextProc)
       }
 
