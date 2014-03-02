@@ -53,6 +53,7 @@ class Interpretor(synchrone: Boolean)
   // Definition of errors exception.
   case class SyntaxError() extends Exception
   case class ListExpected() extends Exception
+  case class ValueExpected() extends Exception
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +99,16 @@ class Interpretor(synchrone: Boolean)
       AsynchroneStrategy
     }
   }
+  
+  // Return a value nested in a TValue, or throw a ValueExpected
+  def inTValue(t: Term): Value =
+  {
+    t match
+    {
+      case TValue(v) => v
+      case _ => throw new ValueExpected()
+    }
+  }
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 /////////////////////////////// ////////////////////////////////////////////////
@@ -112,8 +123,8 @@ class Interpretor(synchrone: Boolean)
         case ListTerm (l) => ((l.map(interpretTerm)).filter(isTrueInt)).length
         case _            => throw new ListExpected()
       }
-      case VSup (left, right) => boolToInt (interpretValue(left) >
-                                            interpretValue(right))
+      case VSup (left, right) => boolToInt (interpretValue(inTValue(left)) >
+                                            interpretValue(inTValue(right)))
      case VEqual (left, right) =>
       // Two errs are not equal
       if (interpretTerm(left) == "err" || interpretTerm(right) == "err")
@@ -121,11 +132,11 @@ class Interpretor(synchrone: Boolean)
         throw new SyntaxError()
       }
       boolToInt (interpretTerm(left) == interpretTerm(right))
-      case VAnd (left, right)   => boolToInt(intToBool(interpretValue(left))
-                                        && intToBool(interpretValue(right)))
-      case VOr (left, right)    => boolToInt(intToBool(interpretValue(left))
-                                        || intToBool(interpretValue(right)))
-      case VNot (v)             => boolToInt(!intToBool(interpretValue(v)))
+      case VAnd (left, right)   => boolToInt(intToBool(interpretValue(inTValue(left)))
+                                        && intToBool(interpretValue(inTValue(right))))
+      case VOr (left, right)    => boolToInt(intToBool(interpretValue(inTValue(left)))
+                                        || intToBool(interpretValue(inTValue(right))))
+      case VNot (v)             => boolToInt(!intToBool(interpretValue(inTValue(v))))
     }
   }
 
@@ -164,14 +175,14 @@ class Interpretor(synchrone: Boolean)
         {
           (parseTermFromString(interpretTerm(left)), parseTermFromString(interpretTerm(right))) match
           {
-            case (TEnc(msg, TPk(VInt(n1))), TSk(VInt(n2))) =>
+            case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) =>
               if(n1!=n2) throw new SyntaxError()
               msg.toString
             case _ => throw new SyntaxError()
           }
         }
-        case TPk  (v) => "pk("+interpretValue(v)+")"
-        case TSk  (v) => "sk("+interpretValue(v)+")"
+        case TPk  (v) => "pk("+interpretValue(inTValue(v))+")"
+        case TSk  (v) => "sk("+interpretValue(inTValue(v))+")"
         case ListTerm (l) => l.map(interpretTerm).toString
       }
     }
@@ -222,7 +233,7 @@ class Interpretor(synchrone: Boolean)
       }
       case PIf (value, procTrue, procFalse) =>
       {
-        if (intToBool(interpretValue(value)))
+        if (intToBool(interpretValue(inTValue(value))))
         {
           interpretProcess(procTrue, channels, fellow)
         }

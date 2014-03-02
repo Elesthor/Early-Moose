@@ -71,7 +71,7 @@ case class POut(c: Channel, t: Term, p: Process) extends Process
     new POut(c, t.replace(x,T), p.replace(x,T))
   }
 }
-case class PIf (v: Value, pIf: Process, pElse: Process) extends Process
+case class PIf (v: Term, pIf: Process, pElse: Process) extends Process
 {
   def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)
   def replace(x: String , T: Term): Process =
