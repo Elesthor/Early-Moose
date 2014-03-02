@@ -30,7 +30,7 @@ class InterpretThread
 {
   override def run()
   {
-    interpreter.interpretProcess(proc, List[Process]())
+    interpreter.interpretProcess(proc)
   }
 }
 
@@ -201,7 +201,7 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                             InterpretProcess                               //
 ////////////////////////////////////////////////////////////////////////////////
-  def interpretProcess(proc: Process, fellow : List[Process]): Unit =
+  def interpretProcess(proc: Process): Unit =
   {
     // * proc : current process to be analysed
     // * channels : set of channel which process may interact with
@@ -214,8 +214,8 @@ class Interpretor(synchrone: Boolean)
       case PNew(name, nextProc) =>
       {
         val randVal = new TValue(new VInt (Random.nextInt))
-        val next = nextProc.replace(name.s, randVal) // FIXME : remplacer les constantes dans les valeurs
-        interpretProcess(next, fellow.map({x => x.replace(name.s, randVal)}))
+        val next = nextProc.replace(name.s, randVal)
+        interpretProcess(next)
       }
 
       case POut(currentChannel, term, nextProc) =>
@@ -229,26 +229,27 @@ class Interpretor(synchrone: Boolean)
         {
           currentChannel.push(interpretTerm(term))
         }
-        interpretProcess(nextProc, fellow)
+        interpretProcess(nextProc)
       }
 
       case PIn(currentChannel, vari, nextProc) =>
       {
         val varIn = parseTermFromString(currentChannel.pop)
         val next = nextProc.replace(vari.p, varIn)
-        interpretProcess(next, fellow.map({x => x.replace(vari.p, varIn)}))
+        interpretProcess(next)
       }
 
-      case PIf (value, procTrue, procFalse) =>
+      case PIf (value, procTrue, procFalse, nextProc) =>
       {
         if (intToBool(interpretValue(inTValue(value))))
         {
-          interpretProcess(procTrue, fellow)
+          interpretProcess(procTrue)
         }
         else
         {
-          interpretProcess(procFalse, fellow)
+          interpretProcess(procFalse)
         }
+        interpretProcess(nextProc)
       }
 
       case PInk(currentChannel, x, u, y, k, nextProc) =>
@@ -262,13 +263,7 @@ class Interpretor(synchrone: Boolean)
         }
         val liTerm = new ListTerm(li)
         var next = nextProc.replace(y.p, liTerm)
-        interpretProcess(next, fellow.map({x => x.replace(y.p, liTerm)}))
-      }
-
-      case PSeq(left, right) =>
-      {
-        interpretProcess(left, right::fellow)
-        interpretProcess(right, fellow)
+        interpretProcess(next)
       }
     }
   }

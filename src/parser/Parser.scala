@@ -63,6 +63,20 @@ class Parser(src: Input)
     if(word.length == 0 || !src.alpha(word(0)) || !it(word.drop(1)))
       throw new NameMalformed(word)
   }
+  
+  // Replace the last PTrivial in an AST with pro
+  def replacePTrivial(in: Process, pro: Process): Process =
+  {
+    in match
+    {
+      case PTrivial() => pro
+      case PIn(c, v, p) => new PIn(c, v, replacePTrivial(p, pro))
+      case PInk(c, v, u, y, k, p) => new PInk(c, v, u, y, k, replacePTrivial(p, pro))
+      case POut(c, t, p) => new POut(c, t, replacePTrivial(p, pro))
+      case PIf(v, pIf, pElse, p) => new PIf(v, pIf, pElse, replacePTrivial(p, pro))
+      case PNew(s, p) => new PNew(s, replacePTrivial(p, pro))
+    }
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 //                               Parse Name                                   //
@@ -129,7 +143,7 @@ class Parser(src: Input)
   }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                             Parse PSeq                                     //
+//                             Parse . at end of a process                    //
 ////////////////////////////////////////////////////////////////////////////////
 // Parse the gap between two processes
 // if possible, consume '.' and parse a new process
@@ -409,7 +423,7 @@ class Parser(src: Input)
         val pif = parseProcess()
         src.checkNextWord("else")
 
-        new PIf(value, pif, parseProcess())
+        new PIf(value, pif, parseProcess(), new PTrivial())
 
       case ("new", p) =>
         if(spaces == 0) throw new src.Unexpected(p, src.space)
@@ -426,7 +440,7 @@ class Parser(src: Input)
         src.checkNextWord(")")
 
         val n = parseProcessSeq()
-        new PSeq(r, n)
+        replacePTrivial(r, n)
       case (_, _) => throw new SyntaxError()
     }
   }

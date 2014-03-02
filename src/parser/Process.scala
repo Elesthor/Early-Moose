@@ -71,12 +71,12 @@ case class POut(c: Channel, t: Term, p: Process) extends Process
     new POut(c, t.replace(x,T), p.replace(x,T))
   }
 }
-case class PIf (v: Term, pIf: Process, pElse: Process) extends Process
+case class PIf (v: Term, pIf: Process, pElse: Process, p: Process) extends Process
 {
-  def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)
+  def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)+p.retString(x)
   def replace(x: String , T: Term): Process =
   {
-    new PIf(v.replace(x,T), pIf.replace(x,T), pElse.replace(x,T))
+    new PIf(v.replace(x,T), pIf.replace(x,T), pElse.replace(x,T), p.replace(x,T))
   }
 }
 case class PNew(s: VConst, p: Process) extends Process
@@ -85,14 +85,6 @@ case class PNew(s: VConst, p: Process) extends Process
   def replace(x: String , T: Term): Process =
   {
     new PNew(s, p.replace(x,T))
-  }
-}
-case class PSeq(l: Process, p: Process) extends Process
-{
-  def retString(x: Int) = "| "*x+"PSeq:\n"+l.retString(x+1)+p.retString(x+1)
-  def replace(x: String , T: Term): Process =
-  {
-    new PSeq(l.replace(x,T), p.replace(x,T))
   }
 }
 
