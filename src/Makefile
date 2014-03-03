@@ -12,8 +12,8 @@ CLASS = $(CLASSPARSER) $(CLASSPLAYER) $(CLASSMAIN)
 
 compile: $(CLASS)
 
-parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class player/Channel.class
-parser/Process.class: parser/Term.class player/Channel.class
+parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
+parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
 Application.class: $(CLASSPARSER) $(CLASSPLAYER)
 

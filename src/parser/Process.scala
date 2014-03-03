@@ -47,25 +47,25 @@ case class PTrivial() extends Process
     //def retString (x: Int): String = "Trivial Process: 0"
   def replace(x: String , T: Term): Process = new PTrivial()
 }
-case class PIn (c: Channel, v: TVar, p: Process) extends Process
+case class PIn (c: String, v: TVar, p: Process) extends Process
 {
-  def retString(x: Int) = "| "*x+"PIn:\n"+c.retString(x+1)+v.retString(x+1)+p.retString(x)
+  def retString(x: Int) = "| "*x+"PIn:\n"+"| "*(x+1)+c+"\n"+v.retString(x+1)+p.retString(x)
   def replace(x: String , T: Term): Process =
   {
     new PIn(c, v, p.replace(x,T))
   }
 }
-case class PInk(c: Channel, v: TVar, u: Term, y: TVar, k: Int, p: Process) extends Process
+case class PInk(c: String, v: TVar, u: Term, y: TVar, k: Int, p: Process) extends Process
 {
-  def retString(x: Int) = "| "*x+"PInk: "+k+"\n"+c.retString(x+1)+v.retString(x+1)+u.retString(x+1)+y.retString(x+1)+p.retString(x)
+  def retString(x: Int) = "| "*x+"PInk: "+k+"\n"+"| "*(x+1)+c+"\n"+v.retString(x+1)+u.retString(x+1)+y.retString(x+1)+p.retString(x)
   def replace(x: String , T: Term): Process =
   {
     new PInk(c, v, u.replace(x,T), y, k, p.replace(x,T))
   }
 }
-case class POut(c: Channel, t: Term, p: Process) extends Process
+case class POut(c: String, t: Term, p: Process) extends Process
 {
-  def retString(x: Int) = "| "*x+"POut:\n"+c.retString(x+1)+t.retString(x+1)+p.retString(x)
+  def retString(x: Int) = "| "*x+"POut:\n"+"| "*(x+1)+c+"\n"+t.retString(x+1)+p.retString(x)
   def replace(x: String , T: Term): Process =
   {
     new POut(c, t.replace(x,T), p.replace(x,T))
