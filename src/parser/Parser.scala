@@ -303,29 +303,6 @@ class Parser(src: Input)
               src.checkNextWord(")")
               new TValue(new VNot(v))
 
-            // operator with variable/constant : RETURN the term
-            case (left, '/') =>
-              src.cleanPeek()
-              src.checkNextWord("\\")
-              checkName(left)
-              return new TValue(new VAnd(new TVar(left), parseTerm()))
-
-            case (left, '\\') =>
-              src.cleanPeek()
-              src.checkNextWord("/")
-              checkName(left)
-              return new TValue(new VOr(new TVar(left), parseTerm()))
-
-            case (left, '=') =>
-              src.cleanPeek()
-              checkName(left)
-              return new TValue(new VEqual(new TVar(left), parseTerm()))
-
-            case (left, '>') =>
-              src.cleanPeek()
-              checkName(left)
-              return new TValue(new VSup(new TVar(left), parseTerm()))
-
             // term between parentheses
             case ("", '(') =>
               src.cleanPeek()
@@ -333,8 +310,9 @@ class Parser(src: Input)
               src.checkNextWord(")")
               r
 
+            // variable
             case (name, _) =>
-              return new TVar(name) // TODO : pourquoi un return ici ?
+              new TVar(name)
           }
         }
       }
