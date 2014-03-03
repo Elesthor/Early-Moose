@@ -78,6 +78,19 @@ class Parser(src: Input)
     }
   }
 
+  // check if we have ) then EOF, useful for player
+  def checkEnd():Boolean =
+  {
+    try
+    {
+      src.checkNextWord(")") 
+      src.checkEOF() 
+    } catch
+    {
+      case src.Unexpected(_, _) => false
+    }
+  }
+
 ////////////////////////////////////////////////////////////////////////////////
 //                               Parse Name                                   //
 ////////////////////////////////////////////////////////////////////////////////

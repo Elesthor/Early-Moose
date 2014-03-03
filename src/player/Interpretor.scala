@@ -73,7 +73,7 @@ class Interpretor(synchrone: Boolean)
       return true // If toInt has not raise an exception, x is an actual int.
     } catch
     {
-      case _: Throwable => false
+      case _: java.lang.NumberFormatException => false
     }
   }
 
@@ -87,11 +87,13 @@ class Interpretor(synchrone: Boolean)
   def parseTermFromString(s: String):Term =
   {
     if(s == "err" || s == "")
-    {
-      println("here")
       throw InterpretationError()
-    }
-    (new Parser(new InputFromString(s+")"))).parseTerm()
+    val p = new Parser(new InputFromString(s+")"))
+    val t = p.parseTerm()
+    if(p.checkEnd()) // all the term has been read
+      return t
+    else
+      throw InterpretationError()
   }
 
   // Return a value nested in a TValue, or throw a ValueExpected
@@ -195,8 +197,12 @@ class Interpretor(synchrone: Boolean)
 
         case ListTerm (l) => l.map(interpretTerm).toString
       }
+    } catch
+    {
+      case InterpretationError()
+      | ListExpected()
+      | ValueExpected() => "err"
     }
-    //catch {case _: Throwable => "err"}
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,14 +237,19 @@ class Interpretor(synchrone: Boolean)
 
       case PIf (value, procTrue, procFalse, nextProc) =>
       {
-        if (intToBool(interpretValue(inTValue(value)))) // TODO catcher interpretationerror et alller au else
+        val execTrue = try
         {
+          intToBool(interpretValue(inTValue(value)))
+        } catch
+        {
+          case InterpretationError()
+          | ListExpected()
+          | ValueExpected() => false
+        }
+        if(execTrue)
           interpretProcess(procTrue)
-        }
         else
-        {
           interpretProcess(procFalse)
-        }
         interpretProcess(nextProc)
       }
 
