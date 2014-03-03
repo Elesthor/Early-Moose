@@ -21,7 +21,7 @@
 %%% PACKAGES
 \usepackage{booktabs} % for much better looking tables
 \usepackage{array} % for better arrays (eg matrices) in maths
-\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+%\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
 \usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
 \usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
 % These packages are all incorporated in the memoir class to one degree or another...
@@ -34,16 +34,15 @@
 \lfoot{}\cfoot{\thepage}\rfoot{}
 
 %%% SECTION TITLE APPEARANCE
-\usepackage{sectsty}
-\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+%\usepackage{sectsty}
+%\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
 % (This matches ConTeXt defaults)
 \usepackage{verbatim}
 %%% ToC (table of contents) APPEARANCE
-\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
-\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
-\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
-\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
-
+%\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+%\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+%\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+%\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
 
 \title{Rapport I,  [Early Moose]}
 \author{Thomas $S\pi\tau$, Olivier Marty}
@@ -75,8 +74,8 @@ Les classes utilisées sont proches de la grammaire, mais notons quelques points
  \item  \texttt{Process} représente le \textbf{P}
 \end{itemize}
 
-Pour \texttt{MetaProc} et \texttt{Process}, la liste est construite grâce au dernier élément du constructeur qui est respectivement un \texttt{MetaProc} et \texttt{Process}. La fin est marquée respectivement par un \texttt{None} et par un \texttt{PTrivial}.
-Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujours initialisé à \texttt{PTrivial}, mais peut être remplacé si le if est parenthése, comme dans le code suivant :
+Pour \texttt{MetaProc} et \texttt{Process}, la liste est construite grâce au dernier élément du constructeur qui est respectivement un \texttt{MetaProc} et un \texttt{Process}. La fin est marquée respectivement par un \texttt{None} et par un \texttt{PTrivial}.
+Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujours initialisé à \texttt{PTrivial}, mais peut être remplacé si le \textbf{if} est parenthése, comme dans le code suivant :
 \begin{center}
  \textbf{(if test then 0 else 0).0}
 \end{center}
@@ -86,11 +85,14 @@ Les termes sont représentés par un descendant de la classe \texttt{Term}, et l
 
 \section{Parsing}
 
-\subsection{Structure du parser}
-Le parsing se fait grâce à la classe de \texttt{Parser}, qui prend en argument un objet \texttt{Input}.
-La seule méthode abstraite de la classe \texttt{Input} est \texttt{getChar}. Une fois cette fonction renseignée, via l'une des deux implémentations \texttt{InputFromFile} et \texttt{InputFromString}, la classe \texttt{Input} fournit des fonctions utiles : \texttt{peek, getWord, getNumber, checkNextWord}, et elle gère les commentaires.\\\\
+\subsection{Structure du parseur}
 
-Le parsing est scindé en multiples fonctions dont la sémantique est immédiate (exceptée la dernière) : 
+La lecture du code se fait avec un objet de type \texttt{Input} qui fournit des fonctions utiles : \texttt{peek, getWord, getNumber, checkNextWord}, et qui saute les commentaires.
+La méthode abstraite \texttt{getChar\_} est renseignée dans deux implémentations : \texttt{InputFromFile} et \texttt{InputFromString}.
+
+La classe \texttt{Input} utilise la classe \texttt{Checker} qui permet de définir facilement un alphabet légal, tout en  offrant des messages d'erreurs clairs.
+
+La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'arbre de syntaxe abstraite, à l'aide de multiples fonctions dont la sémantique est immédiate (exceptée la dernière) : 
 \begin{itemize}
 \item \texttt{parseMetaProc} 
 \item \texttt{parseProcess}
@@ -99,18 +101,24 @@ Le parsing est scindé en multiples fonctions dont la sémantique est immédiate
 \item \texttt{parseChannel}
 \item \texttt{parseConstant}
 \item \texttt{parseList}
-\item \texttt{parseProcessSeq} ( cherche le '.' à la fin d'un process : s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial}, ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.)
-\end{itemize}. 
+\item \texttt{parseProcessSeq} : cherche le '.' à la fin d'un \textbf{P} : s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial} ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.
+\end{itemize}
 
-Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \textbf{délimiteurs} : on peut lire un mot jusqu'à un certain délimiteur ((),:>= etc) pour discerner les cas. Dans le cas des process, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet gérer les cas, et dans le cas des termes, on regarde d'abord s'il s'agit d'un nombre (le premier caractère est - ou un chiffre), puis on effectue de même un pattern matching, et à la fin, on recherche éventuellement un opérateur en notation infixe.\\
+Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \emph{délimiteurs} : on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas :
+\begin{itemize}
+\item pour les process, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet de discerner facilement les cas;
+\item pour les termes, on regarde en premier lieu s'il s'agit d'un nombre (le premier caractère est '-' ou un chiffre), sinon on effectue un \emph{pattern matching}, et pour finir on recherche un éventuel opérateur en notation infixe.
+\end{itemize}
 
-En cas d'erreurs (pas dans la syntaxe, fin du fichier, identifiant illégal) le parseur lève une \textbf{exception}.
+En cas d'erreur le parseur lève une exception.
 
-\subsection{À propos des valeurs}
+\subsection{Précisions}
 
- Les constructeurs qui demandent des valeurs attendent en réalité des termes, qui pourront à l'interprétation être réduit en valeurs. La vérification est donc effectué à l'interprétation.
-À propos des constantes : aucune constantes n'est déclaré en dehors du process new. Les déclaration de constantes réduisent les variables portant le même identifiant.
-À propos des canaux : lors du parsing, les canaux sont représenté uniquement par leur nom. Ce choix permet de les parser indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
+\begin{itemize}
+\item Les constructeurs qui demandent des valeurs attendent en réalité des termes, qui devraient, à l'interprétation, être réduits en valeurs. Aucune distinction n'est faite entre les termes réductibles en valeur et les autres, la vérification du type étant systématique lors de l'interprétation.
+\item Aucune constante n'est déclarée en dehors d'un \textbf{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
+\item Lors du parsing, les canaux sont représentés uniquement par leur nom. Ce choix permet de construire l'arbre indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
+\end{itemize}
 
 \section{Interprétation du langage}
 
