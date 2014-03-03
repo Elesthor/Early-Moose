@@ -1,28 +1,159 @@
-channel : boucle d'attente, pb de synchronized, difficile à prouver, cpu => semaphores
-description de l'ast : metaproc...
 
-** Arbre de syntaxe abstraite :
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+\usepackage{verbatim}
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+
+\title{Rapport I,  [Early Moose]}
+\author{Thomas $S\pi\tau$, Olivier Marty}
+%\date{} % Activate to display a given date or no date (if empty),
+         % otherwise the current date is printed 
+
+\begin{document}
+
+\maketitle
+
+\begin{verbatim}
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                                                   \_\_    _/_/             //
+//                                                       \__/                 //
+//                                                       (oo)\_______   /     //
+//                                                       (__)\       )\/      //
+//                                                           ||-----||        //
+//                                                           ||     ||        //
+////////////////////////////////////////////////////////////////////////////////  
+
+
+\end{verbatim}
+\section{Structure de l'Arbre de Syntaxe Abstraite}
+
 Les classes utilisées sont proches de la grammaire, mais notons quelques points :
- - la classe MetaProc représente le Proc de la grammaire
- - la classe Process représente le P
-Pour MetaProc et Process, la liste est construite grâce au dernier élément du constructeur qui est respectivement un MetaProc et un Process. La fin est marquée respectivement par un None et par un PTrivial.
-Lors du parsing, pour le processus PIf, le processus suivant est toujours initialisé à PTrivial, mais peut être remplacé si le if est parenthése, comme dans le code suivant :
-<(if test then 0 else 0).0
+\begin{itemize}
+ \item  \texttt{MetaProc} représente le \textbf{Proc} de la grammaire
+ \item  \texttt{Process} représente le \textbf{P}
+\end{itemize}
 
-Les termes sont représentés par un descendant de la classe Term, et les valeurs par un descendant de la classe Value. Il existe un terme spécial TValue, donc le constructeur prend un objet de type Value, afin de pouvoir voir une valeur comme un terme.
+Pour \texttt{MetaProc} et \texttt{Process}, la liste est construite grâce au dernier élément du constructeur qui est respectivement un \texttt{MetaProc} et \texttt{Process}. La fin est marquée respectivement par un \texttt{None} et par un \texttt{PTrivial}.
+Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujours initialisé à \texttt{PTrivial}, mais peut être remplacé si le if est parenthése, comme dans le code suivant :
+\begin{center}
+ \textbf{(if test then 0 else 0).0}
+\end{center}
 
-** Le parseur :
-Le parsing se fait grâce à la classe Parser, qui prend en argument un objet Input.
-La seule méthode abstraite de la classe Input est getChar_. Une fois cette fonction renseignée, via l'une des deux implémentations InputFromFile et InputFromString, la classe Input fournit des fonctions utiles : peek, getWord, getNumber, checkNextWord, et elle gère les commentaires.
+Les termes sont représentés par un descendant de la classe \texttt{Term}, et les valeurs par un descendant de la classe \texttt{Value}. Il existe un terme spécial \texttt{TValue}, donc le constructeur prend un objet de type \texttt{Value}, afin de pouvoir voir une valeur comme un terme.
 
-Le parsing est scindé en multiples fonctions : parseMetaProc, parseProcess, parseTerm, parseVariable, parseChannel, parseConstant, parseList et parseProcessSeq. Leurs buts découlent des noms, si ce n'est pour parseProcessSeq qui cherche le '.' à la fin d'un process : s'il est présent, elle appelle parseProcess, sinon elle renvoie PTrivial, ce qui fait remonter la pile d'appel jusqu'au parsing d'un MetaProc, ou d'un PIf.
 
-Le fonctionnement de parseProcess et parseTerm est basé sur les délimiteurs : on peut lire un mot jusqu'à un certain délimiteur ((),:>= etc) pour discerner les cas. Dans le cas des process, un pattern matching sur le mot clé lu et le délimiteur permet gérer les cas, et dans le cas des termes, on regarde d'abord s'il s'agit d'un nombre (le premier caractère est - ou un chiffre), puis on effectue de même un pattern matching, et à la fin, on recherche éventuellement un opérateur en notation infixe.
+\section{Parsing}
 
-En cas d'erreurs (pas dans la syntaxe, fin du fichier, identifiant illégal) le parseur lève une exception.
+\subsection{Structure du parser}
+Le parsing se fait grâce à la classe de \texttt{Parser}, qui prend en argument un objet \texttt{Input}.
+La seule méthode abstraite de la classe \texttt{Input} est \texttt{getChar}. Une fois cette fonction renseignée, via l'une des deux implémentations \texttt{InputFromFile} et \texttt{InputFromString}, la classe \texttt{Input} fournit des fonctions utiles : \texttt{peek, getWord, getNumber, checkNextWord}, et elle gère les commentaires.\\\\
 
-À propos des valeurs : les constructeurs qui demandent des valeurs attendent en réalité des termes, qui pourront à l'interprétation être réduit en valeurs. La vérification est donc effectué à l'interprétation.
+Le parsing est scindé en multiples fonctions dont la sémantique est immédiate (exceptée la dernière) : 
+\begin{itemize}
+\item \texttt{parseMetaProc} 
+\item \texttt{parseProcess}
+\item \texttt{parseTerm}
+\item \texttt{parseVariable}
+\item \texttt{parseChannel}
+\item \texttt{parseConstant}
+\item \texttt{parseList}
+\item \texttt{parseProcessSeq} ( cherche le '.' à la fin d'un process : s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial}, ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.)
+\end{itemize}. 
+
+Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \textbf{délimiteurs} : on peut lire un mot jusqu'à un certain délimiteur ((),:>= etc) pour discerner les cas. Dans le cas des process, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet gérer les cas, et dans le cas des termes, on regarde d'abord s'il s'agit d'un nombre (le premier caractère est - ou un chiffre), puis on effectue de même un pattern matching, et à la fin, on recherche éventuellement un opérateur en notation infixe.\\
+
+En cas d'erreurs (pas dans la syntaxe, fin du fichier, identifiant illégal) le parseur lève une \textbf{exception}.
+
+\subsection{À propos des valeurs}
+
+ Les constructeurs qui demandent des valeurs attendent en réalité des termes, qui pourront à l'interprétation être réduit en valeurs. La vérification est donc effectué à l'interprétation.
 À propos des constantes : aucune constantes n'est déclaré en dehors du process new. Les déclaration de constantes réduisent les variables portant le même identifiant.
-À propos des canaux : lors du parsing, les canaux sont représenté uniquement par leur nom. Ce choix permet de les parser indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante (/!\)
+À propos des canaux : lors du parsing, les canaux sont représenté uniquement par leur nom. Ce choix permet de les parser indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
+
+\section{Interprétation du langage}
+
+\subsection{Introduction}
+
+  L'interprétation repose sur une classe principale d'encapsulation: \texttt{Interpretor}.  Celle ci se décompose quatre méthodes principales d'interprétation: 
+\begin{itemize}
+  \item \texttt{interpretValue} interprétant les valeurs.
+  \item \texttt{interpretTerm} interprétant les termes.
+  \item \texttt{interpretProcess} interprétant les chaines de processus.
+  \item \texttt{interpret} procédure d'appel principale, effectuant les initialisations nécessaires (\emph{cf infra}).
+\end{itemize}
+
+et de diverses méthodes de traitement utilitaires dont le détail serait superflu. Remarquons que l'interprétation des processus est sémantiquement indépendante du caractère synchrone ou asynchrone: seul le comportement des channels diffère. Il est ainsi naturel de ne considérer qu'une classe d'interprétation , mais de distinguer le comportement des channels comme nous le verrons ultérieurement.
+
+\subsection{Schéma d'interprétation suivi}
+
+\subsubsection{Style de programmation}
+Bien que le paradigme objet suivit lors de la conception de l'AST permettrait d'interpréter les processus, termes et autres valeurs à l'aide d'une méthode attachée à l'élément lui même, nous avons choisi de construire une \textbf{fonction d'interprétation distincte}, dans un style plus fonctionnel, en utilisant la capacité de matching associée aux case class Scala. Ce choix d'implémentation permet une modification aisé du comportement de l'interpréteur en cas de modification de la sémantique.\\
+
+\subsubsection{Principe général}
+L'interprétation d'un AST débute lors de l'appel de la méthode \texttt{interpret}. L'AST est alors parcouru une fois pour récupérer l'ensemble des channels, leur fixer la stratégie choisie et construire à la volée une map entre nom de channel et channel.\\\\ Un AST commençant nécessairement par un \texttt{MetaProc} on crée k threads, encapuslés dans la classe \texttt{InterpretThread} pour interpréter la chaine de processus issue du processus gauche du \texttt{MetaProc}. La suite du \texttt{MetaProc} est ensuite évaluée récursivement. Les processus sont lancés à la volée et s'évaluent de manière parallèle.\\
+
+\subsubsection{Environement vs $\beta$-réduction}
+Le premier choix effectué lors de la conception de l'interpréteur est le choix d'une méthode de substitution des variables. Au vue de la sémantique du langage, deux choix sont possibles: la création d'un \textbf{environement} qui se transmet le long de l'interprétation ou la  \textbf{$\beta$-réduction} à la volée. Nous avons optés pour la deuxième solution, respectant au plus près la sémantique \emph{small-step} proposée.  Ce choix est techniquement possible, puisqu'il n'y a transmission de la réduction qu'aux processus situés sur la même branche que le processus courant. En outre elle est très aisée à réaliser car il n'y pas de distinctions subtiles à faire entre variables libres et liées. En outre l'implémentation de cette réduction, se fait naturellement en tant que méthode attachée aux éléments de l'AST.
+
+\subsubsection{in k}
+Néanmoins, une telle méthode pose quelques problèmes quant à la résolution du \texttt{ink} de manière récursive: l'opérateur \texttt{::} ayant à la fois un role sémantique et syntaxique que la construction avec la classe \texttt{ListTerm} ne permet pas de représenter. Nous avons donc dépiler la structure récursive de la sémantique \emph{small-step} pour obtenir une interprétation itérative de ce processus: la liste se construit en allant lire le channel concerné et est remplacé à la fin de l'opération de lecture.
+
+\subsection{Gestion des channels}
+
+La différence entre le mode synchrone et asynchrone ne s'effectuant que dans le comportement des channels, le \emph{design pattern} \textbf{strategy} paraissait naturellement adapté à l'implémentation des channels.\\\\
+Le pattern est géré par le trait \texttt{ChannelHandler} dont dérive les trois stratégies utilisées: 
+\begin{itemize}
+	\item \texttt{AsynchroneStrategy}
+	\item \texttt{SynchroneStrategy}
+	\item \texttt{StdoutStrategy}
+\end{itemize}
+
+La première implémentation des stratégies utilisait des boucles de \texttt{Thread.wait(1)} pour stopper les processus lorsque la sémantique l'imposait (attente d'un message si le channel est vide, attente d'un processus \texttt{in} lors d'un \texttt{out} en mode synchrone), mais cette solution est hautement inélégante car consomme beaucoup de CPU inutilement. La solution retenue est d'utiliser des \textbf{sémaphores} afin d'effectuer les blocages sus-cités.
+
+\end{document}
+
+
 
 
