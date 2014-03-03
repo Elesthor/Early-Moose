@@ -68,14 +68,14 @@
 \end{verbatim}
 \section{Structure de l'Arbre de Syntaxe Abstraite}
 
-Les classes utilisées sont proches de la grammaire, mais notons quelques points :
+Les classes utilisées sont proches de la grammaire, mais notons quelques points~:
 \begin{itemize}
  \item  \texttt{MetaProc} représente le \textbf{Proc} de la grammaire
  \item  \texttt{Process} représente le \textbf{P}
 \end{itemize}
 
 Pour \texttt{MetaProc} et \texttt{Process}, la liste est construite grâce au dernier élément du constructeur qui est respectivement un \texttt{MetaProc} et un \texttt{Process}. La fin est marquée respectivement par un \texttt{None} et par un \texttt{PTrivial}.
-Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujours initialisé à \texttt{PTrivial}, mais peut être remplacé si le \textbf{if} est parenthése, comme dans le code suivant :
+Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujours initialisé à \texttt{PTrivial}, mais peut être remplacé si le \textbf{if} est parenthése, comme dans le code suivant~:
 \begin{center}
  \textbf{(if test then 0 else 0).0}
 \end{center}
@@ -85,14 +85,16 @@ Les termes sont représentés par un descendant de la classe \texttt{Term}, et l
 
 \section{Parsing}
 
+La grammaire simple, comme aucune ambiguïté n'est levée tardivement, nous a fait imaginer un parseur simple, qui construit l'AST au cours de la lecture du code.
+
 \subsection{Structure du parseur}
 
-La lecture du code se fait avec un objet de type \texttt{Input} qui fournit des fonctions utiles : \texttt{peek, getWord, getNumber, checkNextWord}, et qui saute les commentaires.
-La méthode abstraite \texttt{getChar\_} est renseignée dans deux implémentations : \texttt{InputFromFile} et \texttt{InputFromString}.
+La lecture du code se fait avec un objet de type \texttt{Input} qui fournit des fonctions utiles~: \texttt{peek, getWord, getNumber, checkNextWord}, et qui saute les commentaires.
+La méthode abstraite \texttt{getChar\_} est renseignée dans deux implémentations~: \texttt{InputFromFile} et \texttt{InputFromString}.
 
 La classe \texttt{Input} utilise la classe \texttt{Checker} qui permet de définir facilement un alphabet légal, tout en  offrant des messages d'erreurs clairs.
 
-La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'arbre de syntaxe abstraite, à l'aide de multiples fonctions dont la sémantique est immédiate (exceptée la dernière) : 
+La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'AST, à l'aide de multiples fonctions dont la sémantique est immédiate (exceptée la dernière)~: 
 \begin{itemize}
 \item \texttt{parseMetaProc} 
 \item \texttt{parseProcess}
@@ -101,64 +103,68 @@ La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'ar
 \item \texttt{parseChannel}
 \item \texttt{parseConstant}
 \item \texttt{parseList}
-\item \texttt{parseProcessSeq} : cherche le '.' à la fin d'un \textbf{P} : s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial} ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.
+\item \texttt{parseProcessSeq}~: cherche le '.' à la fin d'un \textbf{P}~: s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial} ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.
 \end{itemize}
 
-Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \emph{délimiteurs} : on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas :
+Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \emph{délimiteurs}~: on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas~:
 \begin{itemize}
 \item pour les process, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet de discerner facilement les cas;
 \item pour les termes, on regarde en premier lieu s'il s'agit d'un nombre (le premier caractère est '-' ou un chiffre), sinon on effectue un \emph{pattern matching}, et pour finir on recherche un éventuel opérateur en notation infixe.
 \end{itemize}
 
-En cas d'erreur le parseur lève une exception.
+Comme prévu, la parsing peut être fait à la volée~: la fonction \texttt{peek} de la classe \texttt{Input} permet de ne regarder qu'un seul caractère sans le consommer, et c'est suffisant. La complexité du parseur est linéaire, comme on doit pouvoir l'espérer avec une telle grammaire.
 
 \subsection{Précisions}
 
+Trois précisions sont à faire~:
 \begin{itemize}
-\item Les constructeurs qui demandent des valeurs attendent en réalité des termes, qui devraient, à l'interprétation, être réduits en valeurs. Aucune distinction n'est faite entre les termes réductibles en valeur et les autres, la vérification du type étant systématique lors de l'interprétation.
-\item Aucune constante n'est déclarée en dehors d'un \textbf{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
-\item Lors du parsing, les canaux sont représentés uniquement par leur nom. Ce choix permet de construire l'arbre indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
+\item les constructeurs qui demandent des valeurs attendent en réalité des termes, qui devraient, à l'interprétation, être réduits en valeurs. Aucune distinction n'est faite entre les termes réductibles en valeur et les autres, la vérification du type étant systématique lors de l'interprétation.
+\item aucune constante n'est déclarée en dehors d'un \textbf{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
+\item lors du parsing, les canaux sont représentés uniquement par leur nom. Ce choix permet de construire l'AST indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
 \end{itemize}
 
 \section{Interprétation du langage}
 
 \subsection{Introduction}
 
-  L'interprétation repose sur une classe principale d'encapsulation: \texttt{Interpretor}.  Celle ci se décompose quatre méthodes principales d'interprétation: 
+  L'interprétation repose sur une classe principale d'encapsulation~: \texttt{Interpretor}.  Celle-ci se décompose en quatre méthodes principales d'interprétation~:
 \begin{itemize}
-  \item \texttt{interpretValue} interprétant les valeurs.
-  \item \texttt{interpretTerm} interprétant les termes.
-  \item \texttt{interpretProcess} interprétant les chaines de processus.
-  \item \texttt{interpret} procédure d'appel principale, effectuant les initialisations nécessaires (\emph{cf infra}).
+  \item \texttt{interpretValue}
+  \item \texttt{interpretTerm}
+  \item \texttt{interpretProcess} (interprète toute une chaîne de \textbf{P})
+  \item \texttt{interpret} (procédure d'appel principale, effectuant les initialisations nécessaires (\emph{cf infra})
 \end{itemize}
 
-et de diverses méthodes de traitement utilitaires dont le détail serait superflu. Remarquons que l'interprétation des processus est sémantiquement indépendante du caractère synchrone ou asynchrone: seul le comportement des channels diffère. Il est ainsi naturel de ne considérer qu'une classe d'interprétation , mais de distinguer le comportement des channels comme nous le verrons ultérieurement.
+Remarquons que l'interprétation des processus est sémantiquement indépendante du caractère synchrone ou asynchrone~: seul le comportement des canaux diffère. Il est ainsi naturel de ne considérer qu'une classe d'interprétation, mais de distinguer le comportement des canaux comme nous le verrons ultérieurement.
 
 \subsection{Schéma d'interprétation suivi}
 
-\subsubsection{Style de programmation}
-Bien que le paradigme objet suivit lors de la conception de l'AST permettrait d'interpréter les processus, termes et autres valeurs à l'aide d'une méthode attachée à l'élément lui même, nous avons choisi de construire une \textbf{fonction d'interprétation distincte}, dans un style plus fonctionnel, en utilisant la capacité de matching associée aux case class Scala. Ce choix d'implémentation permet une modification aisé du comportement de l'interpréteur en cas de modification de la sémantique.\\
+\subsubsection{Paradigme de programmation}
+Bien que le paradigme objet suivi lors de la conception de l'AST permettrait d'interpréter les processus, termes et autres valeurs à l'aide d'une méthode attachée à l'élément lui même, nous avons choisi de construire une \textbf{fonction d'interprétation distincte}, dans un style plus fonctionnel, en utilisant la capacité de matching associée aux case class Scala. Ce choix d'implémentation permet une modification aisé du comportement de l'interpréteur en cas de modification de la sémantique.
 
 \subsubsection{Principe général}
-L'interprétation d'un AST débute lors de l'appel de la méthode \texttt{interpret}. L'AST est alors parcouru une fois pour récupérer l'ensemble des channels, leur fixer la stratégie choisie et construire à la volée une map entre nom de channel et channel.\\\\ Un AST commençant nécessairement par un \texttt{MetaProc} on crée k threads, encapuslés dans la classe \texttt{InterpretThread} pour interpréter la chaine de processus issue du processus gauche du \texttt{MetaProc}. La suite du \texttt{MetaProc} est ensuite évaluée récursivement. Les processus sont lancés à la volée et s'évaluent de manière parallèle.\\
+L'interprétation d'un AST débute lors de l'appel de la méthode \texttt{interpret}. L'AST est alors parcouru une fois pour récupérer l'ensemble des canaux, leur fixer la stratégie choisie et construire à la volée une map entre nom de canal et canal.
 
-\subsubsection{Environement vs $\beta$-réduction}
-Le premier choix effectué lors de la conception de l'interpréteur est le choix d'une méthode de substitution des variables. Au vue de la sémantique du langage, deux choix sont possibles: la création d'un \textbf{environement} qui se transmet le long de l'interprétation ou la  \textbf{$\beta$-réduction} à la volée. Nous avons optés pour la deuxième solution, respectant au plus près la sémantique \emph{small-step} proposée.  Ce choix est techniquement possible, puisqu'il n'y a transmission de la réduction qu'aux processus situés sur la même branche que le processus courant. En outre elle est très aisée à réaliser car il n'y pas de distinctions subtiles à faire entre variables libres et liées. En outre l'implémentation de cette réduction, se fait naturellement en tant que méthode attachée aux éléments de l'AST.
+Un AST commençant nécessairement par un \texttt{MetaProc}, on crée k threads encapsulés dans la classe \texttt{InterpretThread} pour interpréter la chaîne de processus liée au \texttt{MetaProc}. La suite de la chaîne de \texttt{MetaProc} est ensuite évaluée récursivement. Les processus sont lancés à la volée et s'évaluent de manière parallèle.
+% TODO nous vs on
+\subsubsection{Environement versus $\beta$-réduction}
+Le premier choix effectué lors de la conception de l'interpréteur est le choix d'une méthode de substitution des variables. Au vue de la sémantique du langage, deux choix sont possibles~: la création d'un \textbf{environement} qui se transmet le long de l'interprétation ou la  \textbf{$\beta$-réduction} à la volée. Nous avons optés pour la deuxième solution, respectant au plus près la sémantique \emph{small-step} proposée.  Ce choix est techniquement possible, puisqu'il n'y a transmission de la réduction qu'aux processus situés sur la même branche que le processus courant. En outre elle est très aisée à réaliser car il n'y pas de distinctions subtiles à faire entre variables libres et liées. En outre l'implémentation de cette réduction se fait naturellement en tant que méthode attachée aux éléments de l'AST.
 
-\subsubsection{in k}
-Néanmoins, une telle méthode pose quelques problèmes quant à la résolution du \texttt{ink} de manière récursive: l'opérateur \texttt{::} ayant à la fois un role sémantique et syntaxique que la construction avec la classe \texttt{ListTerm} ne permet pas de représenter. Nous avons donc dépiler la structure récursive de la sémantique \emph{small-step} pour obtenir une interprétation itérative de ce processus: la liste se construit en allant lire le channel concerné et est remplacé à la fin de l'opération de lecture.
+\subsubsection{Cas du in\^{}k}
+Néanmoins une telle méthode pose quelques problèmes quant à l'interprétation d'un processus de type \texttt{in\^{}k} de manière récursive~: l'opérateur \texttt{::} ayant à la fois un rôle sémantique et syntaxique que la construction avec la classe \texttt{ListTerm} ne permet pas de représenter. Nous avons donc dépiler la structure récursive de la sémantique \emph{small-step} pour obtenir une interprétation itérative de ce processus~: la liste se construit en allant lire le canal concerné et est remplacée seulement à la fin de l'opération de lecture.
 
-\subsection{Gestion des channels}
+\subsection{Gestion des canaux}
 
-La différence entre le mode synchrone et asynchrone ne s'effectuant que dans le comportement des channels, le \emph{design pattern} \textbf{strategy} paraissait naturellement adapté à l'implémentation des channels.\\\\
-Le pattern est géré par le trait \texttt{ChannelHandler} dont dérive les trois stratégies utilisées: 
+La différence entre le mode synchrone et asynchrone ne s'effectuant que dans le comportement des canaux, le \emph{design pattern} \textbf{strategy} paraissait naturellement adapté à l'implémentation des canaux.
+
+Le pattern est géré par le trait \texttt{ChannelHandler} dont dérive les trois stratégies utilisées~:
 \begin{itemize}
 	\item \texttt{AsynchroneStrategy}
 	\item \texttt{SynchroneStrategy}
 	\item \texttt{StdoutStrategy}
 \end{itemize}
 
-La première implémentation des stratégies utilisait des boucles de \texttt{Thread.wait(1)} pour stopper les processus lorsque la sémantique l'imposait (attente d'un message si le channel est vide, attente d'un processus \texttt{in} lors d'un \texttt{out} en mode synchrone), mais cette solution est hautement inélégante car consomme beaucoup de CPU inutilement. La solution retenue est d'utiliser des \textbf{sémaphores} afin d'effectuer les blocages sus-cités.
+La première implémentation des stratégies utilisait des boucles de \texttt{Thread.sleep(1)} pour stopper les processus lorsque la sémantique l'imposait (attente d'un message si le canal est vide, attente mutuelle des processus \texttt{in} et \texttt{out} en mode synchrone), mais cette solution est hautement inélégante car consomme beaucoup de CPU inutilement, sans compter le fait qu'écrire un code robuste à la concurrence était délicat. La solution retenue est d'utiliser des \textbf{sémaphores} afin d'effectuer les blocages sus-cités.
 
 \end{document}
 
