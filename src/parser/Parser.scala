@@ -37,17 +37,6 @@ class Parser(src: Input)
 //                          Utilities function                                //
 ////////////////////////////////////////////////////////////////////////////////
 
-  // Return a value nested in a TValue, or throw a ValueExpected
-  def inTValue(t: Term): Value =
-  {
-    t match
-    {
-      case TValue(v) => v
-      case TVar(v) => new VConst(v)
-      case _ => throw new ValueExpected()
-    }
-  }
-
   // Check if a name is well-formed (throw NameMalformed)
   def checkName(word: String) =
   {
@@ -59,9 +48,17 @@ class Parser(src: Input)
         && it(w.drop(1))
       )
     }
-    // not empty and first char is alphabetic, and then alphanumeric or '-' '_'
-    if(word.length == 0 || !src.alpha(word(0)) || !it(word.drop(1)))
-      throw new NameMalformed(word)
+
+    word match
+    {
+      case "in" | "as" | "out" | "if" | "then" | "else" | "new" =>
+        throw new NameMalformed(word)
+      case _ =>
+        // not empty and first char is alphabetic
+        // and then alphanumeric or '-' '_'
+        if(word.length == 0 || !src.alpha(word(0)) || !it(word.drop(1)))
+          throw new NameMalformed(word)
+    }
   }
   
   // Replace the last PTrivial in an AST with pro
@@ -96,9 +93,8 @@ class Parser(src: Input)
 ////////////////////////////////////////////////////////////////////////////////
   def parseName() =
   {
-    // non empty and first char is alphabetic, and then alphanumeric or '-' '_'
     val name = src.getWord(src.alphaNumeric || src.isChar('-') || src.isChar('_'), src.all)
-    if(name.length == 0 || !src.alpha(name(0))) throw new NameMalformed(name)
+    checkName(name)
     name
   }
 
@@ -288,13 +284,13 @@ class Parser(src: Input)
             r
 
           // variable
-          case (name, _) =>
-            checkName(name)
+          case (name, _)    =>
+            checkName(name) // well-formed
             new TVar(name)
         }
       }
 
-    // si le caractère suivant est un opérateur binaire
+    // if next char is a binary operator
     src.ignoreSpace()
     src.peek() match
     {
@@ -382,7 +378,8 @@ class Parser(src: Input)
         val pif = parseProcess()
         src.checkNextWord("else")
 
-        new PIf(value, pif, parseProcess(), new PTrivial())
+        new PIf(value, pif, parseProcess(), new PTrivial()) // PTrivial may be
+        // replaced by replacePTrivial
 
       case ("new", p) =>
         if(spaces == 0) throw new src.Unexpected(p, src.space)
