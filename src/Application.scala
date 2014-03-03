@@ -27,16 +27,16 @@ object Application
       try
       {
         val src = new InputFromFile(args(1))
-        val p = new Parser(src, (args(0) == "-sync"))
+        val p = new Parser(src)
         try
         {
           // parsing
+          println("--   Parsing    --")
           val program = p.parse()
-          println("End of parsing")
           //println(program.retString(2))
 
           // playing
-          (new Interpretor((args(0) == "-sync"))).interpretMetaProc(program)
+          (new Interpretor((args(0) == "-sync"))).interpret(program)
         }
         catch
         {

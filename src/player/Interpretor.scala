@@ -51,9 +51,12 @@ class Interpretor(synchrone: Boolean)
 {
 
   // Definition of errors exception.
-  case class SyntaxError() extends Exception
+  case class InterpretationError() extends Exception
   case class ListExpected() extends Exception
   case class ValueExpected() extends Exception
+  
+  // set of channels
+  var channels = Map[String, Channel]()
 
 ////////////////////////////////////////////////////////////////////////////////
 //                            Utilities function                              //
@@ -84,8 +87,11 @@ class Interpretor(synchrone: Boolean)
   def parseTermFromString(s: String):Term =
   {
     if(s == "err" || s == "")
-      throw SyntaxError()
-    (new Parser(new InputFromString(s+")"), synchrone)).parseTerm()
+    {
+      println("here")
+      throw InterpretationError()
+    }
+    (new Parser(new InputFromString(s+")"))).parseTerm()
   }
 
   // Return a value nested in a TValue, or throw a ValueExpected
@@ -97,6 +103,7 @@ class Interpretor(synchrone: Boolean)
       case _ => throw new ValueExpected()
     }
   }
+
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +125,7 @@ class Interpretor(synchrone: Boolean)
         // Two errs are not equal
         if (interpretTerm(left) == "err" || interpretTerm(right) == "err")
         {
-          throw new SyntaxError()
+          throw new InterpretationError()
         }
         boolToInt (interpretTerm(left) == interpretTerm(right))
         case VAnd (left, right) =>
@@ -153,7 +160,7 @@ class Interpretor(synchrone: Boolean)
           parseTermFromString(interpretTerm(t)) match
           {
             case TPair(u1, _) => u1.toString
-            case _ => throw new SyntaxError()
+            case _ => throw new InterpretationError()
           }
         }
 
@@ -162,7 +169,7 @@ class Interpretor(synchrone: Boolean)
           parseTermFromString(interpretTerm(t)) match
           {
             case TPair(_, u2) => u2.toString
-            case _ => throw new SyntaxError()
+            case _ => throw new InterpretationError()
           }
         }
 
@@ -178,7 +185,7 @@ class Interpretor(synchrone: Boolean)
           {
             case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) if n1 == n2 =>
               msg.toString
-            case _ => throw new SyntaxError()
+            case _ => throw new InterpretationError()
           }
         }
 
@@ -189,7 +196,7 @@ class Interpretor(synchrone: Boolean)
         case ListTerm (l) => l.map(interpretTerm).toString
       }
     }
-    catch {case _: Throwable => "err"}
+    //catch {case _: Throwable => "err"}
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,9 +205,6 @@ class Interpretor(synchrone: Boolean)
   def interpretProcess(proc: Process): Unit =
   {
     // * proc : current process to be analysed
-    // * channels : set of channel which process may interact with
-    // * fellow : processes which are modified at the same time as proc
-    //      (used when interpreting Pseq.)
     proc match
     {
       case PTrivial() => ()
@@ -214,20 +218,20 @@ class Interpretor(synchrone: Boolean)
 
       case POut(currentChannel, term, nextProc) =>
       {
-        currentChannel.push(interpretTerm(term))
+        channels.get(currentChannel).get.push(interpretTerm(term))
         interpretProcess(nextProc)
       }
 
       case PIn(currentChannel, vari, nextProc) =>
       {
-        val varIn = parseTermFromString(currentChannel.pop)
+        val varIn = parseTermFromString(channels.get(currentChannel).get.pop)
         val next = nextProc.replace(vari.p, varIn)
         interpretProcess(next)
       }
 
       case PIf (value, procTrue, procFalse, nextProc) =>
       {
-        if (intToBool(interpretValue(inTValue(value))))
+        if (intToBool(interpretValue(inTValue(value)))) // TODO catcher interpretationerror et alller au else
         {
           interpretProcess(procTrue)
         }
@@ -240,11 +244,12 @@ class Interpretor(synchrone: Boolean)
 
       case PInk(currentChannel, x, u, y, k, nextProc) =>
       {
+        val chan = channels.get(currentChannel).get
         // Will contains the result of the k In.
         var li = List[Term]()
         for(i <- 1 to k)
         {
-          val t = parseTermFromString(currentChannel.pop)
+          val t = parseTermFromString(chan.pop)
           li = (u.replace(x.p,t))::li
         }
         val liTerm = new ListTerm(li)
@@ -257,16 +262,69 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                             InterpretMetaProc                              //
 ////////////////////////////////////////////////////////////////////////////////
-  def interpretMetaProc(metaP: MetaProc)
+
+  // create the map of channels
+  def createChannels(program: MetaProc): Map[String, Channel] =
+  {
+    var channels = Map[String, Channel]()
+    
+    // record a channel
+    def setChannel(c: String):Unit =
+    {
+      channels.get(c) match
+      {
+        case None =>
+          channels += (c -> new Channel(c, synchrone))
+        case Some(chan) => ()
+      }
+    }
+    // pass through a metaproc
+    def crossMetaProc(metaP: MetaProc):Unit =
+    {
+      crossProcess(metaP.pLeft)
+      if (metaP.metaPRight.isDefined)
+        crossMetaProc(metaP.metaPRight.get)
+    }
+    // pass through a process
+    def crossProcess(p: Process):Unit =
+    {
+      p match
+      {
+        case PTrivial() => ()
+        case PIn(c, _, p) =>
+          setChannel(c);
+          crossProcess(p)
+        case PInk(c, _, _, _, _, p) =>
+          setChannel(c);
+          crossProcess(p)
+        case POut(c, _, p) =>
+          setChannel(c);
+          crossProcess(p)
+        case PIf(_, pIf, pElse, p) =>
+          crossProcess(pIf);
+          crossProcess(pElse);
+          crossProcess(p);
+        case PNew(_, p) =>
+          crossProcess(p);
+      }
+    }
+    
+    crossMetaProc(program)
+    return channels
+  }
+  def interpret(metaP: MetaProc)
   {
     println("-- Interpreting --")
-    val interpret = new Interpretor(synchrone)
+    // set map of channels
+    channels = createChannels(metaP)
+    
+    // launch processes
     def auxInterpretor(metaP: MetaProc)
     {
       var i = 0
       for (i <- 1 to metaP.k)
       {
-        val left = new InterpretThread(interpret, metaP.pLeft)
+        val left = new InterpretThread(this, metaP.pLeft)
         left.start
       }
       if (metaP.metaPRight.isDefined)
