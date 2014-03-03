@@ -121,7 +121,7 @@ class Interpretor(synchrone: Boolean)
           throw new SyntaxError()
         }
         boolToInt (interpretTerm(left) == interpretTerm(right))
-        case VAnd (left, right) =>
+      case VAnd (left, right) =>
           boolToInt(intToBool(interpretValue(inTValue(left)))
                  && intToBool(interpretValue(inTValue(right))))
       case VOr (left, right) =>
@@ -197,10 +197,6 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
   def interpretProcess(proc: Process): Unit =
   {
-    // * proc : current process to be analysed
-    // * channels : set of channel which process may interact with
-    // * fellow : processes which are modified at the same time as proc
-    //      (used when interpreting Pseq.)
     proc match
     {
       case PTrivial() => ()
