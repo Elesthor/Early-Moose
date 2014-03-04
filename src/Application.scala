@@ -33,39 +33,28 @@ object Application
           // parsing
           println("--   Parsing    --")
           val program = p.parse()
-          //println(program.retString(2))
 
           // playing
           (new Interpretor((args(0) == "-sync"))).interpret(program)
         }
         catch
         {
-          case p.SyntaxError()       => System.err.println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
-          case p.NameMalformed(name) => System.err.println("Malformed name : '" + name + "' (line " + src.line + "; col " + src.col + ")\n")
-          case src.EndOfFile()       => System.err.println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
+          case p.SyntaxError()       =>
+            System.err.println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
+          case p.NameMalformed(name) =>
+            System.err.println("Malformed name : '" + name + "' (line " + src.line + "; col " + src.col + ")\n")
+          case src.EndOfFile()       =>
+            System.err.println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
           case src.Unexpected(c, f)  =>
             System.err.println("Character '" + src.charToString(c) + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : " + f.serialized)
         }
       }
       catch
       {
-        case _:java.io.FileNotFoundException => System.err.println("file " + args(1) + " not found")
+        case _:java.io.FileNotFoundException =>
+          System.err.println("file " + args(1) + " not found")
       }
     }
+  }
 }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
