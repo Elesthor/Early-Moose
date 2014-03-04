@@ -82,7 +82,7 @@ Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujou
 
 Les termes sont représentés par la classe \texttt{Term}, héritée pour chacun d'eux, sauf pour les valeurs qui héritent de la classe \texttt{Value}.
 
-Sachant qu'il est impossible en Scala de faire hériter une \emph{case class} d'une \emph{case class}, les valeurs pourraient hériter directement de \texttt{Term} mais nous voulions pouvoir les différencier facilement, sans énumérer tous les cas. Nous avons donc opté pour une \emph{binding class}, \texttt{TValue} qui hérite de \texttt{Term} et qui encapsule un objet \texttt{Value}.
+Sachant qu'il est impossible en Scala de faire hériter une \emph{case class} d'une \emph{case class}, les valeurs pourraient hériter directement de \texttt{Term} mais nous voulions pouvoir les différencier facilement, sans énumérer tous les cas. Nous avons donc opté pour une \textbf{binding class}, \texttt{TValue} qui hérite de \texttt{Term} et qui encapsule un objet \texttt{Value}.
 
 \section{Parsing}
 
@@ -109,7 +109,7 @@ La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'AS
 
 Toutes ces fonctions créent un objet ad-hoc, et laissent le curseur de l'\texttt{Input} juste après le dernier caractère réellement utilisé. Par exemple pour le code \textbf{in(c,x)}, le \textbf{x} engendre une variable, mais la parenthèse est laissée pour permettre à la fonction appelante, qui parse le \textbf{in}, de retrouver la parenthèse fermante. Toutes les situations similaires ont motivé la fonction \texttt{Input.peek} : regarder un caractère sans le consommer.
 
-Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \emph{délimiteurs}~: on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas~:
+Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \textbf{délimiteurs}~: on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas~:
 \begin{itemize}
 \item pour les \texttt{Process}, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet de discerner facilement les cas;
 \item pour les \texttt{Term}, on regarde en premier lieu s'il s'agit d'un nombre (le premier caractère est '-' ou un chiffre), sinon on effectue un \emph{pattern matching} semblable, et pour finir on recherche un éventuel opérateur en notation infixe.
@@ -120,7 +120,7 @@ Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur l
 Trois précisions sont à faire~:
 \begin{itemize}
 \item les constructeurs qui demandent des valeurs attendent en réalité des termes, qui devraient, à l'interprétation, être réduits en valeurs. Aucune distinction n'est faite entre les termes réductibles en valeur et les autres, la vérification du type étant systématique lors de l'interprétation.
-\item aucune constante n'est déclarée en dehors d'un \textbf{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
+\item aucune constante n'est déclarée en dehors d'un \texttt{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
 \item lors du parsing, les canaux sont représentés uniquement par leur nom. Ce choix permet de construire l'AST indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
 \end{itemize}
 
