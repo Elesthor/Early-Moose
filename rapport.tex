@@ -80,7 +80,9 @@ Lors du parsing, pour le processus \texttt{PIf}, le processus suivant est toujou
  \textbf{(if test then 0 else 0).0}
 \end{center}
 
-Les termes sont représentés par un descendant de la classe \texttt{Term}, et les valeurs par un descendant de la classe \texttt{Value}. Il existe un terme spécial \texttt{TValue}, donc le constructeur prend un objet de type \texttt{Value}, afin de pouvoir considérer une valeur comme un terme, Scala n'autorisant malheureusement pas de hériter une \emph{case class} d'une \emph{case class}.
+Les termes sont représentés par la classe \texttt{Term}, héritée pour chacun d'eux, sauf pour les valeurs qui héritent de la classe \texttt{Value}.
+
+Sachant qu'il est impossible en Scala de faire hériter une \emph{case class} d'une \emph{case class}, les valeurs pourraient hériter directement de \texttt{Term} mais nous voulions pouvoir les différencier facilement, sans énumérer tous les cas. Nous avons donc opté pour une \textbf{binding class}, \texttt{TValue} qui hérite de \texttt{Term} et qui encapsule un objet \texttt{Value}.
 
 \section{Parsing}
 
@@ -105,12 +107,12 @@ La classe \texttt{Parser} utilise l'objet \texttt{Input} fourni pour créer l'AS
 \item \texttt{parseProcessSeq}~: cherche le '.' à la fin d'un \textbf{P}~: s'il est présent, elle appelle \texttt{parseProcess}, sinon elle renvoie \texttt{PTrivial} ce qui fait remonter la pile d'appel jusqu'au parsing d'un \texttt{MetaProc}, ou d'un \texttt{PIf}.
 \end{itemize}
 
-Toutes ces fonctions créent un objet ad-hoc, et laissent le curseur de l'\texttt{Input} juste après le dernier caractère réellement utilisé. Par exemple pour le code \textbf{in(c,x)}, le \textbf{x} engendre une variable, mais la parenthèse est laissée pour permettre au programme parsant le \textbf{in} de bien retrouver la parenthèse fermante. Toutes les situations similaires ont motivé la fonction \texttt{Input.peek} : regarder un caractère sans le consommer.
+Toutes ces fonctions créent un objet ad-hoc, et laissent le curseur de l'\texttt{Input} juste après le dernier caractère réellement utilisé. Par exemple pour le code \textbf{in(c,x)}, le \textbf{x} engendre une variable, mais la parenthèse est laissée pour permettre à la fonction appelante, qui parse le \textbf{in}, de retrouver la parenthèse fermante. Toutes les situations similaires ont motivé la fonction \texttt{Input.peek} : regarder un caractère sans le consommer.
 
-Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \emph{délimiteurs}~: on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas~:
+Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur les \textbf{délimiteurs}~: on peut lire un mot jusqu'à un certain délimiteur ((),=: etc) pour discerner les cas~:
 \begin{itemize}
-\item pour les process, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet de discerner facilement les cas;
-\item pour les termes, on regarde en premier lieu s'il s'agit d'un nombre (le premier caractère est '-' ou un chiffre), sinon on effectue un \emph{pattern matching} semblable, et pour finir on recherche un éventuel opérateur en notation infixe.
+\item pour les \texttt{Process}, un \emph{pattern matching} sur le mot clé lu et le délimiteur permet de discerner facilement les cas;
+\item pour les \texttt{Term}, on regarde en premier lieu s'il s'agit d'un nombre (le premier caractère est '-' ou un chiffre), sinon on effectue un \emph{pattern matching} semblable, et pour finir on recherche un éventuel opérateur en notation infixe.
 \end{itemize}
 
 \subsection{Précisions}
@@ -118,11 +120,11 @@ Le fonctionnement de \texttt{parseProcess} et \texttt{parseTerm} est basé sur l
 Trois précisions sont à faire~:
 \begin{itemize}
 \item les constructeurs qui demandent des valeurs attendent en réalité des termes, qui devraient, à l'interprétation, être réduits en valeurs. Aucune distinction n'est faite entre les termes réductibles en valeur et les autres, la vérification du type étant systématique lors de l'interprétation.
-\item aucune constante n'est déclarée en dehors d'un \textbf{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
+\item aucune constante n'est déclarée en dehors d'un \texttt{new}. Les déclaration de constantes réduisent les variables portant le même identifiant.
 \item lors du parsing, les canaux sont représentés uniquement par leur nom. Ce choix permet de construire l'AST indépendamment de la stratégie d'exécution. Les détails d'implémentation des canaux sont dans la partie suivante.
 \end{itemize}
 
-Comme prévu, la parsing peut être fait à la volée~: la fonction \texttt{peek} de la classe \texttt{Input} permet de regarder uniquement un caractère sans le consommer, et c'est suffisant. La complexité du parseur est linéaire, comme on doit pouvoir l'espérer avec une telle grammaire.
+Comme prévu, la parsing peut être fait au fur et à mesure~: la fonction \texttt{peek} de la classe \texttt{Input} permet de regarder uniquement un caractère sans le consommer, et c'est suffisant. La complexité du parseur est linéaire, comme on doit pouvoir l'espérer avec une telle grammaire.
 
 \section{Interprétation du langage}
 
@@ -142,12 +144,14 @@ Remarquons que l'interprétation des processus est sémantiquement indépendante
 Bien que le paradigme objet suivi lors de la conception de l'AST permettrait d'interpréter les processus, termes et autres valeurs à l'aide d'une méthode attachée à l'élément lui même, nous avons choisi de construire une \textbf{fonction d'interprétation distincte}, dans un style plus fonctionnel, en utilisant la capacité de matching associée aux case class Scala. Ce choix d'implémentation permet une modification aisé du comportement de l'interpréteur en cas de modification de la sémantique.
 
 \subsubsection{Principe général}
-L'interprétation d'un AST débute lors de l'appel de la méthode \texttt{interpret}. L'AST est alors parcouru une fois pour récupérer l'ensemble des canaux, leur fixer la stratégie choisie et construire à la volée une map entre nom de canal et canal.
+L'interprétation d'un AST débute lors de l'appel de la méthode \texttt{interpret}. L'AST est alors parcouru une fois, sans détailler les termes, pour récupérer l'ensemble des canaux, créer pour chacun d'eux l'objet adéquat à la stratégie et lier le nom et le canal dans une \texttt{Map}.
 
 Un AST commençant nécessairement par un \texttt{MetaProc}, on crée autant de threads que demandé, encapsulés dans la classe \texttt{InterpretThread} pour interpréter la chaîne de processus liée au \texttt{MetaProc}. La suite de la chaîne de \texttt{MetaProc} est ensuite évaluée récursivement, et les processus sont lancés à la volée et s'évaluent de manière parallèle.
 % TODO nous vs on
-\subsubsection{Environement versus $\beta$-réduction}
-Le premier choix effectué lors de la conception de l'interpréteur est le choix d'une méthode de substitution des variables. Au vue de la sémantique du langage, deux choix sont possibles~: la création d'un \textbf{environement} qui se transmet le long de l'interprétation ou la  \textbf{$\beta$-réduction} à la volée. Nous avons optés pour la deuxième solution, respectant au plus près la sémantique \emph{small-step} proposée.  Ce choix est techniquement possible, puisqu'il n'y a transmission de la réduction qu'aux processus situés sur la même branche que le processus courant. En outre elle est très aisée à réaliser car il n'y pas de distinctions subtiles à faire entre variables libres et liées. En outre l'implémentation de cette réduction se fait naturellement en tant que méthode attachée aux éléments de l'AST.
+\subsubsection{Environnement versus $\beta$-réduction}
+Le premier choix effectué lors de la conception de l'interpréteur est le choix d'une méthode de substitution des variables. Au vue de la sémantique du langage, deux choix sont possibles~: la création d'un \textbf{environnement} qui se transmet le long de l'interprétation ou la  \textbf{$\beta$-réduction} à la volée.
+
+Nous avons optés pour la deuxième solution, respectant au plus près la sémantique \emph{small-step} proposée.  Ce choix est techniquement possible, puisqu'il n'y a transmission de la réduction qu'aux processus situés sur la même branche que le processus courant. En outre elle est très aisée à réaliser car il n'y pas de distinctions subtiles à faire entre variables libres et liées. En outre l'implémentation de cette réduction se fait naturellement en tant que méthode attachée aux éléments de l'AST.
 
 \subsubsection{Cas du in\^{}k}
 Néanmoins une telle méthode pose quelques problèmes quant à l'interprétation d'un processus de type \texttt{in\^{}k} de manière récursive~: l'opérateur \texttt{::} ayant à la fois un rôle sémantique et syntaxique que la construction avec la classe \texttt{ListTerm} ne permet pas de représenter. Nous avons donc dépiler la structure récursive de la sémantique \emph{small-step} pour obtenir une interprétation itérative de ce processus~: la liste se construit en allant lire le canal concerné et est remplacée seulement à la fin de l'opération de lecture.

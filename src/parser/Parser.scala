@@ -30,7 +30,6 @@ class Parser(src: Input)
 
   // Definition of errors
   case class SyntaxError()                  extends Exception
-  case class ValueExpected()                extends Exception
   case class NameMalformed(name: String)    extends Exception
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,8 @@ class Parser(src: Input)
 
     word match
     {
-      case "in" | "as" | "out" | "if" | "then" | "else" | "new" =>
+      case "in" | "as" | "out" | "if" | "then" | "else" | "new"
+      | "pair" | "pi1" | "pi2" | "enc" | "dec" | "pk" | "sk" | "count" | "not" =>
         throw new NameMalformed(word)
       case _ =>
         // not empty and first char is alphabetic
@@ -199,8 +199,7 @@ class Parser(src: Input)
 
         (keyword, peeked) match
         {
-          case ("pair", d) => // generic on d : avoid matching (name, _) with name="pair"
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("pair", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
@@ -208,23 +207,20 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TPair(left, right)
 
-          case ("pi1", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("pi1", '(') =>
             src.cleanPeek()
             val t = parseTerm()
             src.checkNextWord(")")
 
             new TPi1(t)
 
-          case ("pi2", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("pi2", '(') =>
             src.cleanPeek()
             val t = parseTerm()
             src.checkNextWord(")")
             new TPi2(t)
 
-          case ("enc", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("enc", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
@@ -232,8 +228,7 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TEnc(left, right)
 
-          case ("dec", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("dec", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
@@ -241,15 +236,13 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TDec(left, right)
 
-          case ("pk", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("pk", '(') =>
             src.cleanPeek()
             val v = parseTerm()
             src.checkNextWord(")")
             new TPk(v)
 
-          case ("sk", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("sk", '(') =>
             src.cleanPeek()
             val v = parseTerm()
             src.checkNextWord(")")
@@ -262,15 +255,13 @@ class Parser(src: Input)
             new ListTerm(List())
 
           // Values
-          case ("count", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("count", '(') =>
             src.cleanPeek()
             val l = parseTerm()
             src.checkNextWord(")")
             new TValue(new VCount(l))
 
-          case ("not", d) =>
-            if(d != '(') throw new src.Unexpected(d, src.isChar('('))
+          case ("not", '(') =>
             src.cleanPeek()
             val v = parseTerm()
             src.checkNextWord(")")
