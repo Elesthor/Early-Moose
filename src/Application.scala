@@ -17,6 +17,7 @@ object Application
 {
   def main(args: Array[String]): Unit =
   {
+    println(moose)
     // option ligne de commande
     if(args.length < 2 || (args(0) != "-sync" && args(0) != "-async"))
     {
@@ -52,7 +53,9 @@ object Application
         case _:java.io.FileNotFoundException => System.err.println("file " + args(1) + " not found")
       }
     }
-}
+
+    val moose ="////////////////////////////////////////////////////////////////////////////////\n//                                                                            //\n//                                                   \\_\\_    _/_/             //\n//      .--       .      .  .                            \\__/                 //\n//      |- .-. .-.| . .  |\\/|.-..-..-.-,                 (oo)\\_______   /     //\n//      '--`-`-'  '-'-|  '  '`-'`-'-'`'-                 (__)\\       )\\/      //\n//                  `-'                                      ||-----||        //\n//                                                           ||     ||        //\n////////////////////////////////////////////////////////////////////////////////"
+  }
 }
 
 
