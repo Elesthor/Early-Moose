@@ -28,7 +28,6 @@ class VigenereKey(seed: Int) extends Key[Array[Char]]
 
 class Vigenere extends CryptoSystem [Array[Char]]
 {
-  // we have to use a charset for convertion between Array[Char] and String
   def encode (msg: String, key: Array[Char]) : String =
     msg.toArray.foldLeft("",0){(s, c) => (s._1 + (c+key(s._2 % key.length)).toChar, s._2+1)}._1
   
