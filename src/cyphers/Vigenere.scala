@@ -26,7 +26,7 @@ class VigenereKey(seed: Int) extends Key[Array[Char]]
   def getPrivate = getPublic.map({x => (-x).toChar})
 }
 
-class Vigenere extends GenericCypher[Array[Char]]
+class Vigenere extends CryptoSystem [Array[Char]]
 {
   // we have to use a charset for convertion between Array[Char] and String
   def encode (msg: String, key: Array[Char]) : String =

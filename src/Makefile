@@ -18,12 +18,12 @@ cyphers: $(CLASSCYPHERS)
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
 parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
-CYPHERS = $(filter-out cyphers/GenericCypher.class, $(CLASSCYPHERS))
-$(CYPHERS): cyphers/GenericCypher.class
+CYPHERS = $(filter-out cyphers/CryptoSystem.class, $(CLASSCYPHERS))
+$(CYPHERS): cyphers/CryptoSystem.class
 Application.class: $(CLASSPARSER) $(CLASSPLAYER)
 
 %.class: %.scala
 	scalac -d $(shell dirname $*) -classpath $(DIRS) $*.scala
 
 clean:
-	@rm -f *.class parser/*.class player/*.class $(SRC:.scala=.scala~)
+	@rm -f *.class parser/*.class player/*.class cyphers/*.class $(SRC:.scala=.scala~)

@@ -19,7 +19,7 @@ class CesarKey (seed: Int ) extends Key [Char]
   def getPrivate = (-getPublic).toChar
 }
 
-class Cesar extends GenericCypher [Char]
+class Cesar extends CryptoSystem [Char]
 {
   def encode(msg: String, key: Char): String =
     msg.toArray.foldLeft(""){(s,c) => s + (c + key).toChar}
