@@ -29,7 +29,7 @@ class CesarCypher extends GenericCypher [Byte]
 {
   def encode(msg: String, key: Byte): String =
   {
-    new String(msg.getBytes.map({x => (x + key).toByte}))
+    new String(msg.getBytes.map({x => (x + key).toByte})) // TODO buggé
   }
   def encrypt (msg: String, key: Key [Byte]): String =
   {
@@ -43,7 +43,7 @@ class CesarCypher extends GenericCypher [Byte]
 }
 
 val toto = "testthomas"
-val k = new CesarKey (432)
+val k = new CesarKey (util.Random.nextInt())
 val testCypher = new CesarCypher
 println(testCypher.decrypt(testCypher.encrypt(toto, k),k))
 
