@@ -13,32 +13,31 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class CesarKey (seed: Int ) extends Key [Byte]
+class CesarKey (seed: Int ) extends Key [Char]
 {
   def generate(seed: Int) =
   {
-    seed.toByte
+    seed.toChar
   }
   val publ = generate(seed)
-  val priv = (-publ).toByte
+  val priv = (-publ).toChar
 
   def getPublic () = publ
   def getPrivate() = priv
 }
 
-class CesarCypher extends GenericCypher [Byte]
+class CesarCypher extends GenericCypher [Char]
 {
-  val charset = java.nio.charset.Charset.forName("ISO-8859-1")
-  def encode(msg: String, key: Byte): String =
+  def encode(msg: String, key: Char): String =
   {
-    new String(msg.getBytes(charset).map({x => (x + key).toByte}), charset)
+    msg.toArray.foldLeft(""){(s,c) => s + (c + key).toChar}
   }
-  def encrypt (msg: String, key: Key [Byte]): String =
+  def encrypt (msg: String, key: Key [Char]): String =
   {
     encode(msg, key.getPublic)
   }
 
-  def decrypt (crypt: String, key: Key [Byte]): String =
+  def decrypt (crypt: String, key: Key [Char]): String =
   {
     encode(crypt, key.getPrivate)
   }
