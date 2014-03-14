@@ -13,11 +13,11 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class CesarKey (seed: Int ) extends Key [Byte]  
+class CesarKey (seed: Int ) extends Key [Byte]
 {
-  def generate(seed: Int) =  
+  def generate(seed: Int) =
   {
-    seed.toByte 
+    seed.toByte
   }
   val content  = generate(seed)
 
@@ -27,18 +27,18 @@ class CesarKey (seed: Int ) extends Key [Byte]
 
 class CesarCypher extends GenericCypher [Byte]
 {
-  def encode(msg: String, key: Byte): String = 
+  def encode(msg: String, key: Byte): String =
   {
-    new String(msg.getBytes.map({x => (x + key).toByte}))   
+    new String(msg.getBytes.map({x => (x + key).toByte}))
   }
   def encrypt (msg: String, key: Key [Byte]): String =
   {
     encode(msg, key.getPublic)
   }
 
-  def decrypt (crypt: String, key: Key [Byte]): String = 
+  def decrypt (crypt: String, key: Key [Byte]): String =
   {
-    encode(crypt, (-key.getPublic).toByte)
+    encode(crypt, (-key.getPrivate).toByte)
   }
 }
 
