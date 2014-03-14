@@ -13,9 +13,9 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class CesarKey (seed: int)  extends Key [Int] := 
+class CesarKey (seed: Int)  extends Key [Int] = 
 { 
-  def generate(seed: int) =  
+  def generate(seed: Int) =  
   {
      content = ((seed % 256) + 255) % 256
   }
@@ -27,8 +27,17 @@ class CesarKey (seed: int)  extends Key [Int] :=
 
 class CesarCypher extends GenericCypher
 {
-    def encrypt (msg: String, key: String): String :=
+    def encrypt (msg: String, key: CesarKey): String :=
     {
-       
+      var encoded = msg.getBytes
+      for (i = 0 to encoded.length)
+      {
+        encoded(i) = (encoded(i) + key) % 256 
+      }
+      return encoded
     }
+
+    def decrypt (crypt: String, key: CesarKey): String :=
+        encrypt(crynt, key)
 }
+
