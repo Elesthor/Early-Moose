@@ -19,8 +19,8 @@ abstract class Key [T]
   def getPrivate(): T
 }
 
-trait GenericCypher
+trait GenericCypher [T]
 {
-  def encrypt (msg: String , pub: PublicKey): String 
-  def decrypt (msg: String , priv: PrivateKey ): String      
+  def encrypt (msg: String , pub: Key [T] ): String 
+  def decrypt (msg: String , priv: Key [T] ): String      
 }
