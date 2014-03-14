@@ -19,7 +19,7 @@ class CesarKey (seed: Int ) extends Key [Char]
   def getPrivate = (-getPublic).toChar
 }
 
-class CesarCypher extends GenericCypher [Char]
+class Cesar extends GenericCypher [Char]
 {
   def encode(msg: String, key: Char): String =
     msg.toArray.foldLeft(""){(s,c) => s + (c + key).toChar}
@@ -33,6 +33,6 @@ class CesarCypher extends GenericCypher [Char]
 
 val toto = "testthomas"
 val k = new CesarKey (util.Random.nextInt())
-val testCypher = new CesarCypher
+val testCypher = new Cesar
 println(testCypher.decrypt(testCypher.encrypt(toto, k),k))
 
