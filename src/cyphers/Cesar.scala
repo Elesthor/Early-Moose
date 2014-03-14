@@ -31,8 +31,3 @@ class Cesar extends GenericCypher [Char]
     encode(crypt, key.getPrivate)
 }
 
-val toto = "testthomas"
-val k = new CesarKey (util.Random.nextInt())
-val testCypher = new Cesar
-println(testCypher.decrypt(testCypher.encrypt(toto, k),k))
-
