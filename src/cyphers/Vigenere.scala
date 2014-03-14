@@ -13,43 +13,35 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class VigenereKey(seed: Int) extends Key[Array[Byte]]
+class VigenereKey(seed: Int) extends Key[Array[Char]]
 {
   val publ = generate()
-  val priv = publ.map({x => (-x).toByte})
+  val priv = publ.map({x => (-x).toChar})
   
-  def generate() : Array[Byte] =
+  def generate() : Array[Char] =
   {
-    // random Array[Byte] of random size
+    // random Array[Char] of random size
     val randomizer = new util.Random(seed)
-    val a = new Array[Byte](randomizer.nextInt() % 64 + 64)
-    randomizer.nextBytes(a)
-    a
+    randomizer.nextString(randomizer.nextInt() % 64 + 64).toArray
   }
   
   def getPublic () = publ
   def getPrivate() = priv
 }
 
-class Vigenere extends GenericCypher[Array[Byte]]
+class Vigenere extends GenericCypher[Array[Char]]
 {
-  // we have to use a charset for convertion between Array[Byte] and String
-  val charset = java.nio.charset.Charset.forName("ISO-8859-1")
-  def aux (msg: String, key: Array[Byte]) : String =
+  // we have to use a charset for convertion between Array[Char] and String
+  def aux (msg: String, key: Array[Char]) : String =
   {
-    msg.getBytes(charset).foldLeft("",0){(s, c) => (s._1 + c.toChar, s._2+1)}._1
-    /*
-    var encoded = msg.getBytes(charset)
-    for (i <- 0 to encoded.length-1)
-      encoded(i) = (encoded(i) + key(i%key.length)).toByte
-    new String(encoded, charset)*/
+    msg.toArray.foldLeft("",0){(s, c) => (s._1 + (c+key(s._2 % key.length)).toChar, s._2+1)}._1
   }
   
-  def encrypt (msg: String, key: Key[Array[Byte]]): String  =
+  def encrypt (msg: String, key: Key[Array[Char]]): String  =
   {
     aux (msg, key.getPublic)
   }
-  def decrypt (msg: String, key : Key[Array[Byte]]): String =
+  def decrypt (msg: String, key : Key[Array[Char]]): String =
   {
     aux (msg, key.getPrivate)
   }
