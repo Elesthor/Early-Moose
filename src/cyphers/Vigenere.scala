@@ -37,10 +37,12 @@ class Vigenere extends GenericCypher[Array[Byte]]
   val charset = java.nio.charset.Charset.forName("ISO-8859-1")
   def aux (msg: String, key: Array[Byte]) : String =
   {
+    msg.getBytes(charset).foldLeft("",0){(s, c) => (s._1 + c.toChar, s._2+1)}._1
+    /*
     var encoded = msg.getBytes(charset)
     for (i <- 0 to encoded.length-1)
       encoded(i) = (encoded(i) + key(i%key.length)).toByte
-    new String(encoded, charset)
+    new String(encoded, charset)*/
   }
   
   def encrypt (msg: String, key: Key[Array[Byte]]): String  =
@@ -55,7 +57,7 @@ class Vigenere extends GenericCypher[Array[Byte]]
 
 
 var encoder = new Vigenere
-var key = new VigenereKey(0)
+var key = new VigenereKey(util.Random.nextInt)
 var cypher = encoder.encrypt("coucou", key)
 println(cypher)
 println(encoder.decrypt(cypher, key))
