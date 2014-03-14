@@ -1,20 +1,25 @@
-DIRS = ./:parser/:player/
+DIRS = ./:parser/:player/:cyphers/
 
 SRCPARSER = $(wildcard parser/*.scala)
 SRCPLAYER = $(wildcard player/*.scala)
+SRCCYPHERS = $(wildcard cyphers/*.scala)
 SRCMAIN = $(wildcard *.scala)
-SRC = $(SRCPARSER) $(SRCPLAYER) $(SRCMAIN)
+SRC = $(SRCPARSER) $(SRCPLAYER) $(SRCMAIN) $(SRCCYPHERS)
 
 CLASSPARSER = $(SRCPARSER:.scala=.class)
 CLASSPLAYER = $(SRCPLAYER:.scala=.class)
+CLASSCYPHERS = $(SRCCYPHERS:.scala=.class)
 CLASSMAIN = $(SRCMAIN:.scala=.class)
-CLASS = $(CLASSPARSER) $(CLASSPLAYER) $(CLASSMAIN)
+CLASS = $(CLASSPARSER) $(CLASSPLAYER) $(CLASSMAIN) $(CLASSCYPHERS)
 
-compile: $(CLASS)
+all: $(CLASS)
+cyphers: $(CLASSCYPHERS)
 
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
 parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
+CYPHERS = $(filter-out cyphers/GenericCypher.class, $(CLASSCYPHERS))
+$(CYPHERS): cyphers/GenericCypher.class
 Application.class: $(CLASSPARSER) $(CLASSPLAYER)
 
 %.class: %.scala

@@ -1,2 +1,2 @@
 #!/bin/bash
-scala -cp parser/:player/ Application.class $@
+scala -cp parser/:player/ Application $@
