@@ -19,17 +19,19 @@ class CesarKey (seed: Int ) extends Key [Byte]
   {
     seed.toByte
   }
-  val content  = generate(seed)
+  val publ = generate(seed)
+  val priv = (-publ).toByte
 
-  def getPublic () = content
-  def getPrivate() = content
+  def getPublic () = publ
+  def getPrivate() = priv
 }
 
 class CesarCypher extends GenericCypher [Byte]
 {
+  val charset = java.nio.charset.Charset.forName("ISO-8859-1")
   def encode(msg: String, key: Byte): String =
   {
-    new String(msg.getBytes.map({x => (x + key).toByte})) // TODO buggé
+    new String(msg.getBytes(charset).map({x => (x + key).toByte}), charset)
   }
   def encrypt (msg: String, key: Key [Byte]): String =
   {
@@ -38,7 +40,7 @@ class CesarCypher extends GenericCypher [Byte]
 
   def decrypt (crypt: String, key: Key [Byte]): String =
   {
-    encode(crypt, (-key.getPrivate).toByte)
+    encode(crypt, key.getPrivate)
   }
 }
 

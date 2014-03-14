@@ -13,7 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class Key [T] 
+abstract class Key [T]
 {
   def getPublic(): T
   def getPrivate(): T
@@ -21,6 +21,7 @@ abstract class Key [T]
 
 trait GenericCypher [T]
 {
-  def encrypt (msg: String , pub: Key [T] ): String 
-  def decrypt (msg: String , priv: Key [T] ): String      
+  def encrypt (msg: String , pub: Key [T] ): String
+  def decrypt (msg: String , priv: Key [T] ): String
 }
+
