@@ -15,32 +15,20 @@
 
 class CesarKey (seed: Int ) extends Key [Char]
 {
-  def generate(seed: Int) =
-  {
-    seed.toChar
-  }
-  val publ = generate(seed)
-  val priv = (-publ).toChar
-
-  def getPublic () = publ
-  def getPrivate() = priv
+  def getPublic = seed.toChar
+  def getPrivate = (-getPublic).toChar
 }
 
 class CesarCypher extends GenericCypher [Char]
 {
   def encode(msg: String, key: Char): String =
-  {
     msg.toArray.foldLeft(""){(s,c) => s + (c + key).toChar}
-  }
+
   def encrypt (msg: String, key: Key [Char]): String =
-  {
     encode(msg, key.getPublic)
-  }
 
   def decrypt (crypt: String, key: Key [Char]): String =
-  {
     encode(crypt, key.getPrivate)
-  }
 }
 
 val toto = "testthomas"
