@@ -14,9 +14,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO : on peut retrouver publicKey en retrouvant l'indice de g^publicKey ???
-class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(Array[E], Int, E)] // Key : (G, |G|, g^publicKey)
+class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(Int, Int, E)] // public : (|G|,_, g^x); private : (|G|, x, _)
 {
-  var (elements, size, h, x) = generate()
   def generate() =
   {
     // generation of the whole group
@@ -35,36 +34,62 @@ class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(Array[E],
     
     (els, els.length, group.exp(g, x), x)
   }
-  generate()
   
-  def getPublic  = (elements, size, h)
-  def getPrivate = (elements, x, group.unit) // only x count. Plus maintenant en fait j'ai besoin de la taille de elements pour calculer s^-1
+  var (elements, size, h, x) = generate()
+  def getPublic  = (size, 0, h)
+  def getPrivate = (size, x, group.unit)
 }
-
-class ElGamal[E](group: Group[E]) extends CryptoSystem [(Array[E], Int, E)]
+type E = Int
+class ElGamal/*[E]*/(group: Group[E]) extends CryptoSystem [(Int, Int, E)]
 {
-  def encrypt (msg: String, key: Key[(Array[E], Int, E)]): String  =
+  def encrypt (msg: String, key: Key[(Int, Int, E)]): String  =
   {
     val k = key.getPublic
-    val y = util.Random.nextInt(k._2-1)+1
-    val s = group.exp(group.generator, y)
-    val m = group.exp(group.generator, 2)// TODO : on est sensé choisir un élément du groupe...
-    val c2 = group.times(m, s)
-    val cypher = (group.exp(group.generator, y), c2)
-    cypher.toString
+    def encryptChar(c: Char) : String =
+    {
+      val y = util.Random.nextInt(k._1-1)+1
+      val s = group.exp(k._3, y)
+      val m = c // TODO : on est sensé choisir un élément du groupe...
+      val c2 = group.times(m, s)
+      val c1 = group.exp(group.generator, y)
+      val cypher = (c1, c2)
+      cypher.toString
+    }
+    msg.toArray.foldLeft(""){(s,c) => s + encryptChar(c)}
   }
 
-  def decrypt (msg: String, key : Key[(Array[E], Int, E)]): String =
+  def decrypt (msg: String, key : Key[(Int, Int, E)]): String =
   {
     val k = key.getPrivate
-    val c1 = group.generator // TODO
-    val c2 = group.generator // TODO
-    val s = group.exp(c1, k._2)
-    val s_inv = group.exp(s, k._1.length-1)
-    val m = group.times(c2, s_inv)
-    // puis retrouver le message correspondant
-    ""
+    def decryptChar(text: String) : (Char, String) =
+    {
+      val regex = "\\(([0-9]+),([0-9]+)\\)(.*)".r
+      val Some(res) = regex findFirstMatchIn text
+      val c1 = res.group(1).toInt // TODO
+      val c2 = res.group(2).toInt
+      val s_inv = group.exp(c1, k._1-k._2)
+      val m = group.times(c2, s_inv)
+      (m.toChar, res.group(3))
+    }
+    var from = msg
+    var to = ""
+    while(from != "")
+    {
+      var (c, next) = decryptChar(from)
+      to = to + c
+      from = next
+    }
+    to
   }
 }
+
+val grp = new Zk(1009)
+val key = new ElGamalKey(0, grp)
+val gen = new ElGamal(grp)
+val msg = "coucou"
+val cypher = gen.encrypt(msg,key)
+println(msg.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
+println(cypher)
+println(gen.decrypt(cypher, key).toArray.foldLeft(""){(s,c) => s+','+c.toInt})
 
 

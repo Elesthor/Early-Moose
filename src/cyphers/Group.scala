@@ -32,7 +32,7 @@ trait Group[E]
 class Zk(k: Int) extends Group[Int]
 {
   val unit = 0
-  val generator = 1
+  val generator = 1 // TODO : autre chose
   def times (e1: Int, e2: Int) : Int =
   {
     (e1+e2)%k
@@ -42,7 +42,7 @@ class Zk(k: Int) extends Group[Int]
 class Zp(p: Int) extends Group[Int]
 {
   val unit = 1
-  val generator = 2
+  val generator = 2 // TODO
   def times (e1: Int, e2: Int) : Int =
   {
     (e1*e2)%p
