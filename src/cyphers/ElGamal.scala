@@ -54,7 +54,7 @@ class ElGamal/*[E]*/(group: Group[E]) extends CryptoSystem [(Int, Int, E)]
       val c1 = group.exp(group.generator, y)
       val cypher = (c1, c2)
       cypher.toString
-    }
+}
     msg.toArray.foldLeft(""){(s,c) => s + encryptChar(c)}
   }
 

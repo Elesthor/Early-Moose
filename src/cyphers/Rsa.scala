@@ -60,9 +60,18 @@ class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
 
 class RSA extends CryptoSystem [(BigInt, BigInt)]
 {
+  def asciiRepr(s: Byte): String = 
+  {
+   "0"*(3-s.toString.length)+s.toString
+  }
   def PKCS1StringToInt(msg: String): BigInt = 
   {
-    0
+    BigInt.apply(msg.getBytes.map(asciiRepr).foldLeft(""){(s,c)=>s+c})
+  }
+
+  def PKCS1IntToString(nb: BigInt): String = 
+  {
+    nb.toString.grouped(3).toArray.map(_.toInt.toChar).foldLeft(""){(s,c)=>s+c}
   }
 
   def encrypt(msg: String, key: Key[(BigInt, BigInt)]): String = 
@@ -74,10 +83,18 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   def decrypt(crypt: String, key: Key[(BigInt, BigInt)] ): String = 
   {
     val (n, d) = key.getPrivate
-    PKCS1IntToString(BigInt.apply(crypt)).modPow(e,d))
+    PKCS1IntToString(BigInt.apply(crypt).modPow(d,n))
   }
 
 }
 
 val a = new RsaKey(12)
-println(a.getPublic) 
+val b = "tot boubou , salut, foo bar !! , coucou"
+val rsa = new RSA
+val c = rsa.PKCS1StringToInt(b)
+println(c)
+val d = rsa.PKCS1IntToString(c)
+println(d)
+val f = rsa.encrypt(b, a)
+println(f)
+println(rsa.decrypt(f, a))
