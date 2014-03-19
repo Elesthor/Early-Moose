@@ -15,7 +15,7 @@
 
 import scala.BigInt
 import scala.math
-val PQ_LENGTH = 128 
+val PQ_LENGTH = 1024
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   def encrypt(msg: String, key: Key[(BigInt, BigInt)]): String = 
   {
     val (n, e) = key.getPublic
-    val chunks = PKCS1StringToInt(msg).grouped(16).toArray  
+    val chunks = PKCS1StringToInt(msg).grouped(n.bitLength/3).toArray  
     chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString, 2*n.bitLength/3-1)}).foldLeft(""){(s,c)=>s+c}
   }
 
