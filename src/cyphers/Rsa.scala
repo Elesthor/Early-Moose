@@ -13,16 +13,28 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+import scala.BigInt
+import scala.math
+val PQ_LENGTH = 128 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
 //                           Utilities functions                              //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+// Return a padded representation of the byte at len digit.
 
-import scala.BigInt
+def padByte(s: String , len: Int): String = 
+{
+  "0"*(len-s.toString.length)+s.toString
+}
 
-val PQ_LENGTH = 1024
-
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Utilities functions                              //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 abstract class Key [T]
 {
   def getPublic(): T
@@ -40,8 +52,8 @@ class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
   def generate() =
   {
     val randomizer = new util.Random(seed)
-    val p = BigInt.apply(PQ_LENGTH, 100, randomizer)
-    val q = BigInt.apply(PQ_LENGTH, 100, randomizer)
+    val p = BigInt.apply(PQ_LENGTH, 10000, randomizer)
+    val q = BigInt.apply(PQ_LENGTH, 10000, randomizer)
     val n = p*q
     val indEulerN = (p-1)*(q-1)
     
@@ -58,15 +70,13 @@ class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
   var (n, d, e) = generate()
   def getPublic = (n,e)
   def getPrivate = (n,d)
+  def getN = n
+  def getE = e
+  def getD = d
 }
 
 class RSA extends CryptoSystem [(BigInt, BigInt)]
 {
-  // Return a padded representation of the byte at len digit.
-  def padByte(s: String , len: Int): String = 
-  {
-    "0"*(len-s.toString.length)+s.toString
-  }
 
   def PKCS1StringToInt(msg: String): String  = 
   {
@@ -81,25 +91,35 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   def encrypt(msg: String, key: Key[(BigInt, BigInt)]): String = 
   {
     val (n, e) = key.getPublic
-    val chunks = PKCS1StringToInt(msg).grouped(PQ_LENGTH).toArray  
-    chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString, PQ_LENGTH)}).foldLeft(""){(s,c)=>s+c}
+    val chunks = PKCS1StringToInt(msg).grouped(16).toArray  
+    chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString, 2*n.bitLength/3-1)}).foldLeft(""){(s,c)=>s+c}
   }
 
   def decrypt(crypt: String, key: Key[(BigInt, BigInt)] ): String = 
   {
     val (n, d) = key.getPrivate
-    val chunks = crypt.grouped(PQ_LENGTH).toArray 
-
+    val chunks = crypt.grouped(2*n.bitLength/3-1).toArray 
+    println(chunks(0))
+    println(BigInt.apply(chunks(0)).modPow(d,n))
     val decrypted =  chunks.map(BigInt.apply(_).modPow(d,n).toString).foldLeft(""){(s,c)=>s+c}
     PKCS1IntToString(BigInt.apply(decrypted))
   }
 
 }
 
-val a = new RsaKey(12)
-val b = "uhuhuhuhuhuhuhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnuhuhuhuhuhuhuhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5uhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5uhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5uhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5uhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5uhuhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhjjjjjjjjjjjjjjjjjjbbbbbbbbbbbbbbbbbbbbbbjjjjjjjjjjtestcoucou12345123451234512345123451234512345123451234512345123451234bcdefghijklmnop5"
-val rsa = new RSA
 
+
+val a = new RsaKey(13332)
+val b = "toootototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotototototototottotottototototottotott"
+val rsa = new RSA
+val c = (rsa.PKCS1StringToInt(b))
+println(c)
+
+println("------")
+
+println(BigInt.apply(c).modPow(a.getE,a.getN).modPow(a.getD, a.getN))
 val f = rsa.encrypt(b, a)
+
 println(f)
+
 println(rsa.decrypt(f, a))
