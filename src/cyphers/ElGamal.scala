@@ -13,83 +13,132 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-// TODO : on peut retrouver publicKey en retrouvant l'indice de g^publicKey ???
-class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(Int, Int, E)] // public : (|G|,_, g^x); private : (|G|, x, _)
+import scala.BigInt
+
+class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
 {
-  def generate() =
+  // return a random BigInt between 0 (inclusive) and max (exclusive)
+  def randomBigInt(max: BigInt, rnd: util.Random) : BigInt = // TODO : étendre Random
   {
-    // generation of the whole group
-    var els = new Array[E](0)
-    var g = group.generator
-    var e = g
-    do
-    {
-      els = els :+ e
-      e = group.times(g, e)
-    } while(e != g);
-    
-    // key
-    val randomizer = new util.Random(seed)
-    val x = randomizer.nextInt(els.length-1)+1
-    
-    (els, els.length, group.exp(g, x), x)
+    val size = max.bitLength
+    var r = BigInt(0)
+    do {
+      r = BigInt(size, rnd);
+    } while (r >= max);
+    r
   }
   
-  var (elements, size, h, x) = generate()
-  def getPublic  = (size, 0, h)
-  def getPrivate = (size, x, group.unit)
-}
-type E = Int
-class ElGamal/*[E]*/(group: Group[E]) extends CryptoSystem [(Int, Int, E)]
-{
-  def encrypt (msg: String, key: Key[(Int, Int, E)]): String  =
+  def generate() =
   {
-    val k = key.getPublic
-    def encryptChar(c: Char) : String =
+    val randomizer = new util.Random(seed)
+    val x = randomBigInt(group.order-1, randomizer) // TODO : -1 ? on veut pas unit, on veut le générateur ?
+    (group.exp(group.generator, x), x)
+  }
+  
+  var (h, x) = generate()
+  def getPublic  = (0, h)
+  def getPrivate = (x, group.unit)
+}
+
+class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
+{
+  // return a random BigInt between 0 (inclusive) and max (exclusive)
+  def randomBigInt(max: BigInt, rnd: util.Random) : BigInt = // TODO : étendre Random
+  {
+    val size = max.bitLength
+    var r = BigInt(0)
+    do {
+      r = BigInt(size, rnd);
+    } while (r >= max);
+    r
+  }
+  
+  def eToByte(e: E): Byte =
+  {
+    var el = group.generator
+    for(i <- 1 to 256)
     {
-      val y = util.Random.nextInt(k._1-1)+1
-      val s = group.exp(k._3, y)
-      val m = c // TODO : on est sensé choisir un élément du groupe...
+      if(el == e)
+        return (i-128).toByte
+      el = group.times(el, group.generator)
+    }
+    throw new java.lang.RuntimeException("E not found :(")
+  }
+  def eFromByte(c: Byte): E =
+  {
+    group.exp(group.generator, c+128)
+  }
+  
+  def injectiveString(s: String): String =
+  {
+    s.length.toString + '#' + s // TODO : etre transparent à l'encodage, car là la taille de la string en dépend (lors de l'interpratation des octets depuis le réseau)... bytes plutot que char
+  }
+  
+  def getString(s: String): (String, String) =
+  {
+    val p = s.indexOf('#') // if not found, substring will throw an exception, and we want it
+    val len = s.substring(0, p).toInt
+    (s.substring(p+1, p+len+1), s.substring(p+len+1))
+  }
+  def injectiveCode(c: (E, E)): String =
+  {
+    injectiveString(group.eToString(c._1))+injectiveString(group.eToString(c._2))
+  }
+  def getCode(from: String): (E, E, String) =
+  {
+    val (c1, tmp) = getString(from)
+    val (c2, next) = getString(tmp)
+    (group.eFromString(c1), group.eFromString(c2), next)
+  }
+  
+  def encrypt (msg: String, key: Key[(BigInt, E)]): String  =
+  {
+    val randomizer = new util.Random
+    val k = key.getPublic
+    def encryptE(m: E): (E, E) =
+    {
+      val y = randomBigInt(group.order-1, randomizer) // TODO : -1 ? on veut pas unit, on veut le générateur ?
+      val s = group.exp(k._2, y)
       val c2 = group.times(m, s)
       val c1 = group.exp(group.generator, y)
-      val cypher = (c1, c2)
-      cypher.toString
-}
-    msg.toArray.foldLeft(""){(s,c) => s + encryptChar(c)}
+      (c1, c2)
+    }
+    msg.getBytes.foldLeft(""){(s,c) => s + injectiveCode(encryptE(eFromByte(c)))}
   }
 
-  def decrypt (msg: String, key : Key[(Int, Int, E)]): String =
+  def decrypt (msg: String, key : Key[(BigInt, E)]): String =
   {
     val k = key.getPrivate
-    def decryptChar(text: String) : (Char, String) =
+    def decryptE(c1: E, c2: E) : E =
     {
-      val regex = "\\(([0-9]+),([0-9]+)\\)(.*)".r
-      val Some(res) = regex findFirstMatchIn text
-      val c1 = res.group(1).toInt // TODO
-      val c2 = res.group(2).toInt
-      val s_inv = group.exp(c1, k._1-k._2)
+      val s_inv = group.exp(c1, group.order-k._1)
       val m = group.times(c2, s_inv)
-      (m.toChar, res.group(3))
+      m
     }
     var from = msg
     var to = ""
     while(from != "")
     {
-      var (c, next) = decryptChar(from)
-      to = to + c
+      val (c1, c2, next) = getCode(from)
+      to = to + eToByte(decryptE(c1, c2)).toChar
       from = next
     }
     to
   }
 }
 
-val grp = new Zk(1009)
-val key = new ElGamalKey(0, grp)
-val gen = new ElGamal(grp)
-val msg = "coucou"
-val cypher = gen.encrypt(msg,key)
-println(msg.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
-println(cypher)
-println(gen.decrypt(cypher, key).toArray.foldLeft(""){(s,c) => s+','+c.toInt})
 
-
+object Test
+{
+  def main(args: Array[String]): Unit =
+  {
+    val grp = new Zk(1009)
+    val key = new ElGamalKey(0, grp)
+    val gen = new ElGamal(grp)
+    val msg = "salut les coupains :D ! ▤"
+    val cypher = gen.encrypt(msg,key)
+    println(msg)//.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
+    //println(cypher)
+    println(gen.decrypt(cypher, key))//.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
+  }
+}
