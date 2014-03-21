@@ -116,14 +116,14 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
       m
     }
     var from = msg
-    var to = ""
+    var to = Array[Byte]()
     while(from != "")
     {
       val (c1, c2, next) = getCode(from)
-      to = to + eToByte(decryptE(c1, c2)).toChar
+      to :+ eToByte(decryptE(c1, c2))
       from = next
     }
-    to
+    new String(to)
   }
 }
 
