@@ -35,7 +35,7 @@ trait CryptoSystem [T]
 
 class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
 { 
-  val PQ_LENGTH = 1024
+  val PQ_LENGTH = 8192 
   def generate() =
   {
     val randomizer = new util.Random(seed)

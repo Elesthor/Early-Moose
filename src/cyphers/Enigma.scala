@@ -49,13 +49,13 @@ abstract class Rotor
   val content: String
   var buffer: Int
   def rotate() = buffer = (buffer+1)%26
-  def target(i: String) = 
+  def target(i: Char) = 
   {
-    var index = i.getBytes
-    var pos = index(0)-65+buffer
+    var pos = i-65+buffer
     content(pos)
   }
 }
+
 class RotorI(initialBuffer: Int) extends Rotor
 {
   var buffer = initialBuffer
@@ -93,11 +93,11 @@ class EKW extends Rotor
 }
 
 
-class Enigma extends CryptoSystem [T]
+class Enigma extends CryptoSystem [Int]
 {
 
   val state = Array(0,0)
-  def oneTurn (i: String)=
+  def oneTurn (i: Char)=
   {
     state(0) = (state(0)+1)%26
     state(1) = (state(1)+1)%(26*26)
@@ -113,9 +113,9 @@ class Enigma extends CryptoSystem [T]
   val Rotor1 = new RotorI(0)
   val Rotor2 = new RotorV(0)
   val Rotor3 = new RotorI(0)
-
-  println(oneTurn("A"))
-  println((oneTurn("A")))
+  val Reflector = new EKW()
+  println(oneTurn("A"(0)))
+  println((oneTurn("A"(0))))
 }
 
 val a = new Enigma
