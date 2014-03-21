@@ -13,6 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+// TODO : essayer avec un grand seed, comme les char ne sont pas des octets
 class CesarKey (seed: Int ) extends Key [Char]
 {
   def getPublic = seed.toChar
