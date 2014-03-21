@@ -19,7 +19,7 @@ trait Group[E]
   val generator: E
   val order: BigInt
   def times (e1: E, e2: E) : E
-  def expContinuation(e: E, n: BigInt) : E =
+  /*def expContinuation(e: E, n: BigInt) : E =
   {
     def rec(el: E, n: BigInt, f: (E=>E)) : E =
     {
@@ -31,16 +31,16 @@ trait Group[E]
         rec(times(el, el), n/2, {x => f(times(el, x))})
     }
     rec(e, n, {x=>x})
-  }
+  }*/
   def exp (e: E, n: BigInt) : E =
   {
-    expContinuation(e, n)
-    /*if(n == 1)
+    //expContinuation(e, n)
+    if(n == 1)
       e
     else if(n % 2 == 0)
       exp(times(e, e), n/2)
     else
-      times(exp(times(e, e), n/2), e)*/
+      times(exp(times(e, e), n/2), e)
   }
   def eToString(e: E): String
   def eFromString(s: String): E
