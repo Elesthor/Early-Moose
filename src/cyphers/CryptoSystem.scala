@@ -17,6 +17,8 @@ abstract class Key [T]
 {
   def getPublic(): T
   def getPrivate(): T
+  // TODO T => String // pour l'interpréteur
+  // TODO : encapsulation pour sécuriser la clé privée ?
 }
 
 trait CryptoSystem [T]
