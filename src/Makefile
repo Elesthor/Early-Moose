@@ -20,6 +20,7 @@ parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
 CYPHERS = $(filter-out cyphers/CryptoSystem.class, $(CLASSCYPHERS))
 $(CYPHERS): cyphers/CryptoSystem.class
+cyphers/ElGamal.class: cyphers/Group.class
 Application.class: $(CLASSPARSER) $(CLASSPLAYER)
 
 %.class: %.scala
