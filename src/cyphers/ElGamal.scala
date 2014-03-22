@@ -120,7 +120,7 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
     while(from != "")
     {
       val (c1, c2, next) = getCode(from)
-      to :+ eToByte(decryptE(c1, c2))
+      to = to :+ eToByte(decryptE(c1, c2))
       from = next
     }
     new String(to)
@@ -135,10 +135,11 @@ object Test
     val grp = new Zk(1009)
     val key = new ElGamalKey(0, grp)
     val gen = new ElGamal(grp)
-    val msg = "salut les coupains :D ! ▤"
+    val msg = "salut les coupains :D !▤"
     val cypher = gen.encrypt(msg,key)
     println(msg)//.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
     //println(cypher)
     println(gen.decrypt(cypher, key))//.toArray.foldLeft(""){(s,c) => s+','+c.toInt})
+    println("ok");
   }
 }
