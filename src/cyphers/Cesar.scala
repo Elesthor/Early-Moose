@@ -33,7 +33,7 @@ object TestCesar
 {
   def main(args: Array[String]): Unit =
   {
-    val key = new CesarKey(0)
+    val key = new CesarKey(1)
     val gen = new Cesar
     val msg = "asalut les coupains :D !▤"
     println(msg)

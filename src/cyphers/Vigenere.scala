@@ -13,28 +13,45 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-class VigenereKey(seed: Int) extends Key[Array[Char]]
+
+// schéma d'encodage des string : getBytes(UTF8).encode.string(ISO-8859-1).send -> receive.getBytes(ISO-8859-1).decode.string(UTF8)
+
+class VigenereKey(seed: Int) extends Key[Array[Byte]]
 {
-  def generate() : Array[Char] =
+  def generate() : Array[Byte] =
   {
     // random Array[Char] of random size
     val randomizer = new util.Random(seed)
-    randomizer.nextString(randomizer.nextInt() % 64 + 64).toArray
+    randomizer.nextString(randomizer.nextInt() % 64 + 64).getBytes // TODO : que des < 0 ?
   }
   
-  def getPublic  = generate()
-  def getPrivate = getPublic.map({x => (-x).toChar})
+  def getPublic  = Array[Byte](100)//generate()
+  def getPrivate = getPublic.map({x => (-x).toByte})
 }
 
-class Vigenere extends CryptoSystem [Array[Char]]
+class Vigenere extends CryptoSystem [Array[Byte]]
 {
-  def encode (msg: String, key: Array[Char]) : String =
-    msg.toArray.foldLeft("",0){(s, c) => (s._1 + (c+key(s._2 % key.length)).toChar, s._2+1)}._1
-  
-  def encrypt (msg: String, key: Key[Array[Char]]): String  =
-    encode (msg, key.getPublic)
+  def _encrypt (msg: Array[Byte], key: Array[Byte]): Array[Byte]  =
+    msg.foldLeft(Array[Byte](),0){(s, c) => (s._1 :+ (c+key(s._2 % key.length)).toByte, s._2+1)}._1
 
-  def decrypt (msg: String, key : Key[Array[Char]]): String =
-    encode (msg, key.getPrivate)
+  def _decrypt (msg: Array[Byte], key : Array[Byte]): Array[Byte] =
+    _encrypt (msg, key)
+}
+
+object TestVigenere
+{
+  def main(args: Array[String]): Unit =
+  {
+    val key = new VigenereKey(0)
+    val gen = new Vigenere
+    val msg = "asalut les coupains :D !▤"
+    println(msg)
+    val cypher = gen.encrypt(msg,key)
+    println(cypher)
+    println(gen.decrypt(cypher, key))
+    
+    // TODO : pb :
+    //new String(Array[Byte](-0 .. -128)).getBytes donne Array(-17, -65, -67) ASCII ? voir l'encodage
+  }
 }
 
