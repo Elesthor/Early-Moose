@@ -40,9 +40,6 @@ object TestCesar
     val cypher = gen.encrypt(msg,key)
     println(cypher)
     println(gen.decrypt(cypher, key))
-    
-    // TODO : pb :
-    //new String(Array[Byte](-0 .. -128)).getBytes donne Array(-17, -65, -67) ASCII ? voir l'encodage
   }
 }
 
