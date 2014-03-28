@@ -14,21 +14,35 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // TODO : essayer avec un grand seed, comme les char ne sont pas des octets
-class CesarKey (seed: Int ) extends Key [Char]
+class CesarKey (seed: Int) extends Key [Byte]
 {
-  def getPublic = seed.toChar
-  def getPrivate = (-getPublic).toChar
+  def getPublic = seed.toByte
+  def getPrivate = (-getPublic).toByte
 }
 
-class Cesar extends CryptoSystem [Char]
+class Cesar extends CryptoSystem [Byte]
 {
-  def encode(msg: String, key: Char): String =
-    msg.toArray.foldLeft(""){(s,c) => s + (c + key).toChar}
+  def _encrypt (msg: Array[Byte], key: Byte): Array[Byte] =
+    msg.map({ x => (x + key).toByte})
 
-  def encrypt (msg: String, key: Key [Char]): String =
-    encode(msg, key.getPublic)
+  def _decrypt (msg: Array[Byte], key: Byte): Array[Byte] =
+    _encrypt (msg, key)
+}
 
-  def decrypt (crypt: String, key: Key [Char]): String =
-    encode(crypt, key.getPrivate)
+object TestCesar
+{
+  def main(args: Array[String]): Unit =
+  {
+    val key = new CesarKey(0)
+    val gen = new Cesar
+    val msg = "asalut les coupains :D !▤"
+    println(msg)
+    val cypher = gen.encrypt(msg,key)
+    println(cypher)
+    println(gen.decrypt(cypher, key))
+    
+    // TODO : pb :
+    //new String(Array[Byte](-0 .. -128)).getBytes donne Array(-17, -65, -67) ASCII ? voir l'encodage
+  }
 }
 
