@@ -21,21 +21,37 @@ import scala.math
 //                              Key Generator                                 //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
+
 abstract class Key [T]
 {
   def getPublic(): T
   def getPrivate(): T
+  // TODO T => String // pour l'interpréteur
+  // TODO : encapsulation pour sécuriser la clé privée ?
 }
 
-trait CryptoSystem [T]
+abstract class CryptoSystem [T]
 {
-  def encrypt (msg: String , pub: Key [T] ): String
-  def decrypt (msg: String , priv: Key [T] ): String
-}
+  def _encrypt (msg: Array[Byte], key: T): Array[Byte]
+  def _decrypt (msg: Array[Byte], key: T): Array[Byte]
+  
+  def encrypt (msg: String , key: Key [T]): String =
+    arrayToNetwork(_encrypt(hostToArray(msg), key.getPublic))
+  def decrypt (msg: String , key: Key [T]): String =
+    arrayToHost(_decrypt(networkToArray(msg), key.getPrivate))
 
+  def hostToArray (msg: String) : Array[Byte] =
+    msg.getBytes(java.nio.charset.Charset.forName("UTF-8"))
+  def arrayToHost (msg: Array[Byte]) : String =
+    new String(msg, java.nio.charset.Charset.forName("UTF-8"))
+  def networkToArray (msg: String) : Array[Byte] =
+    msg.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
+  def arrayToNetwork (msg: Array[Byte]) : String =
+    new String(msg, java.nio.charset.Charset.forName("ISO-8859-1"))
+}
 class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
 { 
-  val PQ_LENGTH = 8192 
+  val PQ_LENGTH = 2048
   def generate() =
   {
     val randomizer = new util.Random(seed)
@@ -74,31 +90,37 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   {
     "0"*(len-s.toString.length)+s.toString
   }
-
-  def PKCS1StringToInt(msg: String): String  = 
+  
+  def padByteMod(s:String, n: Int): String = 
   {
-    (msg.getBytes.map({x => padByte(x.toString, 3)})).foldLeft(""){(s,c)=>s+c}
+    padByte(s, ((s.length/m+1)*m-s.length))
+  }
+  def PKCS1StringToInt(msg: Array[Byte]): String  = 
+  {
+    (msg.map({x => padByte((x+0x80).toString, 3)})).foldLeft(""){(s,c)=>s+c}
   }
 
-  def PKCS1IntToString(nb: BigInt): String = 
+  def PKCS1IntToString(nb: String): Array[Byte] =
   {
-    (nb.toString.grouped(3).toArray.map(_.toInt.toChar).foldLeft(""){(s,c)=>s+c})
+     (BigInt(nb).toString.grouped(3).toArray.map({x=>(x.toInt-0x80).toByte}))
   }
 
-  def encrypt(msg: String, key: Key[(BigInt, BigInt)]): String = 
+  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt)): Array[Byte] = 
   {
-    val (n, e) = key.getPublic
+    val (n, e) = key
     // Split the input string into blocks.
-    val chunks = PKCS1StringToInt(msg).grouped(n.bitLength/4).toArray  
+    val chunks = PKCS1StringToInt(msg).grouped(513).toArray  
     // Crypt each blocks and concat them
-    chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString, 2*n.bitLength/3)}).foldLeft(""){(s,c)=>s+c}
+    chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString,2*n.bitLength/3) }).foldLeft(""){(s,c)=>s+c}.getBytes
+
   }
 
-  def decrypt(crypt: String, key: Key[(BigInt, BigInt)] ): String = 
+  def _decrypt(crypt: Array[Byte], key: (BigInt, BigInt) ): Array[Byte] = 
   {
-    val (n, d) = key.getPrivate
-    val chunks = crypt.grouped(2*n.bitLength/3).toArray 
-    val decrypted =  chunks.map(BigInt.apply(_).modPow(d,n).toString).foldLeft(""){(s,c)=>s+c}
-    PKCS1IntToString(BigInt.apply(decrypted))
+    val (n, d) = key   
+    val chunks = (new String(crypt)).grouped(2*n.bitLength/3).toArray
+    val decrypted =  chunks.map({x => padByteMod(BigInt.apply(x).modPow(d,n).toString,3)}).foldLeft(""){(s,c)=>s+c}
+    PKCS1IntToString(decrypted)
   }
 }
+
