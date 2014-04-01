@@ -19,22 +19,10 @@ trait Group[E]
   val generator: E
   val order: BigInt
   def times (e1: E, e2: E) : E
-  /*def expContinuation(e: E, n: BigInt) : E =
-  {
-    def rec(el: E, n: BigInt, f: (E=>E)) : E =
-    {
-      if(n==1)
-        f(el)
-      else if(n % 2 == 0)
-        rec(times(el, el), n/2, f)
-      else
-        rec(times(el, el), n/2, {x => f(times(el, x))})
-    }
-    rec(e, n, {x=>x})
-  }*/
   def exp (e: E, n: BigInt) : E =
   {
-    //expContinuation(e, n)
+    if(n == 0)
+      generator
     if(n == 1)
       e
     else if(n % 2 == 0)
@@ -42,8 +30,8 @@ trait Group[E]
     else
       times(exp(times(e, e), n/2), e)
   }
-  def eToString(e: E): String
-  def eFromString(s: String): E
+  def eToBytes(e: E): Array[Byte]
+  def eFromBytes(s: Array[Byte]): E
 }
 
 class Zk(k: BigInt) extends Group[BigInt]
@@ -55,9 +43,9 @@ class Zk(k: BigInt) extends Group[BigInt]
   {
     (e1+e2)%k
   }
-  def eToString(e: BigInt): String =
-    e.toString // TODO : faire des octets, plutot que 0-9*
-  def eFromString(s: String): BigInt =
+  def eToBytes(e: BigInt): Array[Byte] =
+    e.toByteArray
+  def eFromBytes(s: Array[Byte]): BigInt =
     BigInt(s)
 }
 
@@ -70,9 +58,9 @@ class Zp(p: BigInt) extends Group[BigInt]
   {
     (e1*e2)%p
   }
-  def eToString(e: BigInt): String =
-    e.toString
-  def eFromString(s: String): BigInt =
+  def eToBytes(e: BigInt): Array[Byte] =
+    e.toByteArray
+  def eFromBytes(s: Array[Byte]): BigInt =
     BigInt(s)
 }
 
