@@ -147,8 +147,8 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
       val firstPass = rotors(3).target(rotors(2).target(
                       rotors(1).target(rotors(0).target(i))))
       val reflected = reflector.target(firstPass)
-      val result =  rotors(0).targetRev(rotors(1).targetRev(
-                    rotors(2).targetRev(rotors(3).targetRev(reflected))))
+      val result    = rotors(0).targetRev(rotors(1).targetRev(
+                      rotors(2).targetRev(rotors(3).targetRev(reflected))))
       rotors(0).rotate()
       if (state(0) == 0) rotors(1).rotate()
       if (state(1) == 0) rotors(2).rotate()
@@ -157,22 +157,16 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
     else i
   }
 
-  def code(msg: String, rotors: List[Rotor], reflector: Rotor): String = 
+  def encrypt(msg: String, key: Key[(List[Rotor],Rotor)]): String = 
   {
+    val ( rotors, reflector ) = key.getPublic
     replaceInInitialState(rotors)
     msg.map({x => oneTurn(x, rotors, reflector)})
   }
 
-  def encrypt(msg: String, key: Key[(List[Rotor],Rotor)]): String = 
-  {
-    val ( k, p ) = key.getPublic
-    code (msg, k, p)
-  }
-
   def decrypt(msg: String, key: Key[(List[Rotor],Rotor)]): String = 
   {
-    val (k, p) = key.getPublic
-    code (msg, k, p )
+    encrypt(msg, key)
   }
 }
 
