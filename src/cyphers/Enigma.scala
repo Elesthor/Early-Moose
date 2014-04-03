@@ -25,8 +25,16 @@ trait CryptoSystem [T]
   def decrypt (msg: String , priv: Key [T] ): String
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                                Enigma Key                                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
 class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
 {
+  // Possible Rotors (I,II,II,IV,V,beta,gamma)
   val ROTORS = List (
     "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
     "AJDKSIRUXBLHWTMCQGZNPYFVOE",
@@ -38,13 +46,14 @@ class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
     "LEYJVCNIXWPBQMDRTAKZGFUHOS",
     "FSOKANUERHMBTIYCWLQPZXVGJD"
   )
-
+  // Possible reflectors
   val REFLECTORS = List ( 
     "EJMZALYXVBWFCRQUONTSPIKHGD",
     "YRUHQSLDPXNGOKMIEBFZCWVJAT",
     "FVPJIAOYEDRZXWGCTKUQSBNMHL"
   )
 
+  // Randomly select four rotors, one reflector and set the initial position.
   def generate(): (List[Rotor],Rotor) = 
   {
     val factory         = new RotorFactory
@@ -72,18 +81,23 @@ class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
 
 trait Rotor
 {
-  var buffer:             Int
-  val initialBuff:        Int
-  val content:            String
-  val invertedContent:    String
-  def rotate():           Unit  
-  def target(i: Char):    Char  
-  def targetRev(i: Char): Char 
+  var buffer:             Int       // Current position of the rotor
+  val initialBuff:        Int       // Initial position of the rotor
+  val content:            String    // Table of permutation, given as a string
+  val invertedContent:    String    // Inverse of the previous table
+  def rotate():           Unit      // Turn the rotor of 1/26 turn 
+  def target(i: Char):    Char      // Give the image of i by the permutation
+  def targetRev(i: Char): Char      // Give the image of i in the way-back
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                            Creation of rotors                              //
+////////////////////////////////////////////////////////////////////////////////
 
 class RotorFactory
 {
-
+  // Give the invert permutation of a content.
   def invert(content: String): String = 
   {
     val result = Array.fill(26)(0.toChar)
@@ -94,7 +108,8 @@ class RotorFactory
     result.foldLeft(""){(x,s)=>x+s}
     result.foldLeft(""){(x,s)=>x+s}
   }
-
+  
+  // Factory's builder
   def getRotor(cont: String, initialBuffer: Int): Rotor = 
   {
     object newRotor extends Rotor 
@@ -128,30 +143,39 @@ class RotorFactory
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+
+// Implementation of a Enigma 1941 model for KriegsMarine  ( 4 Rotors )  
 class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
 {
-  var state = Array(0,0)
+  // Count the number of letters crypted to make rotors 1,2,3 turn.
+  var state = Array(0, 0, 0)
 
+  // Put the rotors in the initial position
   def replaceInInitialState(rotors: List[Rotor]) = 
   {
     state = Array(0,0)
     rotors.map({x => x.buffer = x.initialBuff} )
   }
 
+  // Crypt one letter, and append the modification to the rotors's positions
   def oneTurn (i: Char, rotors: List[Rotor], reflector: Rotor)=
   {
-    if (64 < i && i < 91)
+    if (64 < i && i < 91) // Only crypt capital letters.
     {
       state(0) = (state(0)+1)%26
       state(1) = (state(1)+1)%(26*26)
+      state(2) = (state(2)+1)%(26*26*26)
+
       val firstPass = rotors(3).target(rotors(2).target(
                       rotors(1).target(rotors(0).target(i))))
       val reflected = reflector.target(firstPass)
       val result    = rotors(0).targetRev(rotors(1).targetRev(
                       rotors(2).targetRev(rotors(3).targetRev(reflected))))
-      rotors(0).rotate()
-      if (state(0) == 0) rotors(1).rotate()
-      if (state(1) == 0) rotors(2).rotate()
+      
+      rotors(0).rotate() // First rotor turns at each letter
+      if (state(0) == 0) rotors(1).rotate() // first rotor had completly turned
+      if (state(1) == 0) rotors(2).rotate() // snd rotor had completly turned 
+      if (state(2) == 0) rotors(3).rotate() // and the third too
       result  
     }
     else i
