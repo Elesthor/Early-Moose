@@ -18,7 +18,7 @@ import perso.utils.BigIntUtils._
 
 class ElGamalKey[E: Manifest](group: Group[E], seed: Int) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
 {
-  var (h, x) = 
+  val (h, x) = 
   {
     val randomizer = new util.Random(seed)
     val x = randomizer.nextBigInt(group.order-2)+1
