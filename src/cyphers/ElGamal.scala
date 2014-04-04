@@ -13,27 +13,11 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-import scala.BigInt
-
-class RandomWithBigInt(rnd: util.Random)
-{
-  // return a random BigInt between 0 (inclusive) and max (exclusive)
-  def nextBigInt(max: BigInt) : BigInt =
-  {
-    val size = max.bitLength
-    var r = BigInt(0)
-    do {
-      r = BigInt(size, rnd);
-    } while (r >= max);
-    r
-  }
-}
-
+// RandomWithBigInt
+import perso.utils.BigIntUtils._
 
 class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
 {
-  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = new RandomWithBigInt(rnd)
-  
   def generate() =
   {
     val randomizer = new util.Random(seed)
@@ -49,8 +33,6 @@ class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E
 class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
 {
 // UTILITIES :
-  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = new RandomWithBigInt(rnd)
-  
   // convert e to a byte
   def eToByte(e: E): Byte =
   {
