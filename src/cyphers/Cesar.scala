@@ -22,7 +22,7 @@ class CesarKey (seed: Int) extends Key [Byte]
 
 class Cesar extends CryptoSystem [Byte]
 {
-  def _encrypt (msg: Array[Byte], key: Byte): Array[Byte] =
+  def _encrypt (msg: Array[Byte], key: Byte, _seed:Int = 0): Array[Byte] =
     msg.map({ x => (x + key).toByte})
 
   def _decrypt (msg: Array[Byte], key: Byte): Array[Byte] =

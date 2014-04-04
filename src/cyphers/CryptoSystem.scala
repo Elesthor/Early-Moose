@@ -22,14 +22,13 @@ abstract class Key [T]
   // TODO : encapsulation pour sécuriser la clé privée ?
 }
 
-// TODO : factoriser tous les Random(Seed) ?
 abstract class CryptoSystem [T]
 {
-  def _encrypt (msg: Array[Byte], key: T): Array[Byte]
+  def _encrypt (msg: Array[Byte], key: T, seed: Int): Array[Byte]
   def _decrypt (msg: Array[Byte], key: T): Array[Byte]
   
-  def encrypt (msg: String , key: Key [T]): String =
-    arrayToNetwork(_encrypt(hostToArray(msg), key.getPublic))
+  def encrypt (msg: String , key: Key [T], seed: Int = 0): String =
+    arrayToNetwork(_encrypt(hostToArray(msg), key.getPublic, seed))
   def decrypt (msg: String , key: Key [T]): String =
     arrayToHost(_decrypt(networkToArray(msg), key.getPrivate))
 

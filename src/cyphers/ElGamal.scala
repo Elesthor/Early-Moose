@@ -28,7 +28,7 @@ class ElGamalKey[E: Manifest](group: Group[E], seed: Int) extends Key[(BigInt, E
   def getPrivate = (x, group.unit)
 }
 
-class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
+class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
 {
 // UTILITIES :
   // convert e to a byte
@@ -73,9 +73,10 @@ class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
     val (c2, next) = getString(tmp)
     (group.eFromBytes(c1), group.eFromBytes(c2), next)
   }
-  val randomizer = new util.Random(seed)
-  def _encrypt (msg: Array[Byte], key: (BigInt, E)): Array[Byte]  =
+  
+  def _encrypt (msg: Array[Byte], key: (BigInt, E), seed: Int): Array[Byte]  =
   {
+    val randomizer = new util.Random(seed)
     def encryptE(m: E): (E, E) =
     {
       val y = randomizer.nextBigInt(group.order-2)+1
@@ -113,11 +114,11 @@ object TestElGamal
   def main(args: Array[String]): Unit =
   {
     val grp = new Zk(1009)
-    val key = new ElGamalKey(grp, 0)
-    val gen = new ElGamal(grp, 10)
+    val key = new ElGamalKey(grp,5)
+    val gen = new ElGamal(grp)
     val msg = "asalut les coupains :D !▤"
     println(msg)
-    val cypher = gen.encrypt(msg,key)
+    val cypher = gen.encrypt(msg,key,15)
     println(cypher)
     println(gen.decrypt(cypher, key))
   }
