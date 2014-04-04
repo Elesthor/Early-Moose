@@ -24,7 +24,7 @@ trait Group[E]
     assert(n>=0)
     if(n == 0)
       generator
-    if(n == 1)
+    else if(n == 1)
       e
     else if(n % 2 == 0)
       exp(times(e, e), n/2)
