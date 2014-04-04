@@ -55,15 +55,15 @@ class RsaKey (seed: Int) extends Key [(BigInt, BigInt)]
   def generate() =
   {
     val randomizer = new util.Random(seed)
-    val p = BigInt.apply(PQ_LENGTH, 10000, randomizer)
-    val q = BigInt.apply(PQ_LENGTH, 10000, randomizer)
+    val p = BigInt(PQ_LENGTH, 10000, randomizer)
+    val q = BigInt(PQ_LENGTH, 10000, randomizer)
     val n = p*q
     val indEulerN = (p-1)*(q-1)
     
-    var e = BigInt.apply(indEulerN.bitLength-1, randomizer)
-    while (e.gcd(indEulerN) !=  BigInt.apply(1))
+    var e = BigInt(indEulerN.bitLength-1, randomizer)
+    while (e.gcd(indEulerN) !=  BigInt(1))
     {
-      e = BigInt.apply(indEulerN.bitLength-1, randomizer)
+      e = BigInt(indEulerN.bitLength-1, randomizer)
     }
     val d = e.modInverse(indEulerN)
 
@@ -105,13 +105,13 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
      (BigInt(nb).toString.grouped(3).toArray.map({x=>(x.toInt-0x80).toByte}))
   }
 
-  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt)): Array[Byte] = 
+  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), _seed:Int = 0): Array[Byte] = 
   {
     val (n, e) = key
     // Split the input string into blocks.
     val chunks = PKCS1StringToInt(msg).grouped(513).toArray  
     // Crypt each blocks and concat them
-    chunks.map({x => padByte(BigInt.apply(x).modPow(e,n).toString,2*n.bitLength/3) }).foldLeft(""){(s,c)=>s+c}.getBytes
+    chunks.map({x => padByte(BigInt(x).modPow(e,n).toString,2*n.bitLength/3) }).foldLeft(""){(s,c)=>s+c}.getBytes
 
   }
 
@@ -119,7 +119,7 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   {
     val (n, d) = key   
     val chunks = (new String(crypt)).grouped(2*n.bitLength/3).toArray
-    val decrypted =  chunks.map({x => padByteMod(BigInt.apply(x).modPow(d,n).toString,3)}).foldLeft(""){(s,c)=>s+c}
+    val decrypted =  chunks.map({x => padByteMod(BigInt(x).modPow(d,n).toString,3)}).foldLeft(""){(s,c)=>s+c}
     PKCS1IntToString(decrypted)
   }
 }
