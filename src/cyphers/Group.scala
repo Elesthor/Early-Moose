@@ -21,6 +21,7 @@ trait Group[E]
   def times (e1: E, e2: E) : E
   def exp (e: E, n: BigInt) : E =
   {
+    assert(n>=0)
     if(n == 0)
       generator
     if(n == 1)
