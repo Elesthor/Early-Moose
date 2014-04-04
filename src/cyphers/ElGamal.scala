@@ -16,16 +16,14 @@
 // RandomWithBigInt
 import perso.utils.BigIntUtils._
 
-class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
+class ElGamalKey[E: Manifest](group: Group[E], seed: Int) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
 {
-  def generate() =
+  var (h, x) = 
   {
     val randomizer = new util.Random(seed)
     val x = randomizer.nextBigInt(group.order-2)+1
     (group.exp(group.generator, x), x)
   }
-  
-  var (h, x) = generate()
   def getPublic  = (0, h)
   def getPrivate = (x, group.unit)
 }
@@ -50,16 +48,17 @@ class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
   def eFromByte(c: Byte): E =
     group.exp(group.generator, c+128)
   
-  // encode a string in a way to decode a concatenation injectively
+  // encode an array of byte in a way to decode a concatenation injectively
   def injectiveString(s: Array[Byte]): Array[Byte] =
     networkToArray(s.length.toString) ++ Array('#'.toByte) ++ s
   // and decode it : return the head and the tail
   def getString(s: Array[Byte]): (Array[Byte], Array[Byte]) =
   {
-    val p = s.indexOf('#') // if not found, substring will throw an exception, and we want it TODO slice ?
+    val p = s.indexOf('#')
+    if(p < 0)
+      throw new RuntimeException("# unfound in array of bytes")
+    
     val len = arrayToNetwork(s.slice(0, p)).toInt
-    //println(new String(s.slice(p+1, p+len+1)))
-    //println(new String(s.slice(p+len+1, s.length)))
     (s.slice(p+1, p+len+1), s.slice(p+len+1, s.length))
   }
   // encode a pair of E in a way to decode a concatenation injectively
@@ -67,7 +66,7 @@ class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
   {
     injectiveString(group.eToBytes(c._1)) ++ injectiveString(group.eToBytes(c._2))
   }
-  // and decode it : return (c1, c2) and the tail
+  // and decode it : return c1, c2 and the tail
   def getCode(from: Array[Byte]): (E, E, Array[Byte]) =
   {
     val (c1, tmp) = getString(from)
@@ -114,7 +113,7 @@ object TestElGamal
   def main(args: Array[String]): Unit =
   {
     val grp = new Zk(1009)
-    val key = new ElGamalKey(0, grp)
+    val key = new ElGamalKey(grp, 0)
     val gen = new ElGamal(grp, 10)
     val msg = "asalut les coupains :D !▤"
     println(msg)
