@@ -15,10 +15,10 @@
 
 import scala.BigInt
 
-class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
+class RandomWithBigInt(rnd: util.Random)
 {
   // return a random BigInt between 0 (inclusive) and max (exclusive)
-  def randomBigInt(max: BigInt, rnd: util.Random) : BigInt = // TODO : étendre Random
+  def nextBigInt(max: BigInt) : BigInt =
   {
     val size = max.bitLength
     var r = BigInt(0)
@@ -27,11 +27,17 @@ class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E
     } while (r >= max);
     r
   }
+}
+
+
+class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
+{
+  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = new RandomWithBigInt(rnd)
   
   def generate() =
   {
     val randomizer = new util.Random(seed)
-    val x = randomBigInt(group.order-2, randomizer)+1
+    val x = randomizer.nextBigInt(group.order-2)+1
     (group.exp(group.generator, x), x)
   }
   
@@ -43,16 +49,7 @@ class ElGamalKey[E: Manifest](seed: Int, group: Group[E]) extends Key[(BigInt, E
 class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
 {
 // UTILITIES :
-  // return a random BigInt between 0 (inclusive) and max (exclusive)
-  def randomBigInt(max: BigInt, rnd: util.Random) : BigInt = // TODO : étendre Random
-  {
-    val size = max.bitLength
-    var r = BigInt(0)
-    do {
-      r = BigInt(size, rnd);
-    } while (r >= max);
-    r
-  }
+  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = new RandomWithBigInt(rnd)
   
   // convert e to a byte
   def eToByte(e: E): Byte =
@@ -100,7 +97,7 @@ class ElGamal[E](group: Group[E], seed: Int) extends CryptoSystem [(BigInt, E)]
   {
     def encryptE(m: E): (E, E) =
     {
-      val y = randomBigInt(group.order-2, randomizer)+1
+      val y = randomizer.nextBigInt(group.order-2)+1
       val s = group.exp(key._2, y)
       val c2 = group.times(m, s)
       val c1 = group.exp(group.generator, y)
@@ -136,7 +133,7 @@ object TestElGamal
   {
     val grp = new Zk(1009)
     val key = new ElGamalKey(0, grp)
-    val gen = new ElGamal(grp, args(0).toInt)
+    val gen = new ElGamal(grp, 10)
     val msg = "asalut les coupains :D !▤"
     println(msg)
     val cypher = gen.encrypt(msg,key)
