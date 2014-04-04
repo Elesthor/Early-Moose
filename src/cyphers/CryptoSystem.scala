@@ -19,7 +19,6 @@ abstract class Key [T]
   def getPrivate(): T
   /*def toString(): String
   def fromString(s: String): T*/
-  // TODO : encapsulation pour sécuriser la clé privée ?
 }
 
 abstract class CryptoSystem [T]
@@ -32,7 +31,7 @@ abstract class CryptoSystem [T]
   def decrypt (msg: String , key: Key [T]): String =
     arrayToHost(_decrypt(networkToArray(msg), key.getPrivate))
 
-  // strings are decoded in UTF-8, but arrays of bytes are sent in ISO-8859-1 which is a bijection Byte <-> 1 extended ASCII Char
+  // strings are decoded in UTF-8, but arrays of bytes are sent in ISO-8859-1 which is a injection 1 Byte -> 1 Char
   def hostToArray (msg: String) : Array[Byte] =
     msg.getBytes(java.nio.charset.Charset.forName("UTF-8"))
   def arrayToHost (msg: Array[Byte]) : String =
