@@ -22,7 +22,8 @@ class VigenereKey(seed: Int) extends Key[Array[Byte]]
   {
     // random Array[Byte] of random size
     val randomizer = new util.Random(seed)
-    randomizer.nextString(randomizer.nextInt() % 64 + 64).getBytes // TODO : que des < 0 ?
+    // nextString return string of any character (chinese...), we cast them to bytes
+    randomizer.nextString(randomizer.nextInt() % 64 + 64).toCharArray.map(_.toByte)
   }
   
   def getPublic  = generate()
