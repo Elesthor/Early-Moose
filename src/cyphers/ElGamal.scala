@@ -15,23 +15,41 @@
 
 // RandomWithBigInt
 import perso.utils.BigIntUtils._
+// injectivePair and getPair
+import perso.utils.NetworkTools._
 
-class ElGamalKey[E: Manifest](group: Group[E], seed: Int) extends Key[(BigInt, E)] // public : (_, g^x); private : (x, _)
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                                ElGamal Key                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+// public  key : (_, g^x)
+// private key : (x, _)
+class ElGamalKey[E](group: Group[E], seed: Int) extends Key[(BigInt, E)]
 {
   val (h, x) = 
   {
-    val randomizer = new util.Random(seed)
-    val x = randomizer.nextBigInt(group.order-2)+1
+    val x = new util.Random(seed).nextBigInt(group.order-2)+1
     (group.exp(group.generator, x), x)
   }
   def getPublic  = (0, h)
   def getPrivate = (x, group.unit)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                          ElGamal implementation                            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+// TODO : assert order >= 256
 class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
 {
-// UTILITIES :
-  // convert e to a byte
+  // UTILITIES :
+  // convert e to a byte (discret logarithm on a little range) // TODO orthographe
   def eToByte(e: E): Byte =
   {
     var el = group.generator
@@ -41,37 +59,21 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
         return i.toByte
       el = group.times(el, group.generator)
     }
-    throw new java.lang.RuntimeException("E not found :(" + new String(group.eToBytes(e)))
+    throw new RuntimeException("E not found :( " + new String(group.eToBytes(e)))
   }
-  
+
   // convert a byte to an e
-  def eFromByte(c: Byte): E =
-    group.exp(group.generator, c+128)
-  
-  // encode an array of byte in a way to decode a concatenation injectively
-  def injectiveString(s: Array[Byte]): Array[Byte] =
-    networkToArray(s.length.toString) ++ Array('#'.toByte) ++ s
-  // and decode it : return the head and the tail
-  def getString(s: Array[Byte]): (Array[Byte], Array[Byte]) =
-  {
-    val p = s.indexOf('#')
-    if(p < 0)
-      throw new RuntimeException("# unfound in array of bytes")
-    
-    val len = arrayToNetwork(s.slice(0, p)).toInt
-    (s.slice(p+1, p+len+1), s.slice(p+len+1, s.length))
-  }
+  def eFromByte(c: Byte): E = group.exp(group.generator, c+128)
+
   // encode a pair of E in a way to decode a concatenation injectively
   def injectiveCode(c: (E, E)): Array[Byte] =
-  {
-    injectiveString(group.eToBytes(c._1)) ++ injectiveString(group.eToBytes(c._2))
-  }
+    injectivePair(group.eToBytes(c._1), group.eToBytes(c._2))
+
   // and decode it : return c1, c2 and the tail
-  def getCode(from: Array[Byte]): (E, E, Array[Byte]) =
+  def getCode(m: Array[Byte]): (E, E, Array[Byte]) =
   {
-    val (c1, tmp) = getString(from)
-    val (c2, next) = getString(tmp)
-    (group.eFromBytes(c1), group.eFromBytes(c2), next)
+    val c = getPair(m)
+    (group.eFromBytes(c._1), group.eFromBytes(c._2), c._3)
   }
   
   def _encrypt (msg: Array[Byte], key: (BigInt, E), seed: Int): Array[Byte]  =
@@ -81,9 +83,7 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
     {
       val y = randomizer.nextBigInt(group.order-2)+1
       val s = group.exp(key._2, y)
-      val c2 = group.times(m, s)
-      val c1 = group.exp(group.generator, y)
-      (c1, c2)
+      (group.exp(group.generator, y), group.times(m, s))
     }
     msg.foldLeft(Array[Byte]()){(s,c) => s ++ injectiveCode(encryptE(eFromByte(c)))}
   }
@@ -91,11 +91,8 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
   def _decrypt (msg: Array[Byte], key : (BigInt, E)): Array[Byte] =
   {
     def decryptE(c1: E, c2: E) : E =
-    {
-      val s_inv = group.exp(c1, group.order-key._1)
-      val m = group.times(c2, s_inv)
-      m
-    }
+      //group.times(c2, group.exp(c1, group.order-key._1)) // TODO raconter ça dans le rapport, et supprimer la ligne
+      group.times(c2, group.inv(group.exp(c1, key._1)))
     var from = msg
     var to = Array[Byte]()
     while(!from.isEmpty)
@@ -113,7 +110,10 @@ object TestElGamal
 {
   def main(args: Array[String]): Unit =
   {
-    val grp = new Zk(1009)
+    //val grp = new Zk(1009)
+    val f = new Zpf(2147483647)
+    val grp = new Elliptic[BigInt](f, 1, (1, 3))
+    
     val key = new ElGamalKey(grp,5)
     val gen = new ElGamal(grp)
     val msg = "asalut les coupains :D !▤"
