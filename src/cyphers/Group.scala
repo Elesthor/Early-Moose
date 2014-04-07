@@ -21,7 +21,7 @@ abstract class Group[E]
 {
   val unit: E
   val generator: E
-  val order: BigInt // minorant de l'ordre
+  val order: BigInt // underestimation of the order
   def times (e1: E, e2: E): E
   def inv(e: E) : E
   def eToBytes(e: E): Array[Byte]
@@ -42,42 +42,28 @@ abstract class Group[E]
   }
 }
 
+// additive group Zk
 class Zk(k: BigInt) extends Group[BigInt]
 {
   val unit = BigInt(0)
-  val generator = BigInt(1) // TODO : autre chose
-  val order = BigInt(10)
-  def times (e1: BigInt, e2: BigInt) : BigInt =
-  {
-    (e1+e2)%k
-  }
-  def inv(e: BigInt): BigInt =
-  {
-    k-e
-  }
-  def eToBytes(e: BigInt): Array[Byte] =
-    e.toByteArray
-  def eFromBytes(s: Array[Byte]): BigInt =
-    BigInt(s)
+  val generator = BigInt(1)
+  val order = k
+  def times (e1: BigInt, e2: BigInt): BigInt = (e1+e2)%k
+  def inv(e: BigInt): BigInt = k-e
+  def eToBytes(e: BigInt): Array[Byte] = e.toByteArray
+  def eFromBytes(s: Array[Byte]): BigInt = BigInt(s)
 }
 
+// multiplying group Zp (with p a prime number)
 class Zp(p: BigInt) extends Group[BigInt]
 {
   val unit = BigInt(1)
-  val generator = BigInt(2) // TODO
+  val generator = BigInt(2)
   val order = p-1
-  def times (e1: BigInt, e2: BigInt) : BigInt =
-  {
-    (e1*e2)%p
-  }
-  def inv(e: BigInt): BigInt =
-  {
-    e.modPow(p-2, p)
-  }
-  def eToBytes(e: BigInt): Array[Byte] =
-    e.toByteArray
-  def eFromBytes(s: Array[Byte]): BigInt =
-    BigInt(s)
+  def times (e1: BigInt, e2: BigInt): BigInt = (e1*e2)%p
+  def inv(e: BigInt): BigInt = e.modPow(p-2, p)
+  def eToBytes(e: BigInt): Array[Byte] = e.toByteArray
+  def eFromBytes(s: Array[Byte]): BigInt = BigInt(s)
 }
 
 // finite field
@@ -95,7 +81,7 @@ abstract class Field[E]
   def div(e1: E, e2: E) = times(e1, inv(e2))
 }
 
-// field Z/pZ
+// field Fp
 class Zpf(p: BigInt) extends { val group = new Zk(p) } with Field[BigInt]
 {
   def one = BigInt(1)
@@ -150,7 +136,6 @@ class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]] //
       case Some((x, y)) => Some((x, f.minus(f.zero, y)))
     }
   }
-  // TODO :
   def eToBytes(e: Option[(K, K)]) =
   {
     e match
@@ -171,12 +156,4 @@ class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]] //
     }
   }
 }
-
-/*
-val f = new Zpf(5)
-val g = new Elliptic[BigInt](f, 0, (2,3))
-for(i <- 1 to 8)
-  println(i, g.exp(g.generator, i))
-*/
-
 
