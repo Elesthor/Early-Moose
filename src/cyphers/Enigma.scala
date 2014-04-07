@@ -13,17 +13,6 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class Key [T]
-{
-  def getPublic(): T
-  def getPrivate(): T
-}
-
-trait CryptoSystem [T]
-{
-  def encrypt (msg: String , pub: Key [T] ): String
-  def decrypt (msg: String , priv: Key [T] ): String
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -58,12 +47,12 @@ class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
   {
     val factory         = new RotorFactory
     val randomizer      = new util.Random(seed) 
-    def randBuff()      = randomizer.nextInt(26)
-    
+    def randBuff()      = randomizer.nextInt(26) // Will create the random 
+                                                 // initail offset
     val baseRotors      = ROTORS
     val baseReflectors  = REFLECTORS(randomizer.nextInt(3))
     val rotors =  randomizer.shuffle(baseRotors).drop(5).map
-                  {s=>factory.getRotor(s, randBuff())}
+                  {s=>factory.getRotor(s, randBuff())} 
     val reflector = factory.getRotor(baseReflectors, 0) 
     return (rotors, reflector)   
   }
@@ -121,12 +110,14 @@ class RotorFactory
 
       def rotate() = buffer = (buffer+1)%26
 
+      // Get the image of char i by the rotor (direct path) 
       def target(i: Char) = 
       {
         var pos = (i-65+buffer)%26
         content(pos)
       }
 
+      // Get the image of char i by the rotor (reverse path)
       def targetRev(i: Char) = 
       {
         var pos = (i-65)%26
@@ -153,7 +144,7 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
   // Put the rotors in the initial position
   def replaceInInitialState(rotors: List[Rotor]) = 
   {
-    state = Array(0,0)
+    state = Array(0,0,0)
     rotors.map({x => x.buffer = x.initialBuff} )
   }
 
@@ -181,24 +172,15 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
     else i
   }
 
-  def encrypt(msg: String, key: Key[(List[Rotor],Rotor)]): String = 
+  def _encrypt(msg: Array[Byte], key: (List[Rotor], Rotor), _seed: Int)  = 
   {
-    val ( rotors, reflector ) = key.getPublic
+    val ( rotors, reflector ) = key
     replaceInInitialState(rotors)
-    msg.map({x => oneTurn(x, rotors, reflector)})
+    (new String (msg)).map({x => oneTurn(x, rotors, reflector)}).getBytes
   }
 
-  def decrypt(msg: String, key: Key[(List[Rotor],Rotor)]): String = 
+  def _decrypt(msg: Array[Byte], key:(List[Rotor],Rotor)) = 
   {
-    encrypt(msg, key)
+    _encrypt(msg, key, 0)
   }
 }
-
-val a = new Enigma
-val test ="!!!ABCDEFGHIJKLMNOPQRSTUVWXYZABCD"
-val b = new EnigmaKey(42)
-val x = a.encrypt(test, b)
-
-println(x)
-println(a.decrypt( x,b))
-

@@ -75,4 +75,35 @@ TrucKey ...
 bidule UTF-8 ISO-8859-1
 codage des string renvoyées par ElGamal, RSA, ...
 
+
+\section{Implémentaiton de RSA}
+
+L'implémentation du coeur de RSA se fait très linéairement par l'utilisation de la classe \texttt{scala.BigInt}, contenant en, particulier des implémentations efficaces des algorithmes de \emph{Miller-Rabin} et d'\emph{Euclide}. La principale difficulté réside en la gestion effective des expansions et des séparations en blocs encryptable pour RSA. Nous avons choisis pour résoudre ce problème d'effectuer les coupes sur des strings représentants les \texttt{BigInt} pour profiter de la souplesse des procédures \texttt{grouped()} et \texttt{drop}. \\\\
+Les clefs RSA sont les couples $(n,e)$ et $(n,d)$ (en utilisant les notations consacrées par l'usage) et donc est typée en 
+\texttt{(Int, Int)}. 
+
+\section{Implémentation d'Enigma}
+L’implémentation choisie est une enigma \emph{Kriegsmarine} - 4 rotors permettant le choix des rotors parmi huit possibles et le réflecteur parmi trois.  \\
+La clef est typée en \texttt{(List[Rotor], Rotor)}: la première liste contient les quatre rotors de cryptage et le deuxième élément du tuple contient le réflecteur. Les offsets initiaux choisis sont contenus dans les objets rotors.\\
+
+Lors de la génération des clefs (choix des rotors et positions initiales) les rotors sont crées au moyen de la \texttt{rotorFactory}, implémentant le pattern \emph{factory} pour permettre la création à la volée des objets choisis.  Les fonctions de cryptage/ décryptage se codent alors très simplement en mettant bout à bout les  de permutations alphabétiques pour chaque rotor. Nous avons en effet choisis de considérer le rotor comme objet centra du dispositif et de le considérer comme un système de cryptage indépendant qui évolue au cours du cryptage. Chaque rotor a donc pour attributs: 
+\begin{itemize}
+  \item \texttt{buffer} : décalage courant
+  \item \texttt{initialBuff}  : décalage initial
+  \item \texttt{content}   : string représentant le chiffrement monoalphabétique correspondant au rotor (par exemple content(0) est l'image de A par cette substitution) 
+  \item \texttt{invertedContent} : string représentant le chiffrement inverse du précédent.
+  \item \texttt{rotate()} : fonction de rotation d'1/26 de tour du rotor.
+  \item \texttt{target(i: Char)}  chiffrement selon le rotor
+  \item \texttt{targetRev(i: Ch)} chiffrement selon le cypher inverse.
+
+\end{itemize}
+
+\section{Implémentation d'AES}
+L'implémentation de l'AES (\emph{Rijndael} ) suit la spécification FIPS-197  et est implémentée dans ses versions clefs 128, 192 et 256 bits.
+
+ Le coeur du cryptosystème repose sur la classe \texttt{AESState} représentant sous forme de matrice 4*4 de Bytes l'état courant du calcul. Les procédures d'évolutions \texttt{SubBytes} , \texttt{ShiftRows}, \texttt{MixColumns} et \texttt{AddRoundKey} travaillent directement sur l'attribut \texttt{currentState}. La Sbox et Sbox inverse d'AES ont été hardcodées pour accélérer le calcul. \\
+
+La générations des clefs suit la spécification de l'algorithme en effectuant la diversification de clefs. De fait une clef est en fait constituée d'une liste des \texttt{roundKeys} de tours.  Ce choix de représentation permet d'écrire alors la procédure de cryptage totale dans un style très fonctionnel en itérant simplement la fonction de tours sur la liste des clefs.
+
+De tous les cryptosystèmes considérés ici, AES est certainement celui dont l'implémentation a été la plus délicate: outre la complexité de l'algorithme,  Scala gère très pédestrement les bytes : tout calcul entre deux bytes renvoie un Int ou un BigInt et nécessite une conversion explicite à l'aide de \texttt{.toByte} ; d'autre part, les calculs dans ${GF}(2^8)$ ont nécessité un travail de débuggage assez conséquent.
 \end{document}
