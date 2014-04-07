@@ -12,8 +12,12 @@
 //                                                           ||-----||        //
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
+//
+// Network Tools : charset conversion and stream coding
 
 package perso.utils
+
+// coding pattern : getBytes(UTF8).encode.string(ISO-8859-1).send -> receive.getBytes(ISO-8859-1).decode.string(UTF8)
 
 object NetworkTools
 {

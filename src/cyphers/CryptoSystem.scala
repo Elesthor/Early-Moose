@@ -12,6 +12,8 @@
 //                                                           ||-----||        //
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
+//
+// abstract classes of Key and CryptoSystem
 
 import perso.utils.NetworkTools._
 
