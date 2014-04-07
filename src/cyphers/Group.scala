@@ -13,13 +13,22 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-trait Group[E]
+// injectivePair and getPair
+import perso.utils.NetworkTools._
+
+// cyclic groups
+abstract class Group[E]
 {
   val unit: E
   val generator: E
-  val order: BigInt
-  def times (e1: E, e2: E) : E
-  def exp (e: E, n: BigInt) : E =
+  val order: BigInt // minorant de l'ordre
+  def times (e1: E, e2: E): E
+  def inv(e: E) : E
+  def eToBytes(e: E): Array[Byte]
+  def eFromBytes(s: Array[Byte]): E
+  
+  def div(e1: E, e2: E): E = times(e1, inv(e2))
+  def exp (e: E, n: BigInt): E =
   {
     assert(n>=0)
     if(n == 0)
@@ -31,18 +40,20 @@ trait Group[E]
     else
       times(exp(times(e, e), n/2), e)
   }
-  def eToBytes(e: E): Array[Byte]
-  def eFromBytes(s: Array[Byte]): E
 }
 
 class Zk(k: BigInt) extends Group[BigInt]
 {
   val unit = BigInt(0)
   val generator = BigInt(1) // TODO : autre chose
-  val order = k
+  val order = BigInt(10)
   def times (e1: BigInt, e2: BigInt) : BigInt =
   {
     (e1+e2)%k
+  }
+  def inv(e: BigInt): BigInt =
+  {
+    k-e
   }
   def eToBytes(e: BigInt): Array[Byte] =
     e.toByteArray
@@ -59,11 +70,113 @@ class Zp(p: BigInt) extends Group[BigInt]
   {
     (e1*e2)%p
   }
+  def inv(e: BigInt): BigInt =
+  {
+    e.modPow(p-2, p)
+  }
   def eToBytes(e: BigInt): Array[Byte] =
     e.toByteArray
   def eFromBytes(s: Array[Byte]): BigInt =
     BigInt(s)
 }
 
-// TODO : courbes elliptiques
+// finite field
+abstract class Field[E]
+{
+  val group:Group[E]
+  def one:E
+  def times(e1: E, e2: E): E
+  def inv(e: E): E
+  
+  val zero = group.unit
+  def plus(e1: E, e2: E) = group.times(e1, e2)
+  def minus(e1: E, e2: E) = group.div(e1, e2)
+  def ktimes(e: E, k: BigInt) = group.exp(e, k)
+  def div(e1: E, e2: E) = times(e1, inv(e2))
+}
+
+// field Z/pZ
+class Zpf(p: BigInt) extends { val group = new Zk(p) } with Field[BigInt]
+{
+  def one = BigInt(1)
+  def times(e1: BigInt, e2: BigInt) = (e1*e2)%p
+  def inv(e: BigInt) = e.modPow(p-2, p)
+}
+
+class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]] // None is inf
+{
+  // y² = x³ + ax² + b (b fixé par g)
+  // il faut 4a³ + 27b² premier avec n si K=Z/nZ
+
+  val unit = None
+  val generator = Some(g)
+  val order = BigInt(256)//f.order+1-2*sqrt(f.order) TODO // minorant (théorème de Hasse-Weil)
+  def times(e1: Option[(K, K)], e2: Option[(K, K)]): Option[(K, K)] =
+  {
+    (e1, e2) match
+    {
+      case (None, e) => e
+      case (e, None) => e
+      case (Some(p), Some(q)) =>
+        if(p._1 != q._1)
+        {
+          val s = f.div(f.minus(p._2, q._2), f.minus(p._1, q._1))
+          val t = f.div(f.minus(f.times(q._2, p._1), f.times(p._2, q._1)), f.minus(p._1, q._1))
+          val x = f.minus(f.minus(f.times(s, s), p._1), q._1)
+          Some((x, f.minus(f.minus(f.zero, t), f.times(s, x))))
+        }
+        else if(p._2 != q._2)
+        {
+          None
+        }
+        else if(p._2 != f.zero)
+        {
+          val s = f.div(f.plus(f.ktimes(f.times(p._1, p._1), 3), a), f.ktimes(p._2, 2))
+          //val t = f.minus(p._2, f.times(p._1, s))
+          val x = f.minus(f.minus(f.times(s, s), p._1), q._1)
+          Some((x, f.minus(f.times(s, f.minus(p._1, x)), p._2)))
+        }
+        else
+        {
+          None
+        }
+    }
+  }
+  def inv(e: Option[(K, K)]) =
+  {
+    e match
+    {
+      case None => None
+      case Some((x, y)) => Some((x, f.minus(f.zero, y)))
+    }
+  }
+  // TODO :
+  def eToBytes(e: Option[(K, K)]) =
+  {
+    e match
+    {
+      case None => println("none"); Array[Byte]()
+      case Some((x, y)) =>
+        injectivePair((f.group.eToBytes(x), f.group.eToBytes(y)))
+    }
+  }
+  def eFromBytes(m: Array[Byte]) =
+  {
+    if(m.isEmpty)
+      None
+    else
+    {
+      val c = getPair(m)
+      Some(f.group.eFromBytes(c._1), f.group.eFromBytes(c._2))
+    }
+  }
+}
+
+/*
+val f = new Zpf(5)
+val g = new Elliptic[BigInt](f, 0, (2,3))
+for(i <- 1 to 8)
+  println(i, g.exp(g.generator, i))
+*/
+
 
