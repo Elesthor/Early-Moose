@@ -13,6 +13,8 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+import perso.utils.NetworkTools._
+
 abstract class Key [T]
 {
   def getPublic(): T
@@ -30,15 +32,5 @@ abstract class CryptoSystem [T]
     arrayToNetwork(_encrypt(hostToArray(msg), key.getPublic, seed))
   def decrypt (msg: String , key: Key [T]): String =
     arrayToHost(_decrypt(networkToArray(msg), key.getPrivate))
-
-  // strings are decoded in UTF-8, but arrays of bytes are sent in ISO-8859-1 which is a injection 1 Byte -> 1 Char
-  def hostToArray (msg: String) : Array[Byte] =
-    msg.getBytes(java.nio.charset.Charset.forName("UTF-8"))
-  def arrayToHost (msg: Array[Byte]) : String =
-    new String(msg, java.nio.charset.Charset.forName("UTF-8"))
-  def networkToArray (msg: String) : Array[Byte] =
-    msg.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
-  def arrayToNetwork (msg: Array[Byte]) : String =
-    new String(msg, java.nio.charset.Charset.forName("ISO-8859-1"))
 }
 
