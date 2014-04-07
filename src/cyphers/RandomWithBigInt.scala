@@ -18,7 +18,9 @@ import scala.BigInt
 
 object BigIntUtils
 {
-  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = new RandomWithBigInt(rnd)
+
+  implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = 
+    new RandomWithBigInt(rnd)
 
   class RandomWithBigInt(rnd: util.Random)
   {
@@ -27,7 +29,8 @@ object BigIntUtils
     {
       val size = max.bitLength
       var r = BigInt(0)
-      do {
+      do 
+      {
         r = BigInt(size, rnd);
       } while (r >= max);
       r
