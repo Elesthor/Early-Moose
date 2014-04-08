@@ -18,10 +18,13 @@ cyphers: $(CLASSCYPHERS)
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
 parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
-CYPHERS = $(filter-out cyphers/CryptoSystem.class, $(CLASSCYPHERS))
+CYPHERS = $(filter-out cyphers/CryptoSystem.class cypher/TestCyphers.scala, $(CLASSCYPHERS))
 $(CYPHERS): cyphers/CryptoSystem.class
 cyphers/ElGamal.class: cyphers/Group.class
-Application.class: $(CLASSPARSER) $(CLASSPLAYER)
+#cyphers/TestCyphers.class: $(CYPHERS)
+# TODO : package
+Aplipcation.class: $(CLASSPARSER) $(CLASSPLAYER)
+
 
 %.class: %.scala
 	scalac -d $(shell dirname $*) -classpath $(DIRS) $*.scala
