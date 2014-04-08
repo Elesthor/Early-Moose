@@ -52,7 +52,7 @@ abstract class CryptoSystem [T]
 }
 
 
-class RsaKey (seed: Int, pqLength: Int = 2048) extends Key [(BigInt, BigInt)]
+class RsaKey (seed: Int, pqLength: Int = 1024) extends Key [(BigInt, BigInt)]
 { 
   val (n,d,e) = 
   {
@@ -103,7 +103,7 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
   def PKCS1StringToInt(msg: Array[Byte], seed: Int): String  = 
   {
     val randomizer = new util.Random(seed)
-    val randomness = "0000"+ BigInt(0x80, randomizer).toString + "000"
+    val randomness = "0000"+ BigInt(0x80, randomizer).toString + "0000"
     randomness+ (msg.map({x => padByte((x+0x80).toString, 3)})).foldLeft(""){(s,c)=>s+c}
   }
 
@@ -114,14 +114,15 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
 
   def PKCS1IntToString2(nb: String): Array[Byte] =
   {
-     (BigInt(nb).toString.drop(0x82).grouped(3).toArray.map({x=>(x.toInt-0x80).toByte}))
+     (BigInt(nb).toString).split("""0000""")(1).grouped(3).toArray.map(
+                                                          {x=>(x.toInt-0x80).toByte})
   }
 
   def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), _seed: Int = 0): Array[Byte] = 
   {
     val (n, e) = key
     // Split the input string into blocks.
-    val chunks = PKCS1StringToInt(msg).grouped(n.bitLength/4).toArray  
+    val chunks = PKCS1StringToInt(msg, _seed).grouped(n.bitLength/4).toArray  
     // Crypt each blocks and concat them
     chunks.map({x => padByte(BigInt(x).modPow(e,n).toString, n.bitLength/3) }).foldLeft(""){(s,c)=>s+c}.getBytes
   }
@@ -131,12 +132,12 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
     val (n, d) = key   
     val chunks = (new String(crypt)).grouped(n.bitLength/3).toArray
     val decrypted =  chunks.map({x => padByteMod(BigInt(x).modPow(d,n).toString,3)}).foldLeft(""){(s,c)=>s+c}
-    PKCS1IntToString(decrypted)
+    println(BigInt(decrypted))
+    PKCS1IntToString2(decrypted)
   }
 }
 val test = new RSA()
 val p = new RsaKey(12)
-var t  = "abcdefghijklmnop"
-//println( test.encrypt(t,p, 42) )
+var t  = "abcdefghijklmiohpugypgouygoyoyuguOKOKOKOKOKOKOKOKOKKOKOOKOKygouyguoyguygouggogyugoyugyoidoOOONNOIOINOINIOOINOISIODNNIOSINOINOIONINOgyoygoyguyunop"
+println( test.encrypt(t,p, 42) )
 println( test.decrypt(test.encrypt(t,p),p) )
-
