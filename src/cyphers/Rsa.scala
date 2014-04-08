@@ -89,11 +89,11 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
                                                           {x=>(x.toInt-0x80).toByte})
   }
 
-  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), _seed: Int = 0): Array[Byte] = 
+  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), seed: Int = 0): Array[Byte] = 
   {
     val (n, e) = key
     // Split the input string into blocks.
-    val chunks = PKCS1StringToInt(msg, _seed).grouped(n.bitLength/4).toArray  
+    val chunks = PKCS1StringToInt(msg, seed).grouped(n.bitLength/4).toArray  
     // Crypt each blocks and concat them
     chunks.map({x => padByte(BigInt(x).modPow(e,n).toString, n.bitLength/3) }).foldLeft(""){(s,c)=>s+c}.getBytes
   }
