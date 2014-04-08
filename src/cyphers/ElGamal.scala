@@ -45,11 +45,11 @@ class ElGamalKey[E](group: Group[E], seed: Int) extends Key[(BigInt, E)]
 ////////////////////////////////////////////////////////////////////////////////
 
 
-// TODO : assert order >= 256
+// group.order must be >= 256
 class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
 {
   // UTILITIES :
-  // convert e to a byte (discret logarithm on a little range) // TODO orthographe
+  // convert e to a byte (discrete logarithm on a little range)
   def eToByte(e: E): Byte =
   {
     var el = group.generator
@@ -116,6 +116,7 @@ object TestElGamal
     
     val key = new ElGamalKey(grp,5)
     val gen = new ElGamal(grp)
+    println(grp.order)
     val msg = "asalut les coupains :D !▤"
     println(msg)
     val cypher = gen.encrypt(msg,key,15)
