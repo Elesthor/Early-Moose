@@ -103,7 +103,6 @@ class RSA extends CryptoSystem [(BigInt, BigInt)]
     val (n, d) = key   
     val chunks = (new String(crypt)).grouped(n.bitLength/3).toArray
     val decrypted =  chunks.map({x => padByteMod(BigInt(x).modPow(d,n).toString,3)}).foldLeft(""){(s,c)=>s+c}
-    println(BigInt(decrypted))
     PKCS1IntToString2(decrypted)
   }
 }
