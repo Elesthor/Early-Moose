@@ -13,8 +13,11 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-
-// schéma d'encodage des string : getBytes(UTF8).encode.string(ISO-8859-1).send -> receive.getBytes(ISO-8859-1).decode.string(UTF8)
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                               Vigenere Key                                 //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class VigenereKey(seed: Int) extends Key[Array[Byte]]
 {
@@ -30,9 +33,16 @@ class VigenereKey(seed: Int) extends Key[Array[Byte]]
   def getPrivate = getPublic.map({x => (-x).toByte})
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                            Vigenere Implementation                         //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 class Vigenere extends CryptoSystem [Array[Byte]]
 {
-  def _encrypt (msg: Array[Byte], key: Array[Byte], _seed:Int = 0): Array[Byte]  =
+  def _encrypt (msg: Array[Byte], key: Array[Byte], _seed:Int = 0): Array[Byte] =
+    // folding : s._1 is the array, and s._2 is a counter
     msg.foldLeft(Array[Byte](),0){(s, c) => (s._1 :+ (c+key(s._2 % key.length)).toByte, s._2+1)}._1
 
   def _decrypt (msg: Array[Byte], key : Array[Byte]): Array[Byte] =

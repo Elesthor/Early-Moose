@@ -12,13 +12,15 @@
 //                                                           ||-----||        //
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
+//
+// class randomToRandomWithBigInt to extends implicitly util.Random
+// to provide random bigint
 
 package perso.utils
 import scala.BigInt
 
 object BigIntUtils
 {
-
   implicit def randomToRandomWithBigInt(rnd: util.Random):RandomWithBigInt = 
     new RandomWithBigInt(rnd)
 
