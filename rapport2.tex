@@ -25,6 +25,7 @@
 \usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
 \usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
 % These packages are all incorporated in the memoir class to one degree or another...
+\usepackage{amsfonts}
 
 %%% HEADERS & FOOTERS
 \usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
@@ -67,22 +68,67 @@
 
 \end{verbatim}
 
+\section{Encodages des caractères}
 
-\section{Structure du code}
-TrucKey ...
+L'encodage des caractère nous a posé un petit problème : le type \texttt{Char} est plus riche que les octets à la mode ASCII, et transformer une chaîne de caractère en tableau d'octet demande de travailler avec un jeu de caractère donné. Nous avons choisis l'UTF-8 pour ne pas poser de limite, mais le nombre de codets dépendant du caractère, le tableau d'octet crypté ne correspond pas forcément à un chaîne valide en UTF-8.
+Nous avons donc utilisé le schéma de conversion suivant sur une entrée de type \texttt{String} :
+\begin{center}
+\begin{tabular}{|lr|l|l|l|l|}
+  \hline
+  Cryptage & : & décodage UTF-8 & cryptage & encodage ISO-8859-1 \\
+  \hline
+  Décryptage & : & décodage ISO-8859-1 & décryptage & encodage UTF-8 \\
+  \hline
+  Type retourné & : & \texttt{Array[Byte]} & \texttt{Array[Byte]} & \texttt{String}\\
+  \hline
+\end{tabular}
+\end{center}
 
-\section{Interfaces}
-bidule UTF-8 ISO-8859-1
-codage des string renvoyées par ElGamal, RSA, ...
 
+En effet, l'ISO-8859-1 est une injection des \texttt{Byte} dans les \texttt{Char}, ce qui permet de transmettre sous forme de \texttt{String} tout tableau d'octet.
 
-\section{Implémentaiton de RSA}
+\section{Implémentations des systèmes de cryptographie}
+
+\subsection{Implémentation des chiffres de César et de Vigenère}
+
+TODO
+
+\subsection{Implémentation du cryptosystème d'ElGamal}
+
+\subsubsection{Concaténation de \texttt{Array[Byte]}}
+
+Lors de l'encodage d'une chaîne de caractère par le cryptosystème d'ElGamal, on obtient une liste de couples d'élements du groupe.
+
+Il a donc fallu trouver un moyen de coder cette information sous la forme de chaîne de caractère. %TODO on/nous
+Pour cela nous exigeons deux méthodes d'un groupes : \texttt{eToBytes} et \texttt{eFromBytes}, qui devraient fournir une injection du groupe dans les tableaux d'octet. Afin de reconnaître les différents tableaux, nous utilisons le codage suivant (avec $|T|$ la taille de T, $+$ la concaténation de tableaux)~:\\
+\begin{tabular}{rll}
+  $T:\texttt{Array[Byte]} \mapsto$ & $|T|$ & (représenté avec les décimales ASCII) \\
+  & $+  \#$ & (singleton du code ASCII de \#)\\
+  & $+ T$ & \\
+\end{tabular}
+
+Une concaténation de tels codes est uniquement déchiffrable, pour des codes de tailles $\log_{10}(|T|) + 1 + |T|$. Ce n'est pas optimal (par exemple, en réservant un bit pour déterminer si l'octet est le dernier codant la taille, on atteint $\log_{128}(|T|) + |T|$, mais on a choisi cette solution assez simple.
+
+\subsubsection{Crytosystème d'ElGamal}
+
+Le reste de l'implémentation n'a pas posé de problème majeur. Soulignons tout de même que les tableaux d'octet sont codés octet par octet. En effet, pour chaque codage, on tire au hasard un élement du groupe, donc l'image du cryptage reste tout le groupe. Pour l'opération inverse, on effectue un logarithme discret sur une plage restreinte d'élément du groupe, qui doit donc être d'ordre au moins 256, ce qui est très largement vérifié pour des groupes assurant un minimum de sécurité...
+
+\subsubsection{Groupes}
+
+Différents groupes on été implémentés :
+\begin{itemize}
+  \item \texttt{Zk}, le groupe $(\mathbb{Z}/k\mathbb{Z}, +)$
+  \item \texttt{Zp}, le groupe $(\mathbb{Z}/p\mathbb{Z}, \times) pour p premier$
+  \item elliptique...
+\end{itemize}
+
+\subsection{Implémentaiton de RSA}
 
 L'implémentation du coeur de RSA se fait très linéairement par l'utilisation de la classe \texttt{scala.BigInt}, contenant en, particulier des implémentations efficaces des algorithmes de \emph{Miller-Rabin} et d'\emph{Euclide}. La principale difficulté réside en la gestion effective des expansions et des séparations en blocs encryptable pour RSA. Nous avons choisis pour résoudre ce problème d'effectuer les coupes sur des strings représentants les \texttt{BigInt} pour profiter de la souplesse des procédures \texttt{grouped()} et \texttt{drop}. \\\\
 Les clefs RSA sont les couples $(n,e)$ et $(n,d)$ (en utilisant les notations consacrées par l'usage) et donc est typée en 
 \texttt{(Int, Int)}. 
 
-\section{Implémentation d'Enigma}
+\subsection{Implémentation d'Enigma}
 L’implémentation choisie est une enigma \emph{Kriegsmarine} - 4 rotors permettant le choix des rotors parmi huit possibles et le réflecteur parmi trois.  \\
 La clef est typée en \texttt{(List[Rotor], Rotor)}: la première liste contient les quatre rotors de cryptage et le deuxième élément du tuple contient le réflecteur. Les offsets initiaux choisis sont contenus dans les objets rotors.\\
 
@@ -98,12 +144,12 @@ Lors de la génération des clefs (choix des rotors et positions initiales) les 
 
 \end{itemize}
 
-\section{Implémentation d'AES}
+\subsection{Implémentation d'AES}
 L'implémentation de l'AES (\emph{Rijndael} ) suit la spécification FIPS-197  et est implémentée dans ses versions clefs 128, 192 et 256 bits.
 
  Le coeur du cryptosystème repose sur la classe \texttt{AESState} représentant sous forme de matrice 4*4 de Bytes l'état courant du calcul. Les procédures d'évolutions \texttt{SubBytes} , \texttt{ShiftRows}, \texttt{MixColumns} et \texttt{AddRoundKey} travaillent directement sur l'attribut \texttt{currentState}. La Sbox et Sbox inverse d'AES ont été hardcodées pour accélérer le calcul. \\
 
 La générations des clefs suit la spécification de l'algorithme en effectuant la diversification de clefs. De fait une clef est en fait constituée d'une liste des \texttt{roundKeys} de tours.  Ce choix de représentation permet d'écrire alors la procédure de cryptage totale dans un style très fonctionnel en itérant simplement la fonction de tours sur la liste des clefs.
 
-De tous les cryptosystèmes considérés ici, AES est certainement celui dont l'implémentation a été la plus délicate: outre la complexité de l'algorithme,  Scala gère très pédestrement les bytes : tout calcul entre deux bytes renvoie un Int ou un BigInt et nécessite une conversion explicite à l'aide de \texttt{.toByte} ; d'autre part, les calculs dans ${GF}(2^8)$ ont nécessité un travail de débuggage assez conséquent.
+De tous les cryptosystèmes considérés ici, AES est certainement celui dont l'implémentation a été la plus délicate: outre la complexité de l'algorithme,  Scala gère très pédestrement les bytes : tout calcul entre deux bytes renvoie un Int ou un BigInt et nécessite une conversion explicite à l'aide de \texttt{.toByte} ; d'autre part, les calculs dans ${GF}(2^8)$ ont nécessité un travail de débuggage assez conséquent. % TODO : conséquent, c'est moche
 \end{document}
