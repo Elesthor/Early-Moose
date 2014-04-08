@@ -15,16 +15,17 @@
 
 // injectivePair and getPair
 import perso.utils.NetworkTools._
+import perso.utils.BigIntUtils.sqrt
 
 // cyclic groups
 abstract class Group[E]
 {
   val unit: E
   val generator: E
-  val order: BigInt // underestimation of the order
+  val order: BigInt // could be an underestimation of the order
   def times (e1: E, e2: E): E
   def inv(e: E) : E
-  def eToBytes(e: E): Array[Byte]
+  def eToBytes(e: E): Array[Byte] // TODO trait element ? + maj rapport
   def eFromBytes(s: Array[Byte]): E
   
   def div(e1: E, e2: E): E = times(e1, inv(e2))
@@ -89,16 +90,23 @@ class Zpf(p: BigInt) extends { val group = new Zk(p) } with Field[BigInt]
   def inv(e: BigInt) = e.modPow(p-2, p)
 }
 
-class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]] // None is inf
+// Notes :
+// we suppose f=Zpf(n) to estimate the order
+// None is inf
+// the curve is y² = x³ + ax² + b (b given by g, the generator)
+class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]]
 {
-  // y² = x³ + ax² + b (b fixé par g)
-  // il faut 4a³ + 27b² premier avec n si K=Z/nZ
-
   val unit = None
   val generator = Some(g)
-  val order = BigInt(256)//f.order+1-2*sqrt(f.order) TODO // minorant (théorème de Hasse-Weil)
+  // order : underestimation (Hasse's theorem)
+  // -1 instead of +1 because sqrt is floor of sqrt
+  val order = f.group.order-1-2*sqrt(f.group.order)
+  // TODO : we have cardinal of points, not of <g>...
+  // c'est souvent du même ordre, mais pour certains générateurs
+  // on a un groupe beaucoup plus petit
   def times(e1: Option[(K, K)], e2: Option[(K, K)]): Option[(K, K)] =
   {
+    // different cases of addition :
     (e1, e2) match
     {
       case (None, e) => e
@@ -112,20 +120,15 @@ class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]] //
           Some((x, f.minus(f.minus(f.zero, t), f.times(s, x))))
         }
         else if(p._2 != q._2)
-        {
           None
-        }
         else if(p._2 != f.zero)
         {
           val s = f.div(f.plus(f.ktimes(f.times(p._1, p._1), 3), a), f.ktimes(p._2, 2))
-          //val t = f.minus(p._2, f.times(p._1, s))
           val x = f.minus(f.minus(f.times(s, s), p._1), q._1)
           Some((x, f.minus(f.times(s, f.minus(p._1, x)), p._2)))
         }
         else
-        {
           None
-        }
     }
   }
   def inv(e: Option[(K, K)]) =
