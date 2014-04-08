@@ -24,7 +24,7 @@ object TestCyphers
     else
     {
       val seed = args(2).toInt
-      val msg = if(args.length == 3)
+      val msg = if(args.length == 3) // read from stdin
       {
         var buffer = ""
         Iterator.continually(Console.readLine).takeWhile(_ != null).foreach(buffer += _)
@@ -72,7 +72,10 @@ object TestCyphers
 
         case"--ElGamal"   =>
         {
-          val grp = new Zp(1009)//2147483647)
+          val grp = new Zp(BigInt("131071"), 3)
+          
+          /*val f = new Zpf(2147483647)
+          val grp = new Elliptic[BigInt](f, 1, (1, 3))*/
           val cypher = new ElGamal(grp)
           val key = new ElGamalKey(grp, seed)
           if(encrypt)

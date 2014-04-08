@@ -91,7 +91,6 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
   def _decrypt (msg: Array[Byte], key : (BigInt, E)): Array[Byte] =
   {
     def decryptE(c1: E, c2: E) : E =
-      //group.times(c2, group.exp(c1, group.order-key._1)) // TODO raconter ça dans le rapport, et supprimer la ligne
       group.times(c2, group.inv(group.exp(c1, key._1)))
     var from = msg
     var to = Array[Byte]()
@@ -102,26 +101,6 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
       from = next
     }
     to
-  }
-}
-
-
-object TestElGamal
-{
-  def main(args: Array[String]): Unit =
-  {
-    //val grp = new Zk(1009)
-    val f = new Zpf(2147483647)
-    val grp = new Elliptic[BigInt](f, 1, (1, 3))
-    
-    val key = new ElGamalKey(grp,5)
-    val gen = new ElGamal(grp)
-    println(grp.order)
-    val msg = "asalut les coupains :D !▤"
-    println(msg)
-    val cypher = gen.encrypt(msg,key,15)
-    println(cypher)
-    println(gen.decrypt(cypher, key))
   }
 }
 

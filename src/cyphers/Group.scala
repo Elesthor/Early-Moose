@@ -25,7 +25,7 @@ abstract class Group[E]
   val order: BigInt // could be an underestimation of the order
   def times (e1: E, e2: E): E
   def inv(e: E) : E
-  def eToBytes(e: E): Array[Byte] // TODO trait element ? + maj rapport
+  def eToBytes(e: E): Array[Byte]
   def eFromBytes(s: Array[Byte]): E
   
   def div(e1: E, e2: E): E = times(e1, inv(e2))
@@ -55,11 +55,11 @@ class Zk(k: BigInt) extends Group[BigInt]
   def eFromBytes(s: Array[Byte]): BigInt = BigInt(s)
 }
 
-// multiplying group Zp (with p a prime number)
-class Zp(p: BigInt) extends Group[BigInt]
+// multiplying group Zp (with p a prime number), g is a generator
+class Zp(p: BigInt, g:BigInt) extends Group[BigInt]
 {
   val unit = BigInt(1)
-  val generator = BigInt(2)
+  val generator = g
   val order = p-1
   def times (e1: BigInt, e2: BigInt): BigInt = (e1*e2)%p
   def inv(e: BigInt): BigInt = e.modPow(p-2, p)
@@ -91,19 +91,13 @@ class Zpf(p: BigInt) extends { val group = new Zk(p) } with Field[BigInt]
 }
 
 // Notes :
-// we suppose f=Zpf(n) to estimate the order
 // None is inf
 // the curve is y² = x³ + ax² + b (b given by g, the generator)
-class Elliptic[K](f: Field[K], a: K, g: (K, K)) extends Group[Option[(K, K)]]
+class Elliptic[K](f: Field[K], a: K, g: (K, K), o:BigInt) extends Group[Option[(K, K)]]
 {
   val unit = None
   val generator = Some(g)
-  // order : underestimation (Hasse's theorem)
-  // -1 instead of +1 because sqrt is floor of sqrt
-  val order = f.group.order-1-2*sqrt(f.group.order)
-  // TODO : we have cardinal of points, not of <g>...
-  // c'est souvent du même ordre, mais pour certains générateurs
-  // on a un groupe beaucoup plus petit
+  val order = o // f.group.order-1-2*sqrt(f.group.order)
   def times(e1: Option[(K, K)], e2: Option[(K, K)]): Option[(K, K)] =
   {
     // different cases of addition :

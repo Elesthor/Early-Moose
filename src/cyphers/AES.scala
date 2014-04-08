@@ -380,8 +380,10 @@ class AES
 
   }
 }
+/*
 val monad = new AES()
 val test = "coucou"
 val k = new AESKey(42)
 var k2 = monad.splitInBlocks(test)
 println(monad.CBCModeEncrypt(k.getPublic, k2))
+*/
