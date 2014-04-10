@@ -20,7 +20,7 @@ for asynchrone mode :
 ./src/run -async protocol.prot
 ```
 
-Système Cryptographiques
+Systèmes Cryptographiques
 ----
 
 Utilisez dans le dossier src
