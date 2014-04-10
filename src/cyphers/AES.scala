@@ -140,7 +140,7 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
 
   def expandKey(initialKey: BigInt,  keySize: Int, expandedKeySize: Int) = 
   {
-    // Current expanded keySize, in bytes */
+    // Current expanded keySize, in bytes 
     val key = initialKey.toByteArray
     var expandedKey = Array.fill(expandedKeySize)(0.toByte)
     var currentSize = 0
@@ -158,7 +158,6 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
       // rconIteration afterwards 
       if(currentSize % keySize == 0)  core(tmp, rconIteration)
       rconIteration += 1
-      // For 256-bit keys, we add an extra sbox to the calculation
       if(keySize == SIZE_32 && ((currentSize % keySize) == 16)) 
       {
         for(i<- 0 to 3) tmp(i) = AES_TABLES.getSBoxValue(tmp(i));
@@ -179,6 +178,7 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
   result.reverse.drop(1)
   }
 
+  // Main generator for the keys
   def generate() = 
   {
     val randomizer = new util.Random(seed)
@@ -196,14 +196,18 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+// Implement the states operations of AES
+
 class AESState(input: BigInt)
 {
+  // Generate a 4*4 matrix of bytes from a 128bits word.
   def init(inputBlock: BigInt) = 
   {
     var inputBytes = (inputBlock).toByteArray
     Array.tabulate[Byte](4,4) { (i,j) => inputBytes(i+4*j) }
   }
 
+  // Generate a 128bits BigInt from a 4*4 matrix of bytes
   def out() = 
   {
     val outputArray = Array.fill(0x10)(0.toByte)
@@ -211,12 +215,7 @@ class AESState(input: BigInt)
     BigInt(outputArray)
   }
 
-  def printState()
-  {
-    for (i<-0 to 3) printf("%h, %h, %h, %h \n", currentState(i)(0), currentState(i)(1),
-                                                currentState(i)(2), currentState(i)(3))
-  }
-
+  // AES SUBBYTES operation
   def subBytes(indirect: Boolean) = 
   {    
     // Select the correct s-box, either (indirect) or not.
@@ -224,6 +223,7 @@ class AESState(input: BigInt)
       for (i <- 0 to 3; j <-0 to 3) currentState(i)(j) = sbox(currentState(i)(j))
   }
 
+  // AES SHIFTROWS operation
   def shiftRows(indirect: Boolean) =
   {
     var t = Array(0.toByte,0.toByte,0.toByte, 0.toByte)
@@ -255,7 +255,7 @@ class AESState(input: BigInt)
     r.toByte
   }
 
-  // AES mixColums and InvmixColumns passes
+  // AES MIXCOLUMNS
   def mixColumns(indirect: Boolean) = 
   {
     val tmp = Array(0.toByte,0.toByte, 0.toByte,0.toByte)
@@ -277,6 +277,7 @@ class AESState(input: BigInt)
     }
   }
 
+  // AES ADDROUNDKEY
   def addRoundKey(roundKey: BigInt) = 
   {
     val inputBytes = (roundKey).toByteArray
@@ -284,6 +285,7 @@ class AESState(input: BigInt)
     for (i<-0 to 3; j<-0 to 3) currentState(i)(j) = (currentState(i)(j)^tmp(i)(j)) .toByte
   }
 
+  // Represents the 4*4 matrix of the current state
   var currentState = init(input)
 }
 
@@ -311,6 +313,7 @@ class AESOneBlock
     state.subBytes(true)
   }
 
+  // Encryption Turns of AES (depends of the key size)
   def encrypt(state: AESState, keys: List[BigInt]) = 
   {
     val lastKey   = keys(keys.length-1)
@@ -323,6 +326,7 @@ class AESOneBlock
     state
   }
 
+  // Decrpytion turns of AES 
   def decrypt(state: AESState, keys: List[BigInt]) = 
   {
     val lastKey = keys(0) 
@@ -351,6 +355,7 @@ class AES extends CryptoSystem [List[BigInt]]
 //                            Utilities functions                             //
 ////////////////////////////////////////////////////////////////////////////////
 
+  // SPlit the string into 128bits bitint
   def splitInBlocks(input: String) = 
   {
     val inputBytes = input.getBytes
@@ -365,6 +370,7 @@ class AES extends CryptoSystem [List[BigInt]]
   result.reverse.drop(1).map{x=> new AESState(x)}
   }
 
+  // Recover the input string
   def reconstructString(blocks: List[BigInt]) = 
   {
     var concatenatedBytes = blocks.foldLeft(Array[Byte]()){(s, c) => s++c.toByteArray}
@@ -383,6 +389,7 @@ class AES extends CryptoSystem [List[BigInt]]
     new String(concatenatedBytes.dropRight(toDrop))
   }
 
+  // Bitwise xor of two 4*4 matrix of bytes
   def xorStates (state1: AESState, state2: AESState ) = 
   {
     val result = (new AESState (BigInt(0x80, new util.Random(423))))
@@ -409,6 +416,18 @@ class AES extends CryptoSystem [List[BigInt]]
     (result.map(_.out)).reverse
   }
 
+  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Int = 0) = 
+  {
+    CBCModeEncrypt(key, splitInBlocks(new String(msg))).foldLeft("")
+                                                      {(s,c)=>s+c+","}.getBytes
+  }
+
+
+  
+////////////////////////////////////////////////////////////////////////////////
+//                              Decryption functions                          //
+////////////////////////////////////////////////////////////////////////////////
+
   def CBCModeDecrypt(keys: List[BigInt], blocks: List[AESState]) = 
   {
     val cypher = new AESOneBlock()
@@ -426,16 +445,6 @@ class AES extends CryptoSystem [List[BigInt]]
     }
     result.reverse
   }
-  
-////////////////////////////////////////////////////////////////////////////////
-//                              Decryption functions                          //
-////////////////////////////////////////////////////////////////////////////////
-
-  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Int = 0) = 
-  {
-    CBCModeEncrypt(key, splitInBlocks(new String(msg))).foldLeft("")
-                                                      {(s,c)=>s+c+","}.getBytes
-  }
 
   def _decrypt (msg: Array[Byte], key: List[BigInt]) = 
   {
@@ -444,5 +453,4 @@ class AES extends CryptoSystem [List[BigInt]]
   }
 
 }
-
 

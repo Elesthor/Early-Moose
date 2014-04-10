@@ -21,7 +21,7 @@
 
 class CesarKey (seed: Int) extends Key [Byte]
 {
-  def getPublic = seed.toByte
+  def getPublic = new util.Random(seed).nextInt.toByte
   def getPrivate = (-getPublic).toByte
 }
 
@@ -38,19 +38,5 @@ class Cesar extends CryptoSystem [Byte]
 
   def _decrypt (msg: Array[Byte], key: Byte): Array[Byte] =
     _encrypt (msg, key)
-}
-
-object TestCesar
-{
-  def main(args: Array[String]): Unit =
-  {
-    val key = new CesarKey(1)
-    val gen = new Cesar
-    val msg = "asalut les coupains :D !▤"
-    println(msg)
-    val cypher = gen.encrypt(msg,key)
-    println(cypher)
-    println(gen.decrypt(cypher, key))
-  }
 }
 

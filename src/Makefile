@@ -19,9 +19,9 @@ parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
 parser/Process.class: parser/Term.class
 player/Interpretor.class: $(CLASSPARSER) player/Channel.class
 
-cyphers/perso/utils/NetworkTools.class:
+cyphers/perso/utils/NetworkTools.class:cyphers/NetworkTools.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/NetworkTools.scala
-cyphers/perso/utils/BigIntUtils.class:
+cyphers/perso/utils/BigIntUtils.class:cyphers/BigIntUtils.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/BigIntUtils.scala
 $(SRCCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class cyphers/perso/utils/NetworkTools.class
 cyphers/ElGamal.class: cyphers/Group.class
@@ -35,4 +35,6 @@ Aplipcation.class: $(CLASSPARSER) $(CLASSPLAYER)
 
 clean:
 	@rm -f *.class parser/*.class player/*.class cyphers/*.class $(SRC:.scala=.scala~)
+	@rm -f cyphers/NetworkTools.scala~ cyphers/BigIntUtils.scala~ cyphers/TestCyphers.scala~
 	@rm -fr cyphers/perso
+

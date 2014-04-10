@@ -49,17 +49,3 @@ class Vigenere extends CryptoSystem [Array[Byte]]
     _encrypt (msg, key)
 }
 
-object TestVigenere
-{
-  def main(args: Array[String]): Unit =
-  {
-    val key = new VigenereKey(0)
-    val gen = new Vigenere
-    val msg = "asalut les coupains :D !▤"
-    println(msg)
-    val cypher = gen.encrypt(msg,key)
-    println(cypher)
-    println(gen.decrypt(cypher, key))
-  }
-}
-
