@@ -103,13 +103,6 @@ object AES_TABLES
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class Key [T]
-{
- def getPublic(): T
-def getPrivate(): T
-}
-
-
 class AESKey(seed: Int) extends Key [List[BigInt]]
 {
 
@@ -197,17 +190,20 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
   def getPrivate() = keys
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                              AES State                                     //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class AESState(input: BigInt)
 {
   def init(inputBlock: BigInt) = 
   {
     var inputBytes = (inputBlock).toByteArray
-    inputBytes =Array.fill(0x10-(inputBytes.length%0x10))(0.toByte) ++ inputBytes
-    println(inputBytes.length)
-    Array.tabulate[Byte](4,4) { (i,j) => (inputBytes(i+4*j))}
+    Array.tabulate[Byte](4,4) { (i,j) => inputBytes(i+4*j) }
   }
-  
+
   def out() = 
   {
     val outputArray = Array.fill(0x10)(0.toByte)
@@ -220,6 +216,7 @@ class AESState(input: BigInt)
     for (i<-0 to 3) printf("%h, %h, %h, %h \n", currentState(i)(0), currentState(i)(1),
                                                 currentState(i)(2), currentState(i)(3))
   }
+
   def subBytes(indirect: Boolean) = 
   {    
     // Select the correct s-box, either (indirect) or not.
@@ -283,12 +280,18 @@ class AESState(input: BigInt)
   def addRoundKey(roundKey: BigInt) = 
   {
     val inputBytes = (roundKey).toByteArray
-    val tmp =Array.tabulate[Byte](4,4) { (i,j) => (inputBytes(i+4*j))}
+    val tmp = Array.tabulate[Byte](4,4) { (i,j) => (inputBytes(i+4*j))}
     for (i<-0 to 3; j<-0 to 3) currentState(i)(j) = (currentState(i)(j)^tmp(i)(j)) .toByte
   }
 
   var currentState = init(input)
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                        AES Encryption, one block                           //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class AESOneBlock
 {
@@ -317,7 +320,7 @@ class AESOneBlock
     state.subBytes(false)
     state.shiftRows(false)
     state.addRoundKey(lastKey)
-    state.out
+    state
   }
 
   def decrypt(state: AESState, keys: List[BigInt]) = 
@@ -329,12 +332,24 @@ class AESOneBlock
     state.subBytes(true)
     for (i <- reversedKeys.drop(1))  oneTurnInDirect(state, i)
     state.addRoundKey(lastKey)
-    state.out
+    state
   }
 }
 
-class AES
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                        AES Encryption, CBC mode                            //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+class AES extends CryptoSystem [List[BigInt]]
 {
+
+////////////////////////////////////////////////////////////////////////////////
+//                            Utilities functions                             //
+////////////////////////////////////////////////////////////////////////////////
 
   def splitInBlocks(input: String) = 
   {
@@ -347,7 +362,7 @@ class AES
       currentBlock(i%0x10)  = paddedInput(i)
       if (i%0x10==0xf) result = BigInt(currentBlock)::result
     } 
-  result.reverse.drop(1)
+  result.reverse.drop(1).map{x=> new AESState(x)}
   }
 
   def reconstructString(blocks: List[BigInt]) = 
@@ -368,20 +383,66 @@ class AES
     new String(concatenatedBytes.dropRight(toDrop))
   }
 
-  def CBCModeEncrypt(keys: List[BigInt], blocks: List[BigInt]) = 
+  def xorStates (state1: AESState, state2: AESState ) = 
+  {
+    val result = (new AESState (BigInt(0x80, new util.Random(423))))
+    val content = Array.tabulate[Byte](4,4) 
+    { (i,j) => (state1.currentState(i)(j)^state2.currentState(i)(j)).toByte}
+    result.currentState = content
+    result
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//                          Encryption functions                              //
+////////////////////////////////////////////////////////////////////////////////
+
+  def CBCModeEncrypt(keys: List[BigInt], blocks: List[AESState]) = 
   {
     val cypher = new AESOneBlock()
-    val IV = (BigInt(0x80, new util.Random(42)))
-    blocks.foldLeft(IV){(c,s) => cypher.encrypt(new AESState(c^s),keys)}
+    var IV = (new AESState (BigInt(0x80, new util.Random(43))))
+    var result = List[AESState]()
+    for (i<- blocks)
+    {
+      IV = (cypher.encrypt(xorStates(IV, i), keys))  
+      result = IV::result
+    }
+    (result.map(_.out)).reverse
   }
 
-  def CBCModeDecrypt(blocks: List[BigInt]) = 
+  def CBCModeDecrypt(keys: List[BigInt], blocks: List[AESState]) = 
   {
+    val cypher = new AESOneBlock()
+    var IV = (new AESState (BigInt(0x80, new util.Random(43))))
+    var result = List[BigInt]()
+    for (i<- blocks)
+    {
+      val t = new AESState (BigInt(0x80, new util.Random(43)))
+      val content = Array.tabulate[Byte](4,4) 
+                      { (x,y) => i.currentState(x)(y).toByte}
+      t.currentState = content
 
+      result = (xorStates(cypher.decrypt(t, keys), IV)  ).out::result 
+      IV = i
+    }
+    result.reverse
   }
+  
+////////////////////////////////////////////////////////////////////////////////
+//                              Decryption functions                          //
+////////////////////////////////////////////////////////////////////////////////
+
+  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Int = 0) = 
+  {
+    CBCModeEncrypt(key, splitInBlocks(new String(msg))).foldLeft("")
+                                                      {(s,c)=>s+c+","}.getBytes
+  }
+
+  def _decrypt (msg: Array[Byte], key: List[BigInt]) = 
+  {
+    reconstructString(CBCModeDecrypt(key, new String (msg).split(""",""").map
+                              {x => new AESState(BigInt(x))}.toList)).getBytes
+  }
+
 }
-val monad = new AES()
-val test = "coucou"
-val k = new AESKey(42)
-var k2 = monad.splitInBlocks(test)
-println(monad.CBCModeEncrypt(k.getPublic, k2))
+
+

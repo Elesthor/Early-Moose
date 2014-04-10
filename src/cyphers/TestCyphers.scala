@@ -79,15 +79,15 @@ object TestCyphers
             print(cypher.encrypt(msg, key, seed))
           else print(cypher.decrypt(msg, key))
         }
-        /*
+        
         case "--AES"      =>
         {
           val cypher = new AES()
           val key = new AESKey(seed)
           if(encrypt)
-            println(cypher.encrypt(msg, key, seed))
+            println(cypher.encrypt(msg, key))
           else println(cypher.decrypt(msg, key))
-        }*/
+        }
         case _ => System.err.println(ERROR)
       }
     }
