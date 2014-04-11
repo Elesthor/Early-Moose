@@ -53,7 +53,7 @@ class RsaKey (seed: Int, pqLength: Int = 1024) extends Key [(BigInt, BigInt)]
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class RSA extends CryptoSystem [(BigInt, BigInt)]
+class Rsa extends CryptoSystem [(BigInt, BigInt)]
 {
 
   // Return a padded representation of the byte at len digit.

@@ -12,7 +12,10 @@
 //                                                           ||-----||        //
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
- 
+
+import java.io.FileInputStream
+import java.io.File
+
 object TestCyphers
 {
   val ERROR = "Please precise --cryptosystem (among Cesar, Vigenere, RSA, Enigma, ElGamal, Enigma and AES) --mode (among encrypt and decrypt) seed (for generating a random key) [input] (string, or if omitted : read from stdin)\nExample : scala TestCyphers --ElGamal --encrypt 10 coucou | scala TestCyphers --ElGamal --decrypt 10"
@@ -27,8 +30,14 @@ object TestCyphers
       val msg = if(args.length == 3) // read from stdin
       {
         var buffer = ""
-        Iterator.continually(Console.readLine).takeWhile(_ != null).foreach(buffer += _)
-        buffer
+        var tmp = new Array[Char](1024)
+        var readen = 0
+        do
+        {
+          readen = Console.in.read(tmp, 0, 1024)
+          buffer = buffer ++ tmp.slice(0, readen)
+        } while(readen > 0);
+        buffer.dropRight(1)
       }
       else
         args(3)
@@ -37,7 +46,7 @@ object TestCyphers
       {
         case "--RSA"      => 
         { 
-          val cypher = new RSA()
+          val cypher = new Rsa()
           val key = new RsaKey(seed)
           if(encrypt)
             print(cypher.encrypt(msg, key, seed))
@@ -72,14 +81,13 @@ object TestCyphers
 
         case"--ElGamal"   =>
         {
-          val grp = new Zp(BigInt("131071"), 3)
-          
-          /*val f = new Zpf(2147483647)
-          val grp = new Elliptic[BigInt](f, 1, (1, 3))*/
+          //val grp = new Zp(BigInt("131071"), 3)
+          val f = new Zpf(2147483647)
+          val grp = new Elliptic[BigInt](f, 1, (1, 3), 1547483647)
           val cypher = new ElGamal(grp)
           val key = new ElGamalKey(grp, seed)
           if(encrypt)
-            print(cypher.encrypt(msg, key, seed))
+            println(cypher.encrypt(msg, key, seed))
           else print(cypher.decrypt(msg, key))
         }
         /*

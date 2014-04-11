@@ -137,7 +137,7 @@ class Elliptic[K](f: Field[K], a: K, g: (K, K), o:BigInt) extends Group[Option[(
   {
     e match
     {
-      case None => println("none"); Array[Byte]()
+      case None => Array[Byte]()
       case Some((x, y)) =>
         injectivePair((f.group.eToBytes(x), f.group.eToBytes(y)))
     }
