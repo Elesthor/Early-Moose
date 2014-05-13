@@ -195,6 +195,8 @@ class Interpretor(synchrone: Boolean)
 
         case TSk  (v) => "sk("+interpretValue(inTValue(v))+")"
 
+        case TOpenEnc (t) => interpretTerm(t) // TODO
+
         case ListTerm (l) => l.map(interpretTerm).toString
       }
     } catch

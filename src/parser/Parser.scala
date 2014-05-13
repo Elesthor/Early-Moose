@@ -51,7 +51,8 @@ class Parser(src: Input)
     word match
     {
       case "in" | "as" | "out" | "if" | "then" | "else" | "new"
-      | "pair" | "pi1" | "pi2" | "enc" | "dec" | "pk" | "sk" | "count" | "not" =>
+      | "pair" | "pi1" | "pi2" | "enc" | "dec" | "pk" | "sk" | "count"
+      | "not" | "openEnc" =>
         throw new NameMalformed(word)
       case _ =>
         // not empty and first char is alphabetic
@@ -247,6 +248,12 @@ class Parser(src: Input)
             val v = parseTerm()
             src.checkNextWord(")")
             new TSk(v)
+          
+          case ("openEnc", '(') =>
+            src.cleanPeek()
+            val v = parseTerm()
+            src.checkNextWord(")")
+            new TOpenEnc(v)
 
           // empty list
           case ("", '[') =>

@@ -194,3 +194,10 @@ case class TSk  (v: Term) extends Term
   override def toString: String = "sk("+v.toString+")"
 }
 
+case class TOpenEnc  (v: Term) extends Term
+{
+  def retString(x: Int): String = "| "*x+"OpenEnc:\n"+v.retString(x+1)
+  def replace(x: String, T: Term): Term = new TOpenEnc(v.replace(x,T))
+  override def toString: String = "openEnc("+v.toString+")"
+}
+
