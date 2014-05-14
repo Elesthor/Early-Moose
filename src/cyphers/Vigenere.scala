@@ -49,3 +49,12 @@ class Vigenere extends CryptoSystem [Array[Byte]]
     _encrypt (msg, key)
 }
 
+class EncapsulatedVigenere extends EncapsulatedCrypto
+{
+  type T = Array[Byte]
+  val crypto = new Vigenere()
+  def makeKey(seed: Int) = new VigenereKey(seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+

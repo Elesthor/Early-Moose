@@ -27,7 +27,7 @@ $(SRCCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class 
 cyphers/ElGamal.class: cyphers/Group.class
 cyphers/TestCyphers.class: $(SRCCYPHERS)
 cyphers/CryptoSystem.class: cyphers/perso/utils/NetworkTools.class
-Aplipcation.class: $(CLASSPARSER) $(CLASSPLAYER)
+Application.class: $(CLASSCYPHERS) $(CLASSPARSER) $(CLASSPLAYER)
 
 
 %.class: %.scala

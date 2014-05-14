@@ -104,3 +104,34 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
   }
 }
 
+
+class EncapsulatedElGamalEc extends EncapsulatedCrypto
+{
+  val field = new Zpf(BigInt("20988936657440586486151264256610222593863921"))
+  val grp = new Elliptic[BigInt](
+    field, 4, (2, 2), BigInt("100000000000000000000")) // TODO mettre une bonne courbe
+  type T = (BigInt, Option[(BigInt,BigInt)])
+  val crypto = new ElGamal(grp)
+  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
+{
+  val grp = new Zk(k)
+  type T = (BigInt, BigInt)
+  val crypto = new ElGamal(grp)
+  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
+{
+  val grp = new Zp(p, g)
+  type T = (BigInt, BigInt)
+  val crypto = new ElGamal(grp)
+  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+
