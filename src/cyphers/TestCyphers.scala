@@ -26,7 +26,7 @@ object TestCyphers
       System.err.println(ERROR)
     else
     {
-      val seed = args(2).toInt
+      val seed = args(2).toLong
       val msg = if(args.length == 3) // read from stdin
       {
         var buffer = ""

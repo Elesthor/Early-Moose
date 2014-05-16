@@ -61,26 +61,20 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
 ////////////////////////////////////////////////////////////////////////////////
 //                            Utilities function                              //
 ////////////////////////////////////////////////////////////////////////////////
-  def boolToInt (b: Boolean): Int = if (b) 1 else 0
-  def intToBool (x: Int): Boolean = if (x==0) false else true
-
-  // Verif wether x represents an int.
-  def isInt (x: String): Boolean =
-  {
-    try
-    {
-      x.toInt;
-      return true // If toInt has not raise an exception, x is an actual int.
-    } catch
-    {
-      case _: java.lang.NumberFormatException => false
-    }
-  }
+  def boolToInt (b: Boolean): Long = if (b) 1 else 0
+  def intToBool (x: Long): Boolean = if (x==0) false else true
 
   // Verif wether the string x is a non null int.
   def isTrueInt(x:String): Boolean =
   {
-    isInt(x) && x.toInt != 0
+    try
+    {
+      val n = x.toLong;
+      return n != 0
+    } catch
+    {
+      case _: java.lang.NumberFormatException => false
+    }
   }
 
   // Used to extract args from terms in the form : XXX(.., ..)
@@ -109,7 +103,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 ////////////////////////////////////////////////////////////////////////////////
-  def interpretValue(v: Value): Int = // TODO : BigInt !!!
+  def interpretValue(v: Value): Long =
   {
     v match
     {
@@ -131,10 +125,10 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
         }
         boolToInt (interpretTerm(left) == interpretTerm(right))
       case VAnd (left, right) =>
-          boolToInt(intToBool(interpretValue(inTValue(left)))
+        boolToInt(intToBool(interpretValue(inTValue(left)))
                  && intToBool(interpretValue(inTValue(right))))
       case VOr (left, right) =>
-          boolToInt(intToBool(interpretValue(inTValue(left)))
+        boolToInt(intToBool(interpretValue(inTValue(left)))
                  || intToBool(interpretValue(inTValue(right))))
       case VNot (v) =>
         boolToInt(!intToBool(interpretValue(inTValue(v))))
@@ -242,7 +236,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
 
       case PNew(name, nextProc) =>
       {
-        val randVal = new TValue(new VInt (Random.nextInt))
+        val randVal = new TValue(new VInt (Random.nextLong))
         val next = nextProc.replace(name.s, randVal)
         interpretProcess(next)
       }

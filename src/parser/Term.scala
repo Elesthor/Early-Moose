@@ -34,7 +34,7 @@ abstract class Value
   def toString: String
 }
 
-case class VInt  (v: Int) extends Value
+case class VInt  (v: Long) extends Value
 {
   def retString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
   def replace (x: String, t: Term): Value = this

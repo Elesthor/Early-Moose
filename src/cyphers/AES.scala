@@ -103,7 +103,7 @@ object AES_TABLES
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class AESKey(seed: Int) extends Key [List[BigInt]]
+class AESKey(seed: Long) extends Key [List[BigInt]]
 {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,7 +416,7 @@ class AES extends CryptoSystem [List[BigInt]]
     (result.map(_.out)).reverse
   }
 
-  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Int = 0) = 
+  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Long = 0) = 
   {
     CBCModeEncrypt(key, splitInBlocks(new String(msg))).foldLeft("")
                                                       {(s,c)=>s+c+","}.getBytes

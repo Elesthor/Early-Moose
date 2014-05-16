@@ -191,7 +191,7 @@ class Parser(src: Input)
     val c = src.peek()
     val leftTerm:Term =
       if(src.numeric(c) || src.isChar('-')(c)) // a number
-        new TValue(new VInt(src.getNumber()))
+        new TValue(new VInt(src.getNumber().toLong))
       else
       {
         val keyword = src.getWord(src.alphaNumeric || src.isChar('-') || src.isChar('_'),
@@ -222,7 +222,7 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TPi2(t)
 
-          case ("enc", '(') =>
+          case ("enc", '(') => // TODO arité 3 avec source de random, 4 en précisant le cryptosystème (donner à interpretor un tableau avec les CS
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
@@ -348,7 +348,7 @@ class Parser(src: Input)
 
       case ("in", '^') =>
         src.cleanPeek()
-        val k = src.getNumber()
+        val k = src.getNumber().toInt  
         src.checkNextWord("(")
 
         val c = parseChannel()
@@ -429,7 +429,7 @@ class Parser(src: Input)
       // ^k :
       else
       {
-        val k = src.getNumber()
+        val k = src.getNumber().toInt
         src.ignoreSpace()
         if(src.checkEOF()) // last
           new MetaProc(left, k, None)

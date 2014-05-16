@@ -23,7 +23,7 @@ import scala.math
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class RsaKey (seed: Int, pqLength: Int = 1024) extends Key [(BigInt, BigInt)]
+class RsaKey (seed: Long, pqLength: Int = 1024) extends Key [(BigInt, BigInt)]
 { 
   val (n,d,e) = 
   {
@@ -71,7 +71,7 @@ class Rsa extends CryptoSystem [(BigInt, BigInt)]
     (msg.map({x => padByte((x+0x80).toString, 3)})).foldLeft(""){(s,c)=>s+c}
   }
   
-  def PKCS1StringToInt(msg: Array[Byte], seed: Int): String  = 
+  def PKCS1StringToInt(msg: Array[Byte], seed: Long): String  = 
   {
     val randomizer = new util.Random(seed)
     val randomness = "0000"+ BigInt(0x80, randomizer).toString + "0"*0x10
@@ -89,7 +89,7 @@ class Rsa extends CryptoSystem [(BigInt, BigInt)]
                                                           {x=>(x.toInt-0x80).toByte})
   }
 
-  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), seed: Int = 0): Array[Byte] = 
+  def _encrypt(msg: Array[Byte], key:(BigInt, BigInt), seed: Long = 0): Array[Byte] = 
   {
     val (n, e) = key
     // Split the input string into blocks.
@@ -111,7 +111,7 @@ class EncapsulatedRsa(pqLength:Int) extends EncapsulatedCrypto
 {
   type T = (BigInt, BigInt)
   val crypto = new Rsa()
-  def makeKey(seed: Int) = new RsaKey(seed, pqLength)
+  def makeKey(seed: Long) = new RsaKey(seed, pqLength)
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

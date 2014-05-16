@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
+class EnigmaKey (seed: Long) extends Key [(List[Rotor],Rotor)]
 {
   // Possible Rotors (I,II,II,IV,V,beta,gamma)
   val ROTORS = List (
@@ -172,7 +172,7 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
     else i
   }
 
-  def _encrypt(msg: Array[Byte], key: (List[Rotor], Rotor), _seed: Int)  = 
+  def _encrypt(msg: Array[Byte], key: (List[Rotor], Rotor), _seed: Long)  = 
   {
     val ( rotors, reflector ) = key
     replaceInInitialState(rotors)

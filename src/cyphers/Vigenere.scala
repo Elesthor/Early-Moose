@@ -19,7 +19,7 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class VigenereKey(seed: Int) extends Key[Array[Byte]]
+class VigenereKey(seed: Long) extends Key[Array[Byte]]
 {
   def generate() : Array[Byte] =
   {
@@ -41,7 +41,7 @@ class VigenereKey(seed: Int) extends Key[Array[Byte]]
 
 class Vigenere extends CryptoSystem [Array[Byte]]
 {
-  def _encrypt (msg: Array[Byte], key: Array[Byte], _seed:Int = 0): Array[Byte] =
+  def _encrypt (msg: Array[Byte], key: Array[Byte], _seed:Long = 0): Array[Byte] =
     // folding : s._1 is the array, and s._2 is a counter
     msg.foldLeft(Array[Byte](),0){(s, c) => (s._1 :+ (c+key(s._2 % key.length)).toByte, s._2+1)}._1
 
@@ -80,7 +80,7 @@ class EncapsulatedVigenere extends EncapsulatedCrypto
 {
   type T = Array[Byte]
   val crypto = new Vigenere()
-  def makeKey(seed: Int) = new VigenereKey(seed)
+  def makeKey(seed: Long) = new VigenereKey(seed)
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

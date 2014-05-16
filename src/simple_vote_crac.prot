@@ -1,8 +1,8 @@
 %Ceci est l'exemple donné dans l'énoncé
-(new v).out(c_out,enc(v>0,pk(10)))^5
-|| in^5(c_in,x -> dec(x,sk(10)) as y).out(stdout,count (y))
+(new v).out(c_out,enc(v>0,pk(1)))^1
+|| in^1(c_in,x -> dec(x,sk(1)) as y).out(stdout,count (y))
 %|| in(c_out, m).out(stdout, openEnc(m)).out(c_in, m)^15
-|| in(c_out, m).out(stdout, m).out(c_in, m).out(stdout, dec(m,sk(10)))^5
+|| in(c_out, m).out(stdout, m).out(c_in, m)^1
 
 %chaque votant doit envoyer (suivant son choix de vote) la chaîne "enc(v,pk(1))"
 % alice construit la liste des v et compte le nombre de 1

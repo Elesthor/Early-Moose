@@ -27,7 +27,7 @@ import perso.utils.NetworkTools._
 
 // public  key : (_, g^x)
 // private key : (x, _)
-class ElGamalKey[E](group: Group[E], seed: Int) extends Key[(BigInt, E)]
+class ElGamalKey[E](group: Group[E], seed: Long) extends Key[(BigInt, E)]
 {
   val (h, x) = 
   {
@@ -76,7 +76,7 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
     (group.eFromBytes(c._1), group.eFromBytes(c._2), c._3)
   }
   
-  def _encrypt (msg: Array[Byte], key: (BigInt, E), seed: Int): Array[Byte]  =
+  def _encrypt (msg: Array[Byte], key: (BigInt, E), seed: Long): Array[Byte]  =
   {
     val randomizer = new util.Random(seed)
     def encryptE(m: E): (E, E) =
@@ -112,7 +112,7 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
     field, 4, (2, 2), BigInt("100000000000000000000")) // TODO mettre une bonne courbe
   type T = (BigInt, Option[(BigInt,BigInt)])
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
@@ -121,7 +121,7 @@ class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
   val grp = new Zk(k)
   type T = (BigInt, BigInt)
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
@@ -130,7 +130,7 @@ class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
   val grp = new Zp(p, g)
   type T = (BigInt, BigInt)
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Int) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

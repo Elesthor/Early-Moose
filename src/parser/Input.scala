@@ -166,15 +166,15 @@ abstract class Input
   }
 
   // Get a number from input
-  def getNumber() =
+  def getNumber():BigInt =
   {
-    Integer.parseInt(getWord(numeric || isChar('-'), all))
+    BigInt(getWord(numeric || isChar('-'), all))
   }
   
-  // Return len chars
+  // Return len characters
   def getRaw(): String =
-  { // TODO charactères bizarres ?
-    val len = getNumber()
+  {
+    val len = getNumber().toInt
     checkNextWord("#")
     def aux(len: Int): String =
     {
