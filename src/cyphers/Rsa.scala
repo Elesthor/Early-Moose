@@ -45,6 +45,14 @@ class RsaKey (seed: Long, pqLength: Int = 1024) extends Key [(BigInt, BigInt)]
   def getPublic = (n,e)
   def getPrivate = (n,d)
 
+  def getString(k: (BigInt, BigInt)): String =
+    k._1.toString + "," + k._2.toString
+  def fromString(s: String): (BigInt, BigInt) =
+  {
+    val d = s.split(",")
+    assert(d.length == 2)
+    (BigInt(d(0)), BigInt(d(1)))
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +119,11 @@ class EncapsulatedRsa(pqLength:Int) extends EncapsulatedCrypto
 {
   type T = (BigInt, BigInt)
   val crypto = new Rsa()
-  def makeKey(seed: Long) = new RsaKey(seed, pqLength)
+  def makeKey(seed: Long) =
+  {
+    val key = new RsaKey(seed, pqLength)
+    (key, key.getString(key.getPublic))
+  }
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

@@ -25,6 +25,10 @@ class CesarKey (seed: Long) extends Key [Byte]
   def setKey (x: Int) = key = x.toByte
   def getPublic () = key
   def getPrivate = (-getPublic).toByte
+  def getString(k: Byte): String =
+    k.toString
+  def fromString(s: String): Byte =
+    s.toByte
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +50,7 @@ class EncapsulatedCesar extends EncapsulatedCrypto
 {
   type T = Byte
   val crypto = new Cesar()
-  def makeKey(seed: Long) = new CesarKey(seed)
+  def makeKey(seed: Long) = (new CesarKey(seed), "")
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

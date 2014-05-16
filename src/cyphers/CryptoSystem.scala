@@ -21,8 +21,8 @@ abstract class Key [T]
 {
   def getPublic(): T
   def getPrivate(): T
-  /*def toString(): String
-  def fromString(s: String): T*/
+  def getString(k: T): String
+  def fromString(s: String): T
 }
 
 abstract class CryptoSystem [T]
@@ -39,7 +39,9 @@ abstract class CryptoSystem [T]
 trait EncapsulatedCrypto
 {
   type T
-  def makeKey(seed: Long) : Key[T]
+  def makeKey(seed: Long) : (Key[T], String)
+  // la string est l'information à donner sur le réseau
+  //(clé publique pour RSA et ElGamal)
   def encrypt(msg: String, key: Key[T], seed: Long) : String
   def decrypt(msg: String, key: Key[T]) : String
   // TODO : information complémentaire (clé publique...)

@@ -60,6 +60,10 @@ class EnigmaKey (seed: Long) extends Key [(List[Rotor],Rotor)]
   val (rotors, reflector) = generate()
   def getPublic = (rotors, reflector)
   def getPrivate = getPublic
+  def getString(k: (List[Rotor],Rotor)): String =
+    throw new RuntimeException("getString with Enigma")
+  def fromString(s: String): (List[Rotor],Rotor) =
+    throw new RuntimeException("fromString with Enigma")
 }
 
 ////////////////////////////////////////////////////////////////////////////////

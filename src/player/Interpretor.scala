@@ -174,11 +174,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
           right match
           {
             case TPk (v) =>
+              val key = crypto.makeKey(interpretValue(inTValue(v)))
               val cypher = crypto.encrypt(
                 interpretTerm(left),
-                crypto.makeKey(interpretValue(inTValue(v))),
+                key._1,
                 interpretValue(inTValue(seed)))
-              TRaw(cypher).toString
+              "pair("+TRaw(cypher).toString+","+TRaw(key._2).toString+")"
             case _       => "err"
           }
           //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
@@ -191,10 +192,10 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
             case TSk (v) =>
               parseTermFromString(interpretTerm(left)) match
               {
-                case TRaw(cypher) =>
+                case TPair(TRaw(cypher), _) =>
                   crypto.decrypt(
                     cypher,
-                    crypto.makeKey(interpretValue(inTValue(v))))
+                    crypto.makeKey(interpretValue(inTValue(v)))._1)
                 case _ => "err"
               }
             case _       => "err"

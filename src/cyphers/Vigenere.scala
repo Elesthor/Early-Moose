@@ -31,6 +31,11 @@ class VigenereKey(seed: Long) extends Key[Array[Byte]]
   
   def getPublic  = generate()
   def getPrivate = getPublic.map({x => (-x).toByte})
+  
+  def getString(k: Array[Byte]): String =
+    new String(k, java.nio.charset.Charset.forName("ISO-8859-1"))
+  def fromString(s: String): Array[Byte] =
+    s.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +58,7 @@ class EncapsulatedVigenere extends EncapsulatedCrypto
 {
   type T = Array[Byte]
   val crypto = new Vigenere()
-  def makeKey(seed: Long) = new VigenereKey(seed)
+  def makeKey(seed: Long) = (new VigenereKey(seed), "")
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }

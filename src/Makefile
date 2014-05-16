@@ -25,7 +25,7 @@ cyphers/perso/utils/NetworkTools.class:cyphers/NetworkTools.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/NetworkTools.scala
 cyphers/perso/utils/BigIntUtils.class:cyphers/BigIntUtils.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/BigIntUtils.scala
-$(SRCCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class cyphers/perso/utils/NetworkTools.class
+$(CLASSCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class cyphers/perso/utils/NetworkTools.class
 cyphers/ElGamal.class: cyphers/Group.class
 cyphers/TestCyphers.class: $(SRCCYPHERS)
 cyphers/CryptoSystem.class: cyphers/perso/utils/NetworkTools.class

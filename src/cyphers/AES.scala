@@ -185,9 +185,14 @@ class AESKey(seed: Long) extends Key [List[BigInt]]
     val initialKey = BigInt(0x80, randomizer)
     expandKey(initialKey, 16 ,172)
   }
-  val keys = generate()
-  def getPublic() = keys
-  def getPrivate() = keys
+  def getPublic = generate()
+  def getPrivate = getPublic
+  
+  
+  def getString(k: List[BigInt]): String =
+    k.foldLeft(""){(s, n) => s+","+n.toString}.drop(1)
+  def fromString(s: String): List[BigInt] =
+    s.split(",").map{x => BigInt(x)}.toList
 }
 
 ////////////////////////////////////////////////////////////////////////////////

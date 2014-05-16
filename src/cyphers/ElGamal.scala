@@ -36,6 +36,17 @@ class ElGamalKey[E](group: Group[E], seed: Long) extends Key[(BigInt, E)]
   }
   def getPublic  = (0, h)
   def getPrivate = (x, group.unit)
+
+  def getString(k: (BigInt, E)): String =
+    k._1.toString + "," +
+    new String(group.eToBytes(k._2), java.nio.charset.Charset.forName("ISO-8859-1"))
+  def fromString(s: String): (BigInt, E) =
+  {
+    val d = s.split(",", 2)
+    assert(d.length == 2)
+    (BigInt(d(0)),
+     group.eFromBytes(d(1).getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))))
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +123,11 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
     field, 4, (2, 2), BigInt("100000000000000000000")) // TODO mettre une bonne courbe
   type T = (BigInt, Option[(BigInt,BigInt)])
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) =
+  {
+    val key = new ElGamalKey(grp, seed)
+    (key, "elgamal")//key.getPublic.toString)
+  }
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
@@ -121,7 +136,11 @@ class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
   val grp = new Zk(k)
   type T = (BigInt, BigInt)
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) =
+  {
+    val key = new ElGamalKey(grp, seed)
+    (key, "elgamal")//key.getPublic.toString)
+  }
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
@@ -130,7 +149,11 @@ class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
   val grp = new Zp(p, g)
   type T = (BigInt, BigInt)
   val crypto = new ElGamal(grp)
-  def makeKey(seed: Long) = new ElGamalKey(grp, seed)
+  def makeKey(seed: Long) =
+  {
+    val key = new ElGamalKey(grp, seed)
+    (key, key.getString(key.getPublic))
+  }
   def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
