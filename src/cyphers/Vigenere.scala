@@ -49,6 +49,33 @@ class Vigenere extends CryptoSystem [Array[Byte]]
     _encrypt (msg, key)
 }
 
+class VigenereOpponent
+{
+  def indexOfCoincidence (inpt: String) = 
+    ((inpt groupBy (c => c) mapValues (_.length.toFloat)).values.foldLeft (0.)
+      {(s,c)=> s*(s-1)+c}) / (inpt.length*(inpt.length-1)/26)
+
+  def filterString(str: String) = 
+    str.filter {x=> (x > 30  && x < 126) || x == 32 }
+
+  def getKeyLength (crypt: String) = 
+  {
+    def computeMoyIndex (s: String, k: Int) = 
+    {
+      def splitAt(x: Int) = 
+      {
+        var tmp = ""
+        for (i<- 0 to s.length-1 if i%k == x) tmp += s(i)
+        tmp
+      }
+      ( ((0 to k-1) map (x => indexOfCoincidence 
+                            (splitAt (x)))).foldLeft (0.) {(s,c) => s+c} ) / k
+    }
+    ((0 to crypt.length/2) map (x => (computeMoyIndex(crypt, x), x)) min)._2
+  }
+}
+
+
 class EncapsulatedVigenere extends EncapsulatedCrypto
 {
   type T = Array[Byte]
@@ -57,4 +84,5 @@ class EncapsulatedVigenere extends EncapsulatedCrypto
   def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
+
 
