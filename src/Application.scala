@@ -15,6 +15,8 @@
 
 object Application
 {
+  case class InvalidArgument(s: String) extends Exception
+  
   def main(args: Array[String]): Unit =
   {
     val moose ="////////////////////////////////////////////////////////////////////////////////\n//                                                                            //\n//                                                   \\_\\_    _/_/             //\n//      .--       .      .  .                            \\__/                 //\n//      |- .-. .-.| . .  |\\/|.-..-..-.-,                 (oo)\\_______   /     //\n//      '--`-`-'  '-'-|  '  '`-'`-'-'`'-                 (__)\\       )\\/      //\n//                  `-'                                      ||-----||        //\n//                                                           ||     ||        //\n////////////////////////////////////////////////////////////////////////////////"
@@ -33,7 +35,7 @@ object Application
         try
         {
           args(2) match
-          { // TODO : seed bigint
+          {
             case "-vigenere" => new EncapsulatedVigenere()
             case "-cesar"    => new EncapsulatedCesar()
             case "-RSA"      =>
@@ -43,9 +45,7 @@ object Application
                   new EncapsulatedRsa(args(4).toInt)
                 else
                 {
-                  System.err.println("Bad option")
-                  System.exit(1)
-                  new EncapsulatedCesar() // to make compiler happy
+                  throw InvalidArgument("Bad option")
                 }
               }
               else
@@ -60,32 +60,25 @@ object Application
                     new EncapsulatedElGamalZk(BigInt(args(4)))
                   case (5, "-zpmul") =>
                     val n = BigInt(args(4))
-                    if(!n.isProbablePrime(10))
+                    if(!n.isProbablePrime(1000))
                     {
-                      System.err.println("Not prime")
-                      System.exit(1)
+                      throw InvalidArgument("Not prime")
                     }
                     new EncapsulatedElGamalZp(n, 7) // TODO générateur ?
                   case _ =>
-                    System.err.println("Bad option")
-                    System.exit(1)
-                    new EncapsulatedCesar() // to make compiler happy
+                    throw InvalidArgument("Bad option")
                 }
               else
                 new EncapsulatedElGamalZp(
                   BigInt("20988936657440586486151264256610222593863921"), 7) // TODO générateur ?
             case _ =>
-              System.err.println("Bad option")
-              System.exit(1)
-              new EncapsulatedCesar() // to make compiler happy
+              throw InvalidArgument("Bad option")
           }
         }
         catch
         {
           case _ :java.lang.NumberFormatException =>
-            System.err.println("Bad option : not an integer")
-            System.exit(1)
-            new EncapsulatedCesar() // to make compiler happy
+            throw InvalidArgument("Bad option : not an integer")
         }
       
       try
@@ -105,18 +98,23 @@ object Application
         {
           case p.SyntaxError()       =>
             System.err.println("Syntax Error (line " + src.line + "; col " + src.col + ")\n")
+            System.exit(1)
           case p.NameMalformed(name) =>
             System.err.println("Malformed name : '" + name + "' (line " + src.line + "; col " + src.col + ")\n")
+            System.exit(1)
           case src.EndOfFile()       =>
             System.err.println("End of file unexpected (line " + src.line + "; col " + src.col + ")\n")
+            System.exit(1)
           case src.Unexpected(c, f)  =>
             System.err.println("Character '" + src.charToString(c) + "' unexpected (line " + src.line + "; col " + src.col + ")\nExpected : " + f.serialized)
+            System.exit(1)
         }
       }
       catch
       {
         case _:java.io.FileNotFoundException =>
           System.err.println("file " + filename + " not found")
+          System.exit(1)
       }
     }
   }

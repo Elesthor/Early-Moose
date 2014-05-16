@@ -222,21 +222,43 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TPi2(t)
 
-          case ("enc", '(') => // TODO arité 3 avec source de random, 4 en précisant le cryptosystème (donner à interpretor un tableau avec les CS
+          case ("enc", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
             val right = parseTerm()
-            src.checkNextWord(")")
-            new TEnc(left, right)
+            src.checkNextWord(",")
+            val seed = parseTerm()
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TEnc(left, right, seed, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TEnc(left, right, seed, "default")
+            }
 
           case ("dec", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
             val right = parseTerm()
-            src.checkNextWord(")")
-            new TDec(left, right)
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TDec(left, right, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TDec(left, right, "default")
+            }
 
           case ("pk", '(') =>
             src.cleanPeek()

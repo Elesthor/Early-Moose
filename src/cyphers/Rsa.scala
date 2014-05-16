@@ -112,7 +112,7 @@ class EncapsulatedRsa(pqLength:Int) extends EncapsulatedCrypto
   type T = (BigInt, BigInt)
   val crypto = new Rsa()
   def makeKey(seed: Long) = new RsaKey(seed, pqLength)
-  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
 }
 

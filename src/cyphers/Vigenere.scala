@@ -49,6 +49,15 @@ class Vigenere extends CryptoSystem [Array[Byte]]
     _encrypt (msg, key)
 }
 
+class EncapsulatedVigenere extends EncapsulatedCrypto
+{
+  type T = Array[Byte]
+  val crypto = new Vigenere()
+  def makeKey(seed: Long) = new VigenereKey(seed)
+  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+
 class VigenereOpponent
 {
   def indexOfCoincidence (inpt: String) = 
@@ -74,15 +83,4 @@ class VigenereOpponent
     ((0 to crypt.length/2) map (x => (computeMoyIndex(crypt, x), x)) min)._2
   }
 }
-
-
-class EncapsulatedVigenere extends EncapsulatedCrypto
-{
-  type T = Array[Byte]
-  val crypto = new Vigenere()
-  def makeKey(seed: Long) = new VigenereKey(seed)
-  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
-}
-
 

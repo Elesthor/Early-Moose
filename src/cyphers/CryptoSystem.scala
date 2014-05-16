@@ -40,8 +40,8 @@ trait EncapsulatedCrypto
 {
   type T
   def makeKey(seed: Long) : Key[T]
-  def encrypt(msg: String, key: Key[T]) : String
+  def encrypt(msg: String, key: Key[T], seed: Long) : String
   def decrypt(msg: String, key: Key[T]) : String
-  // TODO : information complémentaire
+  // TODO : information complémentaire (clé publique...)
 }
 

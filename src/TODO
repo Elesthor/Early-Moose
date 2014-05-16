@@ -1,1 +1,6 @@
-Les classes clé prennent un bigint pour seed
+TODO RAT PORC
+
+EcapsulatedCrypto
+Int -> Long
+
+enc et dec à n+1 argument pour preciser le CS + la seed

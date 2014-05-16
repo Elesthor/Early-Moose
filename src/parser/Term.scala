@@ -163,21 +163,21 @@ case class TPi2 (t: Term) extends Term
   override def toString: String = "pi2("+t.toString+")"
 }
 
-case class TEnc (left: Term, right: Term) extends Term
+case class TEnc (left: Term, right: Term, seed: Term, crypto: String) extends Term
 {
   def retString(x: Int): String =
         "| "*x+"Enc:\n"+left.retString(x+1)+right.retString(x+1)
   def replace(x: String, T: Term): Term =
-    new TEnc(left.replace(x,T), right.replace(x,T))
+    new TEnc(left.replace(x,T), right.replace(x,T), seed.replace(x,T), crypto)
   override def toString: String = "enc("+left.toString+","+right.toString+")"
 }
 
-case class TDec (left: Term, right: Term) extends Term
+case class TDec (left: Term, right: Term, crypto: String) extends Term
 {
   def retString(x: Int): String =
         "| "*x+"Dec:\n"+left.retString(x+1)+right.retString(x+1)
   def replace(x: String, T: Term): Term =
-    new TDec(left.replace(x,T), right.replace(x,T))
+    new TDec(left.replace(x,T), right.replace(x,T), crypto)
   override def toString: String = "dec("+left.toString+","+right.toString+")"
 }
 

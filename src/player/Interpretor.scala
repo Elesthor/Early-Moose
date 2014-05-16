@@ -169,21 +169,22 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
           }
         }
 
-        case TEnc (left, right) =>
+        case TEnc (left, right, seed, cryptoName) => // TODO envoyer l'info+ avec une pair
         {
           right match
           {
             case TPk (v) =>
               val cypher = crypto.encrypt(
                 interpretTerm(left),
-                crypto.makeKey(interpretValue(inTValue(v))))
+                crypto.makeKey(interpretValue(inTValue(v))),
+                interpretValue(inTValue(seed)))
               TRaw(cypher).toString
             case _       => "err"
           }
           //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
 
-        case TDec (left, right) =>
+        case TDec (left, right, cryptoName) =>
         {
           right match
           {
