@@ -37,7 +37,7 @@ object TestCyphers
           readen = Console.in.read(tmp, 0, 1024)
           buffer = buffer ++ tmp.slice(0, readen)
         } while(readen > 0);
-        buffer.dropRight(1)
+        buffer//.dropRight(1) // TODO : parfois on a un \n en trop ?
       }
       else
         args(3)

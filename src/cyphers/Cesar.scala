@@ -43,6 +43,15 @@ class Cesar extends CryptoSystem [Byte]
     _encrypt (msg, key)
 }
 
+class EncapsulatedCesar extends EncapsulatedCrypto
+{
+  type T = Byte
+  val crypto = new Cesar()
+  def makeKey(seed: Int) = new CesarKey(seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
+
 
 class CesarOpponent 
 {
@@ -108,5 +117,3 @@ class CesarOpponent
   }      
 }
 
-
-      

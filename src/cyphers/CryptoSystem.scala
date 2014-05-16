@@ -36,3 +36,11 @@ abstract class CryptoSystem [T]
     arrayToHost(_decrypt(networkToArray(msg), key.getPrivate))
 }
 
+trait EncapsulatedCrypto
+{
+  type T
+  def makeKey(seed: Int) : Key[T]
+  def encrypt(msg: String, key: Key[T]) : String
+  def decrypt(msg: String, key: Key[T]) : String
+}
+

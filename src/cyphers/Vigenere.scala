@@ -76,13 +76,13 @@ class VigenereOpponent
 }
 
 
-val cypher = new Vigenere()
-val o = new VigenereOpponent()
-
-val k = new VigenereKey(45)
-
-val toto ="bonjour je m'apelle thomas espitau et Ceci est une phrase longue!"
-
-println(cypher.encrypt(toto, k))
+class EncapsulatedVigenere extends EncapsulatedCrypto
+{
+  type T = Array[Byte]
+  val crypto = new Vigenere()
+  def makeKey(seed: Int) = new VigenereKey(seed)
+  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
+  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+}
 
 
