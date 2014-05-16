@@ -16,8 +16,9 @@ all: $(CLASS)
 cyphers: $(CLASSCYPHERS) cyphers/TestCyphers.class
 
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
+parser/Term.class: cyphers/perso/utils/NetworkTools.class
 parser/Process.class: parser/Term.class
-player/Interpretor.class: $(CLASSPARSER) player/Channel.class
+player/Interpretor.class: $(CLASSCYPHERS) $(CLASSPARSER) player/Channel.class
 
 cyphers/perso/utils/NetworkTools.class:cyphers/NetworkTools.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/NetworkTools.scala

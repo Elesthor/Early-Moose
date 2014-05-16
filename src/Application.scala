@@ -88,8 +88,6 @@ object Application
             new EncapsulatedCesar() // to make compiler happy
         }
       
-      println(crypto.encrypt("coucou", crypto.makeKey(1)))
-      
       try
       {
         val src = new InputFromFile(filename)
@@ -101,7 +99,7 @@ object Application
           val program = p.parse()
 
           // playing
-          (new Interpretor(mode)).interpret(program)
+          (new Interpretor(mode, crypto)).interpret(program)
         }
         catch
         {

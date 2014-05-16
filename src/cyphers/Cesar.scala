@@ -21,7 +21,7 @@
 
 class CesarKey (seed: Int) extends Key [Byte]
 {
-  def getPublic = new util.Random(seed).nextInt.toByte
+  def getPublic = seed.toByte//new util.Random(seed).nextInt.toByte TODO remettre
   def getPrivate = (-getPublic).toByte
 }
 

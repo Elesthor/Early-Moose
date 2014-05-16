@@ -42,5 +42,6 @@ trait EncapsulatedCrypto
   def makeKey(seed: Int) : Key[T]
   def encrypt(msg: String, key: Key[T]) : String
   def decrypt(msg: String, key: Key[T]) : String
+  // TODO : information complémentaire
 }
 

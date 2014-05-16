@@ -13,6 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+import perso.utils.NetworkTools._
 
 abstract class Term
 {
@@ -192,6 +193,14 @@ case class TSk  (v: Term) extends Term
   def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)
   def replace(x: String, T: Term): Term = new TSk(v.replace(x,T))
   override def toString: String = "sk("+v.toString+")"
+}
+
+case class TRaw  (content: String) extends Term
+{
+  def retString(x: Int): String = "| "*x+"Raw:\n"+"| "*(x+1)+content
+  def replace(x: String, T: Term): Term = this
+  override def toString: String = "raw(" +
+    arrayToNetwork(injectiveString(hostToArray(content))) + ")"
 }
 
 case class TOpenEnc  (v: Term) extends Term

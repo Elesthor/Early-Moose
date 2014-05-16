@@ -47,7 +47,7 @@ class InterpretThread
 //      - Interpretation of process, whose args are terms.
 //      - Interpretation of MetaProc, which enclapsulates some process branches.
 //
-class Interpretor(synchrone: Boolean)
+class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
 {
 
   // Definition of errors exception.
@@ -109,7 +109,7 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 ////////////////////////////////////////////////////////////////////////////////
-  def interpretValue(v: Value): Int =
+  def interpretValue(v: Value): Int = // TODO : BigInt !!!
   {
     v match
     {
@@ -177,23 +177,47 @@ class Interpretor(synchrone: Boolean)
 
         case TEnc (left, right) =>
         {
-          "enc("+interpretTerm(left)+","+interpretTerm(right)+")"
+          right match
+          {
+            case TPk (v) =>
+              val cypher = crypto.encrypt(
+                interpretTerm(left),
+                crypto.makeKey(interpretValue(inTValue(v))))
+              TRaw(cypher).toString
+            case _       => "err"
+          }
+          //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
 
         case TDec (left, right) =>
         {
-          ( parseTermFromString(interpretTerm(left)),
+          right match
+          {
+            case TSk (v) =>
+              parseTermFromString(interpretTerm(left)) match
+              {
+                case TRaw(cypher) =>
+                  crypto.decrypt(
+                    cypher,
+                    crypto.makeKey(interpretValue(inTValue(v))))
+                case _ => "err"
+              }
+            case _       => "err"
+          }
+          /*( parseTermFromString(interpretTerm(left)),
             parseTermFromString(interpretTerm(right)) ) match
           {
             case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) if n1 == n2 =>
               msg.toString
             case _ => throw new InterpretationError()
-          }
+          }*/
         }
 
         case TPk  (v) => "pk("+interpretValue(inTValue(v))+")"
 
         case TSk  (v) => "sk("+interpretValue(inTValue(v))+")"
+        
+        case TRaw (d) => TRaw(d).toString
 
         case TOpenEnc (t) => interpretTerm(t) // TODO
 

@@ -15,6 +15,7 @@
 
 
 import scala.collection.mutable
+import perso.utils.NetworkTools._
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +249,12 @@ class Parser(src: Input)
             val v = parseTerm()
             src.checkNextWord(")")
             new TSk(v)
+          
+          case ("raw", '(') =>
+            src.cleanPeek()
+            val data = src.getRaw()
+            src.checkNextWord(")")
+            new TRaw(arrayToHost(networkToArray(data)))
           
           case ("openEnc", '(') =>
             src.cleanPeek()

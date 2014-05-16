@@ -17,6 +17,8 @@
 //
 // Utility class to handle a stream
 
+import perso.utils.NetworkTools._
+
 // Class of T=>Boolean functions, composable with ||
 // that concatenate serialized
 class GenericChecker[T](_f: T => Boolean, _serialized: String)
@@ -167,6 +169,32 @@ abstract class Input
   def getNumber() =
   {
     Integer.parseInt(getWord(numeric || isChar('-'), all))
+  }
+  
+  // Return len chars
+  def getRaw(): String =
+  { // TODO charactères bizarres ?
+    val len = getNumber()
+    checkNextWord("#")
+    def aux(len: Int): String =
+    {
+      if(len == 0)
+        ""
+      else
+        getChar_() + aux(len-1)
+    }
+    
+    if(len < 0)
+      assert(false)
+    if(len == 0)
+      ""
+    else
+      // first character may be in peeked
+      peeked match
+      {
+        case Some(c) => peeked=None; c+aux(len-1)
+        case None    => aux(len)
+      }
   }
 
   // Try if EOF
