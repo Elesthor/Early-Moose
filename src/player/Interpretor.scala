@@ -15,6 +15,7 @@
 
 import util.Random
 import scala.collection.mutable.Set
+import perso.utils.NetworkTools._
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -47,7 +48,8 @@ class InterpretThread
 //      - Interpretation of process, whose args are terms.
 //      - Interpretation of MetaProc, which enclapsulates some process branches.
 //
-class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto, cryptoMaker: String => EncapsulatedCrypto)
+class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
+    cryptoMaker: String => EncapsulatedCrypto, opponent: Opponent)
 {
 
   // Definition of errors exception.
@@ -242,7 +244,13 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto, cryptoMaker: S
         
         case TRaw (d) => TRaw(d).toString
 
-        case TOpenEnc (t) => interpretTerm(t) // TODO
+        case TOpenEnc (t) =>
+          t match
+          {
+            case TPair(TRaw(cypher), infos) =>
+              arrayToHost(opponent.openEnc(networkToArray(cypher), infos))
+          }
+          //interpretTerm(t)
 
         case ListTerm (l) => l.map(interpretTerm).toString
       }

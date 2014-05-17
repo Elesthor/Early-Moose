@@ -25,27 +25,31 @@ import perso.utils.NetworkTools._
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-// public  key : (_, g^x)
-// private key : (x, _)
-class ElGamalKey[E](group: Group[E], seed: Long) extends Key[(BigInt, E)]
+// public  key : (_, g^x, order)
+// order to be able to make an attack (we suppose we know the group)
+// private key : (x, _, _)
+class ElGamalKey[E](group: Group[E], seed: Long) extends Key[(BigInt, E, BigInt)]
 {
   val (h, x) = 
   {
     val x = new util.Random(seed).nextBigInt(group.order-2)+1
     (group.exp(group.generator, x), x)
   }
-  def getPublic  = (0, h)
-  def getPrivate = (x, group.unit)
+  def getPublic  = (0, h, group.order)
+  def getPrivate = (x, group.unit, group.order)
 
-  def getString(k: (BigInt, E)): String =
-    k._1.toString + "," +
+  def getString(k: (BigInt, E, BigInt)): String =
+    // not the same order !
+    k._1.toString + "," + k._3.toString + "," +
     new String(group.eToBytes(k._2), java.nio.charset.Charset.forName("ISO-8859-1"))
-  def fromString(s: String): (BigInt, E) =
+    
+  def fromString(s: String): (BigInt, E, BigInt) =
   {
-    val d = s.split(",", 2)
-    assert(d.length == 2)
+    val d = s.split(",", 3)
+    assert(d.length == 3)
     (BigInt(d(0)),
-     group.eFromBytes(d(1).getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))))
+     group.eFromBytes(d(2).getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))),
+     BigInt(d(1)))
   }
 }
 
@@ -57,7 +61,7 @@ class ElGamalKey[E](group: Group[E], seed: Long) extends Key[(BigInt, E)]
 
 
 // group.order must be >= 256
-class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
+class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E, BigInt)]
 {
   // UTILITIES :
   // convert e to a byte (discrete logarithm on a little range)
@@ -87,7 +91,7 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
     (group.eFromBytes(c._1), group.eFromBytes(c._2), c._3)
   }
   
-  def _encrypt (msg: Array[Byte], key: (BigInt, E), seed: Long): Array[Byte]  =
+  def _encrypt (msg: Array[Byte], key: (BigInt, E, BigInt), seed: Long): Array[Byte]  =
   {
     val randomizer = new util.Random(seed)
     def encryptE(m: E): (E, E) =
@@ -99,7 +103,7 @@ class ElGamal[E](group: Group[E]) extends CryptoSystem [(BigInt, E)]
     msg.foldLeft(Array[Byte]()){(s,c) => s ++ injectiveCode(encryptE(eFromByte(c)))}
   }
 
-  def _decrypt (msg: Array[Byte], key : (BigInt, E)): Array[Byte] =
+  def _decrypt (msg: Array[Byte], key : (BigInt, E, BigInt)): Array[Byte] =
   {
     def decryptE(c1: E, c2: E) : E =
       group.times(c2, group.inv(group.exp(c1, key._1)))
@@ -121,7 +125,7 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
   val field = new Zpf(BigInt("20988936657440586486151264256610222593863921"))
   val grp = new Elliptic[BigInt](
     field, 4, (2, 2), BigInt("100000000000000000000")) // TODO mettre une bonne courbe
-  type T = (BigInt, Option[(BigInt,BigInt)])
+  type T = (BigInt, Option[(BigInt,BigInt)], BigInt)
   val crypto = new ElGamal(grp)
   def makeKey(seed: Long) =
   {
@@ -134,7 +138,7 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
 class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
 {
   val grp = new Zk(k)
-  type T = (BigInt, BigInt)
+  type T = (BigInt, BigInt, BigInt)
   val crypto = new ElGamal(grp)
   def makeKey(seed: Long) =
   {
@@ -147,7 +151,7 @@ class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
 class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
 {
   val grp = new Zp(p, g)
-  type T = (BigInt, BigInt)
+  type T = (BigInt, BigInt, BigInt)
   val crypto = new ElGamal(grp)
   def makeKey(seed: Long) =
   {
@@ -156,5 +160,35 @@ class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
   }
   def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
+}
+class ElGamalOpponentZk extends Opponent
+{
+  def openEnc(crypt: Array[Byte], infos : Term):Array[Byte] =
+  {
+    val (_, h, k) = infos match
+    {
+      case TRaw(pubkey) =>
+        // the key decoding don't depend on order :
+        new ElGamalKey(new Zk(BigInt(1000)), 0).fromString(pubkey)
+    }
+    val group = new Zk(k)
+    val crypto = new ElGamal(group)
+    
+    // on a h = gx mod k, on cherche x :
+    val x = (group.generator.modInverse(k)*h)%k
+    
+    def decryptE(c1: BigInt, c2: BigInt) : BigInt =
+      group.times(c2, group.inv(group.exp(c1, x)))
+    
+    var from = crypt
+    var to = Array[Byte]()
+    while(!from.isEmpty)
+    {
+      val (c1, c2, next) = crypto.getCode(from)
+      to = to :+ crypto.eToByte(decryptE(c1, c2))
+      from = next
+    }
+    to
+  }
 }
 

@@ -21,6 +21,7 @@ object Application
   // crée des cryptosystème en fonction de leur nom
   def cryptoMaker(cryptoName: String): EncapsulatedCrypto =
   {
+    // TODO : maintenir une map des systèmes déjà créés ?
     val regexRSA = "RSA([0-9]*)".r
     val regexEG  = "elGamal(|ec|zpmul|zpadd|)([0-9]+)".r
     cryptoName match
@@ -85,46 +86,47 @@ object Application
       // lecture des arguments
       val mode = args(0) == "-sync"
       val filename = args(1)
-      val crypto =
+      val (crypto, opponent) =
         try
         {
           args(2) match
           {
-            case "-cesar"    => new EncapsulatedCesar()
-            case "-vigenere" => new EncapsulatedVigenere()
+            case "-cesar"    => (new EncapsulatedCesar(), new DummyOpponent())
+            case "-vigenere" => (new EncapsulatedVigenere(), new DummyOpponent())
             case "-RSA"      =>
               if(args.length > 3)
               {
                 if(args.length > 4 && args(3) == "-keysize")
-                  new EncapsulatedRsa(args(4).toInt)
+                  (new EncapsulatedRsa(args(4).toInt), new DummyOpponent())
                 else
                 {
                   throw InvalidArgument("Bad option")
                 }
               }
               else
-                new EncapsulatedRsa(1024)
+                (new EncapsulatedRsa(1024), new DummyOpponent())
             case "-elGamal"  =>
               if(args.length > 3)
                 (args.length, args(3)) match
                 {
                   case (4, "-ec")    =>
-                    new EncapsulatedElGamalEc()
+                    (new EncapsulatedElGamalEc(), new DummyOpponent())
                   case (5, "-zpadd") =>
-                    new EncapsulatedElGamalZk(BigInt(args(4)))
+                    (new EncapsulatedElGamalZk(BigInt(args(4))), new ElGamalOpponentZk())
                   case (5, "-zpmul") =>
                     val n = BigInt(args(4))
                     if(!n.isProbablePrime(1000))
                     {
                       throw InvalidArgument("Bad option : not a prime number")
                     }
-                    new EncapsulatedElGamalZp(n, 7) // TODO générateur ?
+                    (new EncapsulatedElGamalZp(n, 7), new DummyOpponent()) // TODO générateur ?
                   case _ =>
                     throw InvalidArgument("Bad option")
                 }
               else
-                new EncapsulatedElGamalZp(
-                  BigInt("20988936657440586486151264256610222593863921"), 7) // TODO générateur ?
+                (new EncapsulatedElGamalZp(
+                  BigInt("20988936657440586486151264256610222593863921"), 7), // TODO générateur ?
+                 new DummyOpponent())
             case _ =>
               throw InvalidArgument("Bad option")
           }
@@ -146,7 +148,7 @@ object Application
           val program = p.parse()
 
           // playing
-          (new Interpretor(mode, crypto, cryptoMaker)).interpret(program)
+          (new Interpretor(mode, crypto, cryptoMaker, opponent)).interpret(program)
         }
         catch
         {
