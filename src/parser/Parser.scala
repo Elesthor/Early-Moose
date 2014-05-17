@@ -229,24 +229,20 @@ class Parser(src: Input)
             val right = parseTerm()
             src.checkNextWord(",")
             val seed = parseTerm()
-            src.ignoreSpace()
-            src.peek() match
-            {
-              case ',' =>
-                src.cleanPeek()
-                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
-                src.checkNextWord(")")
-                new TEnc(left, right, seed, crypto)
-              case ')' =>
-                src.cleanPeek()
-                new TEnc(left, right, seed, "default")
-            }
+            src.checkNextWord(")")
+            new TEnc(left, right, seed)
 
           case ("dec", '(') =>
             src.cleanPeek()
             val left = parseTerm()
             src.checkNextWord(",")
             val right = parseTerm()
+            src.checkNextWord(")")
+            new TDec(left, right)
+
+          case ("pk", '(') =>
+            src.cleanPeek()
+            val v = parseTerm()
             src.ignoreSpace()
             src.peek() match
             {
@@ -254,23 +250,28 @@ class Parser(src: Input)
                 src.cleanPeek()
                 val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
                 src.checkNextWord(")")
-                new TDec(left, right, crypto)
+                new TPk(v, crypto)
               case ')' =>
                 src.cleanPeek()
-                new TDec(left, right, "default")
+                new TPk(v, "default")
             }
-
-          case ("pk", '(') =>
-            src.cleanPeek()
-            val v = parseTerm()
-            src.checkNextWord(")")
-            new TPk(v)
 
           case ("sk", '(') =>
             src.cleanPeek()
             val v = parseTerm()
-            src.checkNextWord(")")
-            new TSk(v)
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TSk(v, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TSk(v, "default")
+            }
+
           
           case ("raw", '(') =>
             src.cleanPeek()

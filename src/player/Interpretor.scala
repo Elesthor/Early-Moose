@@ -47,7 +47,7 @@ class InterpretThread
 //      - Interpretation of process, whose args are terms.
 //      - Interpretation of MetaProc, which enclapsulates some process branches.
 //
-class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
+class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto, cryptoMaker: String => EncapsulatedCrypto)
 {
 
   // Definition of errors exception.
@@ -64,6 +64,16 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
   def boolToInt (b: Boolean): Long = if (b) 1 else 0
   def intToBool (x: Long): Boolean = if (x==0) false else true
 
+  def cryptoGetter(name: String): EncapsulatedCrypto =
+  {
+    name match
+    {
+      case "default" =>
+        crypto
+      case _ =>
+        cryptoMaker(name)
+    }
+  }
   // Verif wether the string x is a non null int.
   def isTrueInt(x:String): Boolean =
   {
@@ -169,36 +179,34 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
           }
         }
 
-        case TEnc (left, right, seed, cryptoName) => // TODO envoyer l'info+ avec une pair
+        case TEnc (msg, key, seed) =>
         {
-          right match
+          parseTermFromString(interpretTerm(key)) match
           {
-            case TPk (v) =>
-              val key = crypto.makeKey(interpretValue(inTValue(v)))
-              val cypher = crypto.encrypt(
-                interpretTerm(left),
-                key._1,
+            case TPair (TRaw(key), TPair(info, TRaw(cryptoName))) =>
+              val lcrypto = cryptoGetter(cryptoName)
+              val cypher = lcrypto.encrypt(
+                interpretTerm(msg),
+                lcrypto.stringToKey(key),
                 interpretValue(inTValue(seed)))
-              "pair("+TRaw(cypher).toString+","+TRaw(key._2).toString+")"
+              "pair("+TRaw(cypher).toString+","+info.toString+")"
             case _       => "err"
           }
           //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
 
-        case TDec (left, right, cryptoName) =>
+        case TDec (msg, key) =>
         {
-          right match
+          (parseTermFromString(interpretTerm(msg)),
+           parseTermFromString(interpretTerm(key))) match
           {
-            case TSk (v) =>
-              parseTermFromString(interpretTerm(left)) match
-              {
-                case TPair(TRaw(cypher), _) =>
-                  crypto.decrypt(
-                    cypher,
-                    crypto.makeKey(interpretValue(inTValue(v)))._1)
-                case _ => "err"
-              }
-            case _       => "err"
+            case (TPair(TRaw(cypher), _),
+                  TPair (TRaw(key), TPair(_, TRaw(cryptoName)))) =>
+              val lcrypto = cryptoGetter(cryptoName)
+              lcrypto.decrypt(
+                cypher,
+                lcrypto.stringToKey(key))
+            case _ => "err"
           }
           /*( parseTermFromString(interpretTerm(left)),
             parseTermFromString(interpretTerm(right)) ) match
@@ -209,9 +217,28 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto)
           }*/
         }
 
-        case TPk  (v) => "pk("+interpretValue(inTValue(v))+")"
+        case TPk  (v, cryptoName) =>
+          // content : pair with key, and a pair with addition information and cryptoName
+          val lcrypto = cryptoGetter(cryptoName)
+          val key = lcrypto.makeKey(interpretValue(inTValue(v)))
+          TPair(
+            TRaw(lcrypto.keyToString(key._1.getPublic)),
+            TPair(
+              TRaw(key._2),
+              TRaw(cryptoName)
+            )
+          ).toString
 
-        case TSk  (v) => "sk("+interpretValue(inTValue(v))+")"
+        case TSk  (v, cryptoName) =>
+          val lcrypto = cryptoGetter(cryptoName)
+          val key = lcrypto.makeKey(interpretValue(inTValue(v)))
+          TPair(
+            TRaw(lcrypto.keyToString(key._1.getPrivate)),
+            TPair(
+              TRaw(key._2),
+              TRaw(cryptoName)
+            )
+          ).toString
         
         case TRaw (d) => TRaw(d).toString
 

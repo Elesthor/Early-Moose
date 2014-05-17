@@ -51,8 +51,8 @@ class EncapsulatedCesar extends EncapsulatedCrypto
   type T = Byte
   val crypto = new Cesar()
   def makeKey(seed: Long) = (new CesarKey(seed), "")
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 
 
@@ -105,7 +105,7 @@ class CesarOpponent
     for (i<- 0 to 255)
     {
       currentKey.setKey(i);
-      val currentDecrypt = cypher.decrypt(crypt, currentKey);
+      val currentDecrypt = cypher.decrypt(crypt, currentKey.getPublic);
       if (currentDecrypt == filterString(currentDecrypt))
       {
         val currentDist =  computeDist(getLetters(currentDecrypt))

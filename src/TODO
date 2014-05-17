@@ -5,3 +5,4 @@ Int -> Long
 
 enc et dec à n+1 argument pour preciser le CS + la seed
 pair qui contient une info supplémentaire qui dépend du CS
+mot clé raw et key

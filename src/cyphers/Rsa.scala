@@ -124,7 +124,7 @@ class EncapsulatedRsa(pqLength:Int) extends EncapsulatedCrypto
     val key = new RsaKey(seed, pqLength)
     (key, key.getString(key.getPublic))
   }
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 

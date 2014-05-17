@@ -126,10 +126,10 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
   def makeKey(seed: Long) =
   {
     val key = new ElGamalKey(grp, seed)
-    (key, "elgamal")//key.getPublic.toString)
+    (key, key.getString(key.getPublic))
   }
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
 {
@@ -139,10 +139,10 @@ class EncapsulatedElGamalZk(k: BigInt) extends EncapsulatedCrypto
   def makeKey(seed: Long) =
   {
     val key = new ElGamalKey(grp, seed)
-    (key, "elgamal")//key.getPublic.toString)
+    (key, key.getString(key.getPublic))
   }
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
 {
@@ -154,7 +154,7 @@ class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
     val key = new ElGamalKey(grp, seed)
     (key, key.getString(key.getPublic))
   }
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 

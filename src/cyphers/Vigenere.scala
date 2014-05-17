@@ -59,8 +59,8 @@ class EncapsulatedVigenere extends EncapsulatedCrypto
   type T = Array[Byte]
   val crypto = new Vigenere()
   def makeKey(seed: Long) = (new VigenereKey(seed), "")
-  def encrypt(msg: String, key: Key[T], seed: Long) = crypto.encrypt(msg, key, seed)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 
 class VigenereOpponent

@@ -13,9 +13,54 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+
 object Application
 {
   case class InvalidArgument(s: String) extends Exception
+  
+  // crée des cryptosystème en fonction de leur nom
+  def cryptoMaker(cryptoName: String): EncapsulatedCrypto =
+  {
+    val regexRSA = "RSA([0-9]*)".r
+    val regexEG  = "elGamal(|ec|zpmul|zpadd|)([0-9]+)".r
+    cryptoName match
+    {
+      case "cesar"              =>
+        new EncapsulatedCesar()
+      case "vigenere"           =>
+        new EncapsulatedVigenere()
+      case regexRSA(keysize)    =>
+        keysize match
+        {
+          case "" =>
+            new EncapsulatedRsa(1024)
+          case _  =>
+            new EncapsulatedRsa(keysize.toInt)
+        }
+      case regexEG (mode, size) =>
+        (mode, size) match
+        {
+          case ("", "") =>
+            new EncapsulatedElGamalZp( // TODO générateur ?
+              BigInt("20988936657440586486151264256610222593863921"), 7)
+          case ("ec", "") =>
+            new EncapsulatedElGamalEc()
+          case ("zpmul", size) if size != "" =>
+            val n = BigInt(size)
+            if(!n.isProbablePrime(1000))
+            {
+              throw InvalidArgument("Not prime")
+            }
+            new EncapsulatedElGamalZp(n, 7) // TODO générateur ?
+          case ("zpadd", size) if size != "" =>
+            new EncapsulatedElGamalZk(BigInt(size))
+          case _ =>
+            throw InvalidArgument("Bad crypto name")
+        }
+      case _ =>
+        throw InvalidArgument("Bad crypto name")
+    }
+  }
   
   def main(args: Array[String]): Unit =
   {
@@ -36,8 +81,8 @@ object Application
         {
           args(2) match
           {
-            case "-vigenere" => new EncapsulatedVigenere()
             case "-cesar"    => new EncapsulatedCesar()
+            case "-vigenere" => new EncapsulatedVigenere()
             case "-RSA"      =>
               if(args.length > 3)
               {
@@ -92,7 +137,7 @@ object Application
           val program = p.parse()
 
           // playing
-          (new Interpretor(mode, crypto)).interpret(program)
+          (new Interpretor(mode, crypto, cryptoMaker)).interpret(program)
         }
         catch
         {
