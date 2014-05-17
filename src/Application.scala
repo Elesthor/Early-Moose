@@ -64,12 +64,21 @@ object Application
   
   def main(args: Array[String]): Unit =
   {
-    val moose ="////////////////////////////////////////////////////////////////////////////////\n//                                                                            //\n//                                                   \\_\\_    _/_/             //\n//      .--       .      .  .                            \\__/                 //\n//      |- .-. .-.| . .  |\\/|.-..-..-.-,                 (oo)\\_______   /     //\n//      '--`-`-'  '-'-|  '  '`-'`-'-'`'-                 (__)\\       )\\/      //\n//                  `-'                                      ||-----||        //\n//                                                           ||     ||        //\n////////////////////////////////////////////////////////////////////////////////"
-    println(moose)
+    println("////////////////////////////////////////////////////////////////////////////////")
+    println("//                                                                            //")
+    println("//                                                   \\_\\_    _/_/             //")
+    println("//      .--       .      .  .                            \\__/                 //")
+    println("//      |- .-. .-.| . .  |\\/|.-..-..-.-,                 (oo)\\_______   /     //")
+    println("//      '--`-`-'  '-'-|  '  '`-'`-'-'`'-                 (__)\\       )\\/      //")
+    println("//                  `-'                                      ||-----||        //")
+    println("//                                                           ||     ||        //")
+    println("////////////////////////////////////////////////////////////////////////////////")
+    
+    val errmsg = "Please precise in order :\n\ta mode among -sync or -async\n\ta source file\n\ta cryptosystem among -cesar -vigenere -rsa (you can precise -keysize [INT]) or -elGamal (you can precise -ec, -zpadd [INT], or -zpmul [prime INT])"
     // option ligne de commande
     if(args.length < 3 || (args(0) != "-sync" && args(0) != "-async"))
     {
-      System.err.println("Please precise -sync or -async, then a source file and then a cryptosystem among...") // TODO
+      System.err.println(errmsg)
     }
     else
     {
@@ -107,7 +116,7 @@ object Application
                     val n = BigInt(args(4))
                     if(!n.isProbablePrime(1000))
                     {
-                      throw InvalidArgument("Not prime")
+                      throw InvalidArgument("Bad option : not a prime number")
                     }
                     new EncapsulatedElGamalZp(n, 7) // TODO générateur ?
                   case _ =>
