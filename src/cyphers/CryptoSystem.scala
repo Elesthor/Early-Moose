@@ -39,6 +39,8 @@ abstract class CryptoSystem [T]
 trait EncapsulatedCrypto
 {
   type T
+  // la string est l'information à donner sur le réseau
+  //(clé publique pour RSA et ElGamal)
   def makeKey(seed: Long) : (Key[T], String)
   def keyToString(k: T) : String =
   {
@@ -50,11 +52,8 @@ trait EncapsulatedCrypto
     val dummyKey = makeKey(0)._1
     dummyKey.fromString(s)
   }
-  // la string est l'information à donner sur le réseau
-  //(clé publique pour RSA et ElGamal)
   def encrypt(msg: String, key: T, seed: Long) : String
   def decrypt(msg: String, key: T) : String
-  // TODO : information complémentaire (clé publique...)
 }
 
 trait Opponent

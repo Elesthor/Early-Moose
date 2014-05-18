@@ -1,2 +1,2 @@
 #!/bin/bash
-scala -cp parser/:player/:cyphers/ Application $@
+scala -cp parser/:player/:cyphers/:network/ Application $@

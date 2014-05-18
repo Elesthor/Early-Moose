@@ -71,6 +71,22 @@ case class POut(c: String, t: Term, p: Process) extends Process
     new POut(c, t.replace(x,T), p.replace(x,T))
   }
 }
+case class PConnect(c: String, host: String, port: Int, p: Process) extends Process
+{
+  def retString(x: Int) = "| "*x+"PConnect:\n"+"| "*(x+1)+c+"\n"+"| "*(x+1)+host+"\n"+"| "*(x+1)+port+"\n"+p.retString(x)
+  def replace(x: String , T: Term): Process =
+  {
+    new PConnect(c, host, port, p.replace(x,T))
+  }
+}
+case class PAccept(c: String, port: Int, p: Process) extends Process
+{
+  def retString(x: Int) = "| "*x+"PAccept:\n"+"| "*(x+1)+c+"\n"+"| "*(x+1)+port+"\n"+p.retString(x)
+  def replace(x: String , T: Term): Process =
+  {
+    new PAccept(c, port, p.replace(x,T))
+  }
+}
 case class PIf (v: Term, pIf: Process, pElse: Process, p: Process) extends Process
 {
   def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)+p.retString(x)

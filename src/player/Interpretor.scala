@@ -66,6 +66,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
   def boolToInt (b: Boolean): Long = if (b) 1 else 0
   def intToBool (x: Long): Boolean = if (x==0) false else true
 
+  // return the right cryptosystem
   def cryptoGetter(name: String): EncapsulatedCrypto =
   {
     name match
@@ -89,14 +90,14 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
     }
   }
 
-  // Used to extract args from terms in the form : XXX(.., ..)
+  // Used to parse a string
   def parseTermFromString(s: String):Term =
   {
     if(s == "err" || s == "")
       throw InterpretationError()
     val p = new Parser(new InputFromString(s+")"))
     val t = p.parseTerm()
-    if(p.checkEnd()) // all the term has been read
+    if(p.checkEnd()) // the whole term has been read
       return t
     else
       throw InterpretationError()
@@ -290,6 +291,18 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         val next = nextProc.replace(vari.p, varIn)
         interpretProcess(next)
       }
+      
+      case PConnect(currentChannel, host, port, nextProc) =>
+      {
+        channels.get(currentChannel).get.connect(host, port)
+        interpretProcess(nextProc)
+      }
+      
+      case PAccept(currentChannel, port, nextProc) =>
+      {
+        channels.get(currentChannel).get.accept(port)
+        interpretProcess(nextProc)
+      }
 
       case PIf (value, procTrue, procFalse, nextProc) =>
       {
@@ -358,20 +371,26 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
       {
         case PTrivial() => ()
         case PIn(c, _, p) =>
-          setChannel(c);
+          setChannel(c)
           crossProcess(p)
         case PInk(c, _, _, _, _, p) =>
-          setChannel(c);
+          setChannel(c)
           crossProcess(p)
         case POut(c, _, p) =>
-          setChannel(c);
+          setChannel(c)
+          crossProcess(p)
+        case PConnect(c, _, _, p) =>
+          setChannel(c)
+          crossProcess(p)
+        case PAccept(c, _, p) =>
+          setChannel(c)
           crossProcess(p)
         case PIf(_, pIf, pElse, p) =>
-          crossProcess(pIf);
-          crossProcess(pElse);
-          crossProcess(p);
+          crossProcess(pIf)
+          crossProcess(pElse)
+          crossProcess(p)
         case PNew(_, p) =>
-          crossProcess(p);
+          crossProcess(p)
       }
     }
     crossMetaProc(program)
