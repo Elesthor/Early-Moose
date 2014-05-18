@@ -125,9 +125,8 @@ class StdoutStrategy extends ChannelHandler
 
 class Channel(c: String, synchrone: Boolean)
 {
+  var socket: Option[SocketManager] = None
   val name: String = c
-  // Initialize the channel with a trivial strategy
-  //    (when creating the channel while parsing)
   var strategy: ChannelHandler =
     if(name == "stdout") new StdoutStrategy()
     else if(synchrone)   new SynchroneStrategy()
@@ -136,8 +135,34 @@ class Channel(c: String, synchrone: Boolean)
   def retString(x: Int): String = "| "*x+"Channel:\n"+"| "*(x+1)+name+"\n"
 
   // Enqueue an element
-  def push(msg: String) = strategy.push(msg)
+  def push(msg: String) =
+  {
+    socket match
+    {
+      case None => strategy.push(msg)
+      case Some(s) => s.push(msg)
+    }
+  }
   // Dequeue an element
-  def pop() = strategy.pop()
+  def pop() =
+  {
+    socket match
+    {
+      case None => strategy.pop()
+      case Some(s) => s.pop()
+    }
+  }
+  
+  // gestion du réseau
+  def connect(host: String, port: Int) =
+  {
+    println("connexion...")
+    socket = Some(new Client(host, port))
+  }
+  def accept(port: Int) =
+  {
+    println("acceptation...")
+    socket = Some(new Server(port))
+  }
 }
 

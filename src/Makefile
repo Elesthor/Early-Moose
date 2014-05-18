@@ -1,4 +1,4 @@
-DIRS = ./:parser/:player/:cyphers/
+DIRS = ./:parser/:player/:cyphers/:network/
 
 SRCPARSER = $(wildcard parser/*.scala)
 SRCPLAYER = $(wildcard player/*.scala)
@@ -19,6 +19,7 @@ parser/Input.class: cyphers/perso/utils/NetworkTools.class
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
 parser/Term.class: cyphers/perso/utils/NetworkTools.class
 parser/Process.class: parser/Term.class
+player/Channel.class: network/SocketManager.class
 player/Interpretor.class: cyphers/CryptoSystem.class $(CLASSPARSER) player/Channel.class
 
 cyphers/perso/utils/NetworkTools.class:cyphers/NetworkTools.scala

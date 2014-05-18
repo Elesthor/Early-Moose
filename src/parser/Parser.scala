@@ -397,6 +397,27 @@ class Parser(src: Input)
         src.checkNextWord(")")
         new POut(channel, message, parseProcessSeq())
 
+      case ("connect", '(') =>
+        src.cleanPeek()
+        val channel = parseChannel()
+        src.checkNextWord(",")
+
+        val host = src.getWord(src.alphaNumeric || src.isChar('-') || src.isChar('_') || src.isChar('.'), src.all)
+        src.checkNextWord(",")
+        
+        val port = src.getNumber().toInt
+        src.checkNextWord(")")
+        new PConnect(channel, host, port, parseProcessSeq())
+
+      case ("accept", '(') =>
+        src.cleanPeek()
+        val channel = parseChannel()
+        src.checkNextWord(",")
+        
+        val port = src.getNumber().toInt
+        src.checkNextWord(")")
+        new PAccept(channel, port, parseProcessSeq())
+
       case ("if", p) =>
         if(spaces == 0) throw new src.Unexpected(p, src.space)
 
