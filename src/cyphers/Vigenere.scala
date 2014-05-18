@@ -28,7 +28,7 @@ class VigenereKey(seed: Long) extends Key[Array[Byte]]
     // random Array[Byte] of random size
     val randomizer = new util.Random(seed)
     // nextString return string of any character (chinese...), we cast them to bytes
-    randomizer.nextString(randomizer.nextInt() % 4 + 6).toCharArray.map(_.toByte)
+    randomizer.nextString(randomizer.nextInt() % 4 + 10).toCharArray.map(_.toByte)
   }
   
   def getPublic  = generate()
@@ -89,7 +89,7 @@ class VigenereOpponent
   // Remove all non printable characters from the str string.
   def filterString(str: String) = 
     str.filter 
-    {x=> (x > 47  && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93 ).contains(x) }
+    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93).contains(x) }
 
   // Compute the substring constituted from the chars at positions which are 
   // congrous to x mod k.
@@ -177,9 +177,10 @@ class VigenereOpponent
 val c = new CesarOpponent()
 val cypher = new Vigenere();
 val opp = new VigenereOpponent();
-val toto = "pair(1234209876567308, pair(toto, 09876O4567895))"
-val key = new VigenereKey(5);
+val toto = "pair(pair(19876509876, pair(654, pair(098761, 98765)), 987654567), 09876546)"
+val key = new VigenereKey(98765);
 println(key.getPublic.length)
 val crypt = cypher.encrypt(toto, key.getPublic)
 println(opp.indexOfCoincidence(toto))
-println(new String (opp.openEnc((crypt.getBytes))))*/
+println(new String (opp.openEnc((crypt.getBytes))))
+println(opp.indexOfCoincidence(new String (opp.openEnc((crypt.getBytes)))))*/

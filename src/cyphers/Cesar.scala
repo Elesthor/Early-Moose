@@ -82,8 +82,9 @@ class CesarOpponent
     inpt groupBy (c => c) mapValues (_.length.toFloat/inpt.length*100)
 
   // Filter the string str from all non-printable ascii characters.
-  def filterString(str: String) = 
-    str.filter {x=> (x > 47  && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93 ).contains(x) }
+ def filterString(str: String) = 
+    str.filter 
+    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93).contains(x) }
 
   def getLetters(str: String) = 
   {
@@ -109,8 +110,9 @@ class CesarOpponent
     sum
   }
 
-  def openEnc(crypt: String) =
+  def openEnc(cryptBytes: Array[Byte]) =
   {
+    val crypt = new String (cryptBytes);
     val cypher = new Cesar()
     val currentKey = new CesarKey(0) 
     var minimalValue = 10000.0
@@ -130,7 +132,7 @@ class CesarOpponent
         }
       }
     }
-    decryptedText
+    decryptedText.getBytes
   }      
 }
 
