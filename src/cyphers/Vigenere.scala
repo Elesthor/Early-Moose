@@ -32,7 +32,7 @@ class VigenereKey(seed: Long) extends Key[Array[Byte]]
   }
   
   def getPublic  = generate()
-  def getPrivate = getPublic.map({x => (-x).toByte})
+  def getPrivate = getPublic
   
   def getString(k: Array[Byte]): String =
     new String(k, java.nio.charset.Charset.forName("ISO-8859-1"))
@@ -53,7 +53,7 @@ class Vigenere extends CryptoSystem [Array[Byte]]
     msg.foldLeft(Array[Byte](),0){(s, c) => (s._1 :+ (c+key(s._2 % key.length)).toByte, s._2+1)}._1
 
   def _decrypt (msg: Array[Byte], key : Array[Byte]): Array[Byte] =
-    _encrypt (msg, key)
+    _encrypt (msg, key.map({x => (-x).toByte}))
 }
 
 class EncapsulatedVigenere extends EncapsulatedCrypto

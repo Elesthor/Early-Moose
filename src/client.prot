@@ -1,6 +1,10 @@
 connect(c, localhost, 2001).
 new seed.
-out(c, pk(seed, RSA)).
-in(c, kaes).
+pkrsa = pk(seed, RSA).
+skrsa = sk(seed, RSA).
+out(c, pkrsa).
+in(c, kaes_enc).
+kaes = dec(kaes_enc, skrsa).
 in(c, msg).
-out(stdout, dec(msg, dec(kaes, sk(seed, RSA))))
+out(stdout, dec(msg, kaes)).
+close(c)

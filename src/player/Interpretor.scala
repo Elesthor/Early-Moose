@@ -304,6 +304,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         interpretProcess(nextProc)
       }
 
+      case PClose(currentChannel, nextProc) =>
+      {
+        channels.get(currentChannel).get.close
+        interpretProcess(nextProc)
+      }
+      
       case PIf (value, procTrue, procFalse, nextProc) =>
       {
         val execTrue = try
@@ -335,6 +341,13 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         val liTerm = new ListTerm(li)
         var next = nextProc.replace(y.p, liTerm)
         interpretProcess(next)
+      }
+      
+      case PAff(name, term, nextProc) =>
+      {
+        interpretProcess(nextProc.replace(
+          name,
+          parseTermFromString(interpretTerm(term))))
       }
     }
   }
@@ -385,11 +398,16 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         case PAccept(c, _, p) =>
           setChannel(c)
           crossProcess(p)
+        case PClose(c, p) =>
+          setChannel(c)
+          crossProcess(p)
         case PIf(_, pIf, pElse, p) =>
           crossProcess(pIf)
           crossProcess(pElse)
           crossProcess(p)
         case PNew(_, p) =>
+          crossProcess(p)
+        case PAff(_, _, p) =>
           crossProcess(p)
       }
     }
