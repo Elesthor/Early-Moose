@@ -459,3 +459,12 @@ class AES extends CryptoSystem [List[BigInt]]
 
 }
 
+class EncapsulatedAES extends EncapsulatedCrypto
+{
+  type T = List[BigInt]
+  val crypto = new AES()
+  def makeKey(seed: Long) = (new AESKey(seed), "")
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
+}
+

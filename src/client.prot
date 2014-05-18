@@ -1,0 +1,6 @@
+connect(c, localhost, 2001).
+new seed.
+out(c, pk(seed, RSA)).
+in(c, kaes).
+in(c, msg).
+out(stdout, dec(msg, dec(kaes, sk(seed, RSA))))

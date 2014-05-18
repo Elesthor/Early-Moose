@@ -30,6 +30,8 @@ object Application
         new EncapsulatedCesar()
       case "vigenere"           =>
         new EncapsulatedVigenere()
+      case "AES"           =>
+        new EncapsulatedAES()
       case regexRSA(keysize)    =>
         keysize match
         {
@@ -93,6 +95,7 @@ object Application
           {
             case "-cesar"    => (new EncapsulatedCesar(), new CesarOpponent())
             case "-vigenere" => (new EncapsulatedVigenere(), new VigenereOpponent())
+            case "-AES"      => (new EncapsulatedAES(), new DummyOpponent())
             case "-RSA"      =>
               if(args.length > 3)
               {

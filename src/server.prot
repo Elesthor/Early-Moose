@@ -1,0 +1,5 @@
+accept(c, 2001).
+new seed.
+in(c, pkrsa).
+out(c, enc(sk(seed, AES), pkrsa, seed)).
+out(c, enc(coucou, pk(seed, AES), seed))
