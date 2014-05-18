@@ -72,7 +72,7 @@ class EncapsulatedVigenere extends EncapsulatedCrypto
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class VigenereOpponent
+class VigenereOpponent extends Opponent
 {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ class VigenereOpponent
 
   }
 
-  def openEnc(cryptBytes: Array[Byte]): Array[Byte] =
+  def openEnc(cryptBytes: Array[Byte], _infos: Term): Array[Byte] =
   {
     var keyLength = 1;
     val crypt = new String (cryptBytes);
@@ -170,7 +170,7 @@ class VigenereOpponent
       try  return (decryptWithKeylength((crypt), keyLength)).getBytes
       catch {case e: Exception => keyLength += 1}  
     }
-  return "".getBytes
+    return "".getBytes
   }
 }
 /*

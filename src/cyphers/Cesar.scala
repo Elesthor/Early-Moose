@@ -56,7 +56,7 @@ class EncapsulatedCesar extends EncapsulatedCrypto
 }
 
 
-class CesarOpponent 
+class CesarOpponent extends Opponent
 {
   val FREQ_FR = scala.collection.immutable.Map( 
       ('!',0.0427497311748),('%',0.000546763515274),(')',1.37707006828),
@@ -110,9 +110,15 @@ class CesarOpponent
     sum
   }
 
+<<<<<<< HEAD
   def openEnc(cryptBytes: Array[Byte]) =
   {
     val crypt = new String (cryptBytes);
+=======
+  def openEnc(crypta: Array[Byte], _infos : Term):Array[Byte] =
+  {
+    val crypt = new String(crypta, java.nio.charset.Charset.forName("ISO-8859-1"))
+>>>>>>> 2c5287a40d6b20f0eaaa36bef3338fc9cb562412
     val cypher = new Cesar()
     val currentKey = new CesarKey(0) 
     var minimalValue = 10000.0
@@ -132,7 +138,11 @@ class CesarOpponent
         }
       }
     }
+<<<<<<< HEAD
     decryptedText.getBytes
+=======
+    decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
+>>>>>>> 2c5287a40d6b20f0eaaa36bef3338fc9cb562412
   }      
 }
 

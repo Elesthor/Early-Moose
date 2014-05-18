@@ -91,8 +91,8 @@ object Application
         {
           args(2) match
           {
-            case "-cesar"    => (new EncapsulatedCesar(), new DummyOpponent())
-            case "-vigenere" => (new EncapsulatedVigenere(), new DummyOpponent())
+            case "-cesar"    => (new EncapsulatedCesar(), new CesarOpponent())
+            case "-vigenere" => (new EncapsulatedVigenere(), new VigenereOpponent())
             case "-RSA"      =>
               if(args.length > 3)
               {
