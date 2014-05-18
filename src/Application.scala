@@ -13,7 +13,6 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 object Application
 {
   case class InvalidArgument(s: String) extends Exception
