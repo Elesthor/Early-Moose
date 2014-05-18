@@ -15,6 +15,7 @@
 
 import util.Random
 import scala.collection.mutable.Set
+import perso.utils.NetworkTools._
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -47,7 +48,8 @@ class InterpretThread
 //      - Interpretation of process, whose args are terms.
 //      - Interpretation of MetaProc, which enclapsulates some process branches.
 //
-class Interpretor(synchrone: Boolean)
+class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
+    cryptoMaker: String => EncapsulatedCrypto, opponent: Opponent)
 {
 
   // Definition of errors exception.
@@ -61,26 +63,30 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                            Utilities function                              //
 ////////////////////////////////////////////////////////////////////////////////
-  def boolToInt (b: Boolean): Int = if (b) 1 else 0
-  def intToBool (x: Int): Boolean = if (x==0) false else true
+  def boolToInt (b: Boolean): Long = if (b) 1 else 0
+  def intToBool (x: Long): Boolean = if (x==0) false else true
 
-  // Verif wether x represents an int.
-  def isInt (x: String): Boolean =
+  def cryptoGetter(name: String): EncapsulatedCrypto =
+  {
+    name match
+    {
+      case "default" =>
+        crypto
+      case _ =>
+        cryptoMaker(name)
+    }
+  }
+  // Verif wether the string x is a non null int.
+  def isTrueInt(x:String): Boolean =
   {
     try
     {
-      x.toInt;
-      return true // If toInt has not raise an exception, x is an actual int.
+      val n = x.toLong;
+      return n != 0
     } catch
     {
       case _: java.lang.NumberFormatException => false
     }
-  }
-
-  // Verif wether the string x is a non null int.
-  def isTrueInt(x:String): Boolean =
-  {
-    isInt(x) && x.toInt != 0
   }
 
   // Used to extract args from terms in the form : XXX(.., ..)
@@ -109,7 +115,7 @@ class Interpretor(synchrone: Boolean)
 ////////////////////////////////////////////////////////////////////////////////
 //                            InterpretValues                                 //
 ////////////////////////////////////////////////////////////////////////////////
-  def interpretValue(v: Value): Int =
+  def interpretValue(v: Value): Long =
   {
     v match
     {
@@ -131,10 +137,10 @@ class Interpretor(synchrone: Boolean)
         }
         boolToInt (interpretTerm(left) == interpretTerm(right))
       case VAnd (left, right) =>
-          boolToInt(intToBool(interpretValue(inTValue(left)))
+        boolToInt(intToBool(interpretValue(inTValue(left)))
                  && intToBool(interpretValue(inTValue(right))))
       case VOr (left, right) =>
-          boolToInt(intToBool(interpretValue(inTValue(left)))
+        boolToInt(intToBool(interpretValue(inTValue(left)))
                  || intToBool(interpretValue(inTValue(right))))
       case VNot (v) =>
         boolToInt(!intToBool(interpretValue(inTValue(v))))
@@ -175,27 +181,76 @@ class Interpretor(synchrone: Boolean)
           }
         }
 
-        case TEnc (left, right) =>
+        case TEnc (msg, key, seed) =>
         {
-          "enc("+interpretTerm(left)+","+interpretTerm(right)+")"
+          parseTermFromString(interpretTerm(key)) match
+          {
+            case TPair (TRaw(key), TPair(info, TRaw(cryptoName))) =>
+              val lcrypto = cryptoGetter(cryptoName)
+              val cypher = lcrypto.encrypt(
+                interpretTerm(msg),
+                lcrypto.stringToKey(key),
+                interpretValue(inTValue(seed)))
+              "pair("+TRaw(cypher).toString+","+info.toString+")"
+            case _       => "err"
+          }
+          //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
 
-        case TDec (left, right) =>
+        case TDec (msg, key) =>
         {
-          ( parseTermFromString(interpretTerm(left)),
+          (parseTermFromString(interpretTerm(msg)),
+           parseTermFromString(interpretTerm(key))) match
+          {
+            case (TPair(TRaw(cypher), _),
+                  TPair (TRaw(key), TPair(_, TRaw(cryptoName)))) =>
+              val lcrypto = cryptoGetter(cryptoName)
+              lcrypto.decrypt(
+                cypher,
+                lcrypto.stringToKey(key))
+            case _ => "err"
+          }
+          /*( parseTermFromString(interpretTerm(left)),
             parseTermFromString(interpretTerm(right)) ) match
           {
             case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) if n1 == n2 =>
               msg.toString
             case _ => throw new InterpretationError()
-          }
+          }*/
         }
 
-        case TPk  (v) => "pk("+interpretValue(inTValue(v))+")"
+        case TPk  (v, cryptoName) =>
+          // content : pair with key, and a pair with addition information and cryptoName
+          val lcrypto = cryptoGetter(cryptoName)
+          val key = lcrypto.makeKey(interpretValue(inTValue(v)))
+          TPair(
+            TRaw(lcrypto.keyToString(key._1.getPublic)),
+            TPair(
+              TRaw(key._2),
+              TRaw(cryptoName)
+            )
+          ).toString
 
-        case TSk  (v) => "sk("+interpretValue(inTValue(v))+")"
+        case TSk  (v, cryptoName) =>
+          val lcrypto = cryptoGetter(cryptoName)
+          val key = lcrypto.makeKey(interpretValue(inTValue(v)))
+          TPair(
+            TRaw(lcrypto.keyToString(key._1.getPrivate)),
+            TPair(
+              TRaw(key._2),
+              TRaw(cryptoName)
+            )
+          ).toString
+        
+        case TRaw (d) => TRaw(d).toString
 
-        case TOpenEnc (t) => interpretTerm(t) // TODO
+        case TOpenEnc (t) =>
+          t match
+          {
+            case TPair(TRaw(cypher), infos) =>
+              arrayToHost(opponent.openEnc(networkToArray(cypher), infos))
+          }
+          //interpretTerm(t)
 
         case ListTerm (l) => l.map(interpretTerm).toString
       }
@@ -218,7 +273,7 @@ class Interpretor(synchrone: Boolean)
 
       case PNew(name, nextProc) =>
       {
-        val randVal = new TValue(new VInt (Random.nextInt))
+        val randVal = new TValue(new VInt (Random.nextLong))
         val next = nextProc.replace(name.s, randVal)
         interpretProcess(next)
       }

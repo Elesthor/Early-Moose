@@ -103,7 +103,7 @@ object AES_TABLES
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class AESKey(seed: Int) extends Key [List[BigInt]]
+class AESKey(seed: Long) extends Key [List[BigInt]]
 {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,9 +185,14 @@ class AESKey(seed: Int) extends Key [List[BigInt]]
     val initialKey = BigInt(0x80, randomizer)
     expandKey(initialKey, 16 ,172)
   }
-  val keys = generate()
-  def getPublic() = keys
-  def getPrivate() = keys
+  def getPublic = generate()
+  def getPrivate = getPublic
+  
+  
+  def getString(k: List[BigInt]): String =
+    k.foldLeft(""){(s, n) => s+","+n.toString}.drop(1)
+  def fromString(s: String): List[BigInt] =
+    s.split(",").map{x => BigInt(x)}.toList
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,7 +421,7 @@ class AES extends CryptoSystem [List[BigInt]]
     (result.map(_.out)).reverse
   }
 
-  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Int = 0) = 
+  def _encrypt (msg: Array[Byte], key: List[BigInt], seed: Long = 0) = 
   {
     CBCModeEncrypt(key, splitInBlocks(new String(msg))).foldLeft("")
                                                       {(s,c)=>s+c+","}.getBytes

@@ -15,6 +15,7 @@
 
 
 import scala.collection.mutable
+import perso.utils.NetworkTools._
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +191,7 @@ class Parser(src: Input)
     val c = src.peek()
     val leftTerm:Term =
       if(src.numeric(c) || src.isChar('-')(c)) // a number
-        new TValue(new VInt(src.getNumber()))
+        new TValue(new VInt(src.getNumber().toLong))
       else
       {
         val keyword = src.getWord(src.alphaNumeric || src.isChar('-') || src.isChar('_'),
@@ -226,8 +227,10 @@ class Parser(src: Input)
             val left = parseTerm()
             src.checkNextWord(",")
             val right = parseTerm()
+            src.checkNextWord(",")
+            val seed = parseTerm()
             src.checkNextWord(")")
-            new TEnc(left, right)
+            new TEnc(left, right, seed)
 
           case ("dec", '(') =>
             src.cleanPeek()
@@ -240,14 +243,41 @@ class Parser(src: Input)
           case ("pk", '(') =>
             src.cleanPeek()
             val v = parseTerm()
-            src.checkNextWord(")")
-            new TPk(v)
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TPk(v, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TPk(v, "default")
+            }
 
           case ("sk", '(') =>
             src.cleanPeek()
             val v = parseTerm()
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TSk(v, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TSk(v, "default")
+            }
+
+          
+          case ("raw", '(') =>
+            src.cleanPeek()
+            val data = src.getRaw()
             src.checkNextWord(")")
-            new TSk(v)
+            new TRaw(arrayToHost(networkToArray(data)))
           
           case ("openEnc", '(') =>
             src.cleanPeek()
@@ -341,7 +371,7 @@ class Parser(src: Input)
 
       case ("in", '^') =>
         src.cleanPeek()
-        val k = src.getNumber()
+        val k = src.getNumber().toInt  
         src.checkNextWord("(")
 
         val c = parseChannel()
@@ -422,7 +452,7 @@ class Parser(src: Input)
       // ^k :
       else
       {
-        val k = src.getNumber()
+        val k = src.getNumber().toInt
         src.ignoreSpace()
         if(src.checkEOF()) // last
           new MetaProc(left, k, None)

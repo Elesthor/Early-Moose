@@ -1,7 +1,9 @@
 %Ceci est l'exemple donné dans l'énoncé
-(new v).out(c_out,enc(v>0,pk(1)))^15
-|| in^15(c_in,x -> dec(x,sk(1)) as y).out(stdout,count (y))
-|| in(c_out, m).out(stdout, openEnc(m)).out(c_in, m)^15
+(new v).(new seed).out(c_out,enc(v>0,pk(1,elGamalzpmul1009),seed))^1
+|| in^1(c_in,x -> dec(x,sk(1,elGamalzpmul1009)) as y).out(stdout,count (y))
+%|| in(c_out, m).out(stdout, openEnc(m)).out(c_in, m)^15
+|| in(c_out, m).out(stdout, m).out(c_in, m)^1
+
 
 %chaque votant doit envoyer (suivant son choix de vote) la chaîne "enc(v,pk(1))"
 % alice construit la liste des v et compte le nombre de 1

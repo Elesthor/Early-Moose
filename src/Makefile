@@ -15,15 +15,17 @@ CLASS = $(CLASSPARSER) $(CLASSPLAYER) $(CLASSMAIN) $(CLASSCYPHERS) cyphers/TestC
 all: $(CLASS)
 cyphers: $(CLASSCYPHERS) cyphers/TestCyphers.class
 
+parser/Input.class: cyphers/perso/utils/NetworkTools.class
 parser/Parser.class: parser/Input.class parser/Process.class parser/Term.class
+parser/Term.class: cyphers/perso/utils/NetworkTools.class
 parser/Process.class: parser/Term.class
-player/Interpretor.class: $(CLASSPARSER) player/Channel.class
+player/Interpretor.class: cyphers/CryptoSystem.class $(CLASSPARSER) player/Channel.class
 
 cyphers/perso/utils/NetworkTools.class:cyphers/NetworkTools.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/NetworkTools.scala
 cyphers/perso/utils/BigIntUtils.class:cyphers/BigIntUtils.scala
 	scalac -d cyphers -classpath $(DIRS) cyphers/BigIntUtils.scala
-$(SRCCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class cyphers/perso/utils/NetworkTools.class
+$(CLASSCYPHERS): cyphers/CryptoSystem.class cyphers/perso/utils/BigIntUtils.class cyphers/perso/utils/NetworkTools.class
 cyphers/ElGamal.class: cyphers/Group.class
 cyphers/TestCyphers.class: $(SRCCYPHERS)
 cyphers/CryptoSystem.class: cyphers/perso/utils/NetworkTools.class

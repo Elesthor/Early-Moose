@@ -47,7 +47,7 @@ abstract class Group[E]
 class Zk(k: BigInt) extends Group[BigInt]
 {
   val unit = BigInt(0)
-  val generator = BigInt(1)
+  val generator = k-1
   val order = k
   def times (e1: BigInt, e2: BigInt): BigInt = (e1+e2)%k
   def inv(e: BigInt): BigInt = k-e

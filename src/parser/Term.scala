@@ -13,6 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 
+import perso.utils.NetworkTools._
 
 abstract class Term
 {
@@ -33,7 +34,7 @@ abstract class Value
   def toString: String
 }
 
-case class VInt  (v: Int) extends Value
+case class VInt  (v: Long) extends Value
 {
   def retString(x: Int): String = "| "*x+"Int:\n"+"| "*(x+1)+v.toString+"\n"
   def replace (x: String, t: Term): Value = this
@@ -162,13 +163,13 @@ case class TPi2 (t: Term) extends Term
   override def toString: String = "pi2("+t.toString+")"
 }
 
-case class TEnc (left: Term, right: Term) extends Term
+case class TEnc (left: Term, right: Term, seed: Term) extends Term
 {
   def retString(x: Int): String =
-        "| "*x+"Enc:\n"+left.retString(x+1)+right.retString(x+1)
+        "| "*x+"Enc:\n"+left.retString(x+1)+right.retString(x+1)+seed.retString(x+1)
   def replace(x: String, T: Term): Term =
-    new TEnc(left.replace(x,T), right.replace(x,T))
-  override def toString: String = "enc("+left.toString+","+right.toString+")"
+    new TEnc(left.replace(x,T), right.replace(x,T), seed.replace(x,T))
+  override def toString: String = "enc("+left.toString+","+right.toString+","+seed.toString+")"
 }
 
 case class TDec (left: Term, right: Term) extends Term
@@ -180,18 +181,26 @@ case class TDec (left: Term, right: Term) extends Term
   override def toString: String = "dec("+left.toString+","+right.toString+")"
 }
 
-case class TPk  (v: Term) extends Term
+case class TPk  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"Pk:\n"+v.retString(x+1)
-  def replace(x: String, T: Term): Term = new TPk(v.replace(x,T))
-  override def toString: String = "pk("+v.toString+")"
+  def retString(x: Int): String = "| "*x+"Pk:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def replace(x: String, T: Term): Term = new TPk(v.replace(x,T), crypto)
+  override def toString: String = "pk("+v.toString+","+crypto+")"
 }
 
-case class TSk  (v: Term) extends Term
+case class TSk  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)
-  def replace(x: String, T: Term): Term = new TSk(v.replace(x,T))
-  override def toString: String = "sk("+v.toString+")"
+  def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def replace(x: String, T: Term): Term = new TSk(v.replace(x,T), crypto)
+  override def toString: String = "sk("+v.toString+","+crypto+")"
+}
+
+case class TRaw  (content: String) extends Term
+{
+  def retString(x: Int): String = "| "*x+"Raw:\n"+"| "*(x+1)+content
+  def replace(x: String, T: Term): Term = this
+  override def toString: String = "raw(" +
+    arrayToNetwork(injectiveString(hostToArray(content))) + ")"
 }
 
 case class TOpenEnc  (v: Term) extends Term

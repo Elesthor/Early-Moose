@@ -19,13 +19,16 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-class CesarKey (seed: Int) extends Key [Byte]
+class CesarKey (seed: Long) extends Key [Byte]
 {
-  var key =  new util.Random(seed).nextInt.toByte
-
+  var key = new util.Random(seed).nextInt.toByte
   def setKey (x: Int) = key = x.toByte
-  def getPublic = key
-  def getPrivate = (-key).toByte
+  def getPublic () = key
+  def getPrivate = (-getPublic).toByte
+  def getString(k: Byte): String =
+    k.toString
+  def fromString(s: String): Byte =
+    s.toByte
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +39,7 @@ class CesarKey (seed: Int) extends Key [Byte]
 
 class Cesar extends CryptoSystem [Byte]
 {
-  def _encrypt (msg: Array[Byte], key: Byte, _seed:Int = 0): Array[Byte] =
+  def _encrypt (msg: Array[Byte], key: Byte, _seed:Long = 0): Array[Byte] =
     msg.map({ x => (x + key).toByte})
 
   def _decrypt (msg: Array[Byte], key: Byte): Array[Byte] =
@@ -47,9 +50,9 @@ class EncapsulatedCesar extends EncapsulatedCrypto
 {
   type T = Byte
   val crypto = new Cesar()
-  def makeKey(seed: Int) = new CesarKey(seed)
-  def encrypt(msg: String, key: Key[T]) = crypto.encrypt(msg, key)
-  def decrypt(msg: String, key: Key[T]) = crypto.decrypt(msg, key)
+  def makeKey(seed: Long) = (new CesarKey(seed), "")
+  def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
+  def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 
 
@@ -90,14 +93,14 @@ class CesarOpponent
   
   def computeDist(str: String) = 
   {
-    var sum = 0.;
+    var sum = 0.0;
     var baseFreq = letterFrequencies(str);
     for (i <- (48 to 91).toList ++  List(40, 41, 44, 46, 58, 93 ))
     {
       val bqp = 
       (
         if (str.contains(i.toChar)) baseFreq(i.toChar)
-        else 0.
+        else 0.0
       )
       sum +=  (bqp - FREQ_FR(i.toChar))*(bqp - FREQ_FR(i.toChar))
     }
@@ -110,12 +113,12 @@ class CesarOpponent
   {
     val cypher = new Cesar()
     val currentKey = new CesarKey(0) 
-    var minimalValue = 10000.
+    var minimalValue = 10000.0
     var decryptedText = ""
     for (i<- 0 to 255)
     {
       currentKey.setKey(i);
-      val currentDecrypt = cypher.decrypt(crypt, currentKey);
+      val currentDecrypt = cypher.decrypt(crypt, currentKey.getPublic);
       if (currentDecrypt == filterString(currentDecrypt))
       {
 

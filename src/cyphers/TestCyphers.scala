@@ -26,7 +26,7 @@ object TestCyphers
       System.err.println(ERROR)
     else
     {
-      val seed = args(2).toInt
+      val seed = args(2).toLong
       val msg = if(args.length == 3) // read from stdin
       {
         var buffer = ""
@@ -49,8 +49,8 @@ object TestCyphers
           val cypher = new Rsa()
           val key = new RsaKey(seed)
           if(encrypt)
-            print(cypher.encrypt(msg, key, seed))
-          else print(cypher.decrypt(msg, key))
+            print(cypher.encrypt(msg, key.getPublic, seed))
+          else print(cypher.decrypt(msg, key.getPrivate))
         }
 
         case "--Vigenere" =>
@@ -58,8 +58,8 @@ object TestCyphers
           val cypher = new Vigenere()
           val key = new VigenereKey(seed)
           if(encrypt)
-            print(cypher.encrypt(msg, key, seed))
-          else print(cypher.decrypt(msg, key))
+            print(cypher.encrypt(msg, key.getPublic, seed))
+          else print(cypher.decrypt(msg, key.getPrivate))
         }
       
         case "--Cesar"    =>
@@ -67,16 +67,16 @@ object TestCyphers
           val cypher = new Cesar()
           val key = new CesarKey(seed)
           if(encrypt)
-            print(cypher.encrypt(msg, key, seed))
-          else print(cypher.decrypt(msg, key))
+            print(cypher.encrypt(msg, key.getPublic, seed))
+          else print(cypher.decrypt(msg, key.getPrivate))
         }
         case "--Enigma"   =>
         {
           val cypher = new Enigma()
           val key = new EnigmaKey(seed)
           if(encrypt)
-            print(cypher.encrypt(msg, key, seed))
-          else print(cypher.decrypt(msg, key))
+            print(cypher.encrypt(msg, key.getPublic, seed))
+          else print(cypher.decrypt(msg, key.getPrivate))
         }
 
         case"--ElGamal"   =>
@@ -87,8 +87,8 @@ object TestCyphers
           val cypher = new ElGamal(grp)
           val key = new ElGamalKey(grp, seed)
           if(encrypt)
-            println(cypher.encrypt(msg, key, seed))
-          else print(cypher.decrypt(msg, key))
+            println(cypher.encrypt(msg, key.getPublic, seed))
+          else print(cypher.decrypt(msg, key.getPrivate))
         }
         
         case "--AES"      =>
@@ -96,8 +96,8 @@ object TestCyphers
           val cypher = new AES()
           val key = new AESKey(seed)
           if(encrypt)
-            println(cypher.encrypt(msg, key))
-          else println(cypher.decrypt(msg, key))
+            println(cypher.encrypt(msg, key.getPublic))
+          else println(cypher.decrypt(msg, key.getPrivate))
         }
         case _ => System.err.println(ERROR)
       }

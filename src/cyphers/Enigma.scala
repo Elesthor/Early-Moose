@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
+class EnigmaKey (seed: Long) extends Key [(List[Rotor],Rotor)]
 {
   // Possible Rotors (I,II,II,IV,V,beta,gamma)
   val ROTORS = List (
@@ -60,6 +60,10 @@ class EnigmaKey (seed: Int) extends Key [(List[Rotor],Rotor)]
   val (rotors, reflector) = generate()
   def getPublic = (rotors, reflector)
   def getPrivate = getPublic
+  def getString(k: (List[Rotor],Rotor)): String =
+    throw new RuntimeException("getString with Enigma")
+  def fromString(s: String): (List[Rotor],Rotor) =
+    throw new RuntimeException("fromString with Enigma")
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +176,7 @@ class Enigma extends CryptoSystem [(List[Rotor],Rotor)]
     else i
   }
 
-  def _encrypt(msg: Array[Byte], key: (List[Rotor], Rotor), _seed: Int)  = 
+  def _encrypt(msg: Array[Byte], key: (List[Rotor], Rotor), _seed: Long)  = 
   {
     val ( rotors, reflector ) = key
     replaceInInitialState(rotors)
