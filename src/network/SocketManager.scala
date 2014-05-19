@@ -47,7 +47,7 @@ abstract class SocketManager
     r._1
   }
   
-  def closeSocket()
+  def close()
 }
 
 class Server (port: Int) extends
@@ -57,7 +57,7 @@ class Server (port: Int) extends
   val out = new PrintStream(s.getOutputStream())
 } with SocketManager
 {
-  def closeSocket() =
+  def close() =
   {
     s.close
   }
@@ -70,7 +70,7 @@ class Client (host: String, port: Int) extends
   val out = new PrintStream(s.getOutputStream())
 } with SocketManager
 {
-  def closeSocket() =
+  def close() =
   {
     s.close
   }

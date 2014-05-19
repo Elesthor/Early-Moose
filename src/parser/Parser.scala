@@ -320,33 +320,36 @@ class Parser(src: Input)
 
     // if next char is a binary operator
     src.ignoreSpace()
-    src.peek() match
-    {
-      case ':'  =>
-        if(inList) // an element, let the delimiter
-          leftTerm
-        else // new list
-        {
+    if(src.checkEOF())
+      leftTerm
+    else
+      src.peek() match
+      {
+        case ':'  =>
+          if(inList) // an element, let the delimiter
+            leftTerm
+          else // new list
+          {
+            src.cleanPeek()
+            src.checkNextWord(":")
+            new ListTerm(leftTerm :: parseList())
+          }
+        case '/'  =>
           src.cleanPeek()
-          src.checkNextWord(":")
-          new ListTerm(leftTerm :: parseList())
-        }
-      case '/'  =>
-        src.cleanPeek()
-        src.checkNextWord("\\")
-        new TValue(new VAnd(leftTerm, parseTerm()))
-      case '\\' =>
-        src.cleanPeek()
-        src.checkNextWord("/")
-        new TValue(new VOr(leftTerm, parseTerm()))
-      case '='  =>
-        src.cleanPeek()
-        new TValue(new VEqual(leftTerm, parseTerm()))
-      case '>'  =>
-        src.cleanPeek()
-        new TValue(new VSup(leftTerm, parseTerm()))
-      case _    => leftTerm
-    }
+          src.checkNextWord("\\")
+          new TValue(new VAnd(leftTerm, parseTerm()))
+        case '\\' =>
+          src.cleanPeek()
+          src.checkNextWord("/")
+          new TValue(new VOr(leftTerm, parseTerm()))
+        case '='  =>
+          src.cleanPeek()
+          new TValue(new VEqual(leftTerm, parseTerm()))
+        case '>'  =>
+          src.cleanPeek()
+          new TValue(new VSup(leftTerm, parseTerm()))
+        case _    => leftTerm
+      }
   }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +357,7 @@ class Parser(src: Input)
 ////////////////////////////////////////////////////////////////////////////////
   def parseProcess(): Process =
   {
-    val keyword = src.getWord(src.alpha, src.parenthesis || src.space || src.isChar('^') || src.isChar('0'))
+    val keyword = src.getWord(src.alpha, src.parenthesis || src.space || src.isChar('^') || src.isChar('0') || src.isChar('='))
     val spaces = src.ignoreSpace()
     val peeked = src.peek()
 
@@ -417,6 +420,12 @@ class Parser(src: Input)
         val port = src.getNumber().toInt
         src.checkNextWord(")")
         new PAccept(channel, port, parseProcessSeq())
+      
+      case ("close", '(') =>
+        src.cleanPeek()
+        val channel = parseChannel()
+        src.checkNextWord(")")
+        new PClose(channel, parseProcessSeq())
 
       case ("if", p) =>
         if(spaces == 0) throw new src.Unexpected(p, src.space)
@@ -446,7 +455,12 @@ class Parser(src: Input)
 
         val n = parseProcessSeq()
         replacePTrivial(r, n)
-      case (_, _) => throw new SyntaxError()
+      case (name, '=') => // affectation
+        src.cleanPeek()
+        checkName(name)
+        new PAff(name, parseTerm(), parseProcessSeq())
+        
+      case _ => throw new SyntaxError()
     }
   }
 

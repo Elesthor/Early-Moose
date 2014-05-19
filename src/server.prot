@@ -1,0 +1,7 @@
+accept(c, 2001).
+new seed.
+kaes = pk(seed, AES).
+in(c, pkrsa).
+out(c, enc(kaes, pkrsa, seed)).
+out(c, enc(coucou, kaes, seed)).
+close(c)

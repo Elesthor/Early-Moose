@@ -156,13 +156,25 @@ class Channel(c: String, synchrone: Boolean)
   // gestion du réseau
   def connect(host: String, port: Int) =
   {
-    println("connexion...")
+    System.err.println(c + " : connexion to "+host+":"+port)
     socket = Some(new Client(host, port))
+    System.err.println(c + " : done")
   }
   def accept(port: Int) =
   {
-    println("acceptation...")
+    System.err.println(c + " : wait client on "+port)
     socket = Some(new Server(port))
+    System.err.println(c + " : done")
+  }
+  def close() =
+  {
+    socket match
+    {
+      case None => System.err.println(c + " : channel already closed")
+      case Some(s) =>
+        s.close()
+        System.err.println(c + " : closed")
+    }
   }
 }
 

@@ -24,7 +24,7 @@ class CesarKey (seed: Long) extends Key [Byte]
   var key = new util.Random(seed).nextInt.toByte
   def setKey (x: Int) = key = x.toByte
   def getPublic () = key
-  def getPrivate = (-getPublic).toByte
+  def getPrivate = getPublic
   def getString(k: Byte): String =
     k.toString
   def fromString(s: String): Byte =
@@ -43,7 +43,7 @@ class Cesar extends CryptoSystem [Byte]
     msg.map({ x => (x + key).toByte})
 
   def _decrypt (msg: Array[Byte], key: Byte): Array[Byte] =
-    _encrypt (msg, key)
+    _encrypt (msg, (-key).toByte)
 }
 
 class EncapsulatedCesar extends EncapsulatedCrypto
