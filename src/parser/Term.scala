@@ -203,10 +203,10 @@ case class TRaw  (content: String) extends Term
     arrayToNetwork(injectiveString(hostToArray(content))) + ")"
 }
 
-case class TOpenEnc  (v: Term) extends Term
+case class TOpenEnc  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"OpenEnc:\n"+v.retString(x+1)
-  def replace(x: String, T: Term): Term = new TOpenEnc(v.replace(x,T))
-  override def toString: String = "openEnc("+v.toString+")"
+  def retString(x: Int): String = "| "*x+"OpenEnc:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def replace(x: String, T: Term): Term = new TOpenEnc(v.replace(x,T), crypto)
+  override def toString: String = "openenc("+v.toString+","+crypto+")"
 }
 

@@ -282,8 +282,18 @@ class Parser(src: Input)
           case ("openEnc", '(') => // TODO cryptosys
             src.cleanPeek()
             val v = parseTerm()
-            src.checkNextWord(")")
-            new TOpenEnc(v)
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TOpenEnc(v, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TOpenEnc(v, "default")
+            }
 
           // empty list
           case ("", '[') =>

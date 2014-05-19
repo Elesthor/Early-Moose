@@ -18,49 +18,60 @@ object Application
   case class InvalidArgument(s: String) extends Exception
   
   // crée des cryptosystème en fonction de leur nom
-  def cryptoMaker(cryptoName: String): EncapsulatedCrypto =
+  def cryptoMaker(cryptoName: String): (EncapsulatedCrypto, Opponent) =
   {
     // TODO : maintenir une map des systèmes déjà créés ?
-    val regexRSA = "RSA([0-9]*)".r
-    val regexEG  = "elGamal(|ec|zpmul|zpadd|)([0-9]+)".r
-    cryptoName match
+    val regexRSA = "-?RSA(-keysize)?([0-9]*)".r
+    val regexEG  = "-?elGamal-?(ec|zpmul|zpadd)?([0-9]*)".r
+    try
     {
-      case "cesar"              =>
-        new EncapsulatedCesar()
-      case "vigenere"           =>
-        new EncapsulatedVigenere()
-      case "AES"           =>
-        new EncapsulatedAES()
-      case regexRSA(keysize)    =>
-        keysize match
-        {
-          case "" =>
-            new EncapsulatedRsa(1024)
-          case _  =>
-            new EncapsulatedRsa(keysize.toInt)
-        }
-      case regexEG (mode, size) =>
-        (mode, size) match
-        {
-          case ("", "") =>
-            new EncapsulatedElGamalZp( // TODO générateur ?
-              BigInt("20988936657440586486151264256610222593863921"), 7)
-          case ("ec", "") =>
-            new EncapsulatedElGamalEc()
-          case ("zpmul", size) if size != "" =>
-            val n = BigInt(size)
-            if(!n.isProbablePrime(1000))
-            {
-              throw InvalidArgument("Not prime")
-            }
-            new EncapsulatedElGamalZp(n, 7) // TODO générateur ?
-          case ("zpadd", size) if size != "" =>
-            new EncapsulatedElGamalZk(BigInt(size))
-          case _ =>
-            throw InvalidArgument("Bad crypto name")
-        }
-      case _ =>
-        throw InvalidArgument("Bad crypto name")
+      cryptoName match
+      {
+        case "cesar" | "-cesar" =>
+          (new EncapsulatedCesar(), new CesarOpponent())
+        case "vigenere" | "-vigenere" =>
+          (new EncapsulatedVigenere(), new VigenereOpponent())
+        case "AES" | "-AES" =>
+          (new EncapsulatedAES(), new DummyOpponent())
+        case regexRSA(_, keysize)    =>
+          keysize match
+          {
+            case "" =>
+              (new EncapsulatedRsa(1024), new DummyOpponent())
+            case _  =>
+              (new EncapsulatedRsa(keysize.toInt), new DummyOpponent())
+          }
+        case regexEG (mode, size) =>
+          (mode, size) match
+          {
+            case ("", "") =>
+              (new EncapsulatedElGamalZp( // TODO générateur ?
+                BigInt("20988936657440586486151264256610222593863921"), 7),
+               new DummyOpponent())
+            case ("ec", "") =>
+              (new EncapsulatedElGamalEc(), new DummyOpponent())
+            case ("zpmul", size) if size != "" =>
+              val n = BigInt(size)
+              if(!n.isProbablePrime(1000))
+              {
+                throw InvalidArgument("Bad crypto name : not prime")
+              }
+              (new EncapsulatedElGamalZp(n, 7), // TODO générateur ?
+               new DummyOpponent())
+            case ("zpadd", size) if size != "" =>
+              (new EncapsulatedElGamalZk(BigInt(size)),
+               new ElGamalOpponentZk())
+            case _ =>
+              throw InvalidArgument("Bad crypto name")
+          }
+        case _ =>
+          throw InvalidArgument("Bad crypto name")
+      }
+    }
+    catch
+    {
+      case _ :java.lang.NumberFormatException =>
+        throw InvalidArgument("Bad crypto name : not an integer")
     }
   }
   
@@ -87,57 +98,7 @@ object Application
       // lecture des arguments
       val mode = args(0) == "-sync"
       val filename = args(1)
-      val (crypto, opponent) =
-        try
-        {
-          args(2) match
-          {
-            case "-cesar"    => (new EncapsulatedCesar(), new CesarOpponent())
-            case "-vigenere" => (new EncapsulatedVigenere(), new VigenereOpponent())
-            case "-AES"      => (new EncapsulatedAES(), new DummyOpponent())
-            case "-RSA"      =>
-              if(args.length > 3)
-              {
-                if(args.length > 4 && args(3) == "-keysize")
-                  (new EncapsulatedRsa(args(4).toInt), new DummyOpponent())
-                else
-                {
-                  throw InvalidArgument("Bad option")
-                }
-              }
-              else
-                (new EncapsulatedRsa(1024), new DummyOpponent())
-            case "-elGamal"  =>
-              if(args.length > 3)
-                (args.length, args(3)) match
-                {
-                  case (4, "-ec")    =>
-                    (new EncapsulatedElGamalEc(), new DummyOpponent())
-                  case (5, "-zpadd") =>
-                    (new EncapsulatedElGamalZk(BigInt(args(4))), new ElGamalOpponentZk())
-                  case (5, "-zpmul") =>
-                    val n = BigInt(args(4))
-                    if(!n.isProbablePrime(1000))
-                    {
-                      throw InvalidArgument("Bad option : not a prime number")
-                    }
-                    (new EncapsulatedElGamalZp(n, 7), new DummyOpponent()) // TODO générateur ?
-                  case _ =>
-                    throw InvalidArgument("Bad option")
-                }
-              else
-                (new EncapsulatedElGamalZp(
-                  BigInt("20988936657440586486151264256610222593863921"), 7), // TODO générateur ?
-                 new DummyOpponent())
-            case _ =>
-              throw InvalidArgument("Bad option")
-          }
-        }
-        catch
-        {
-          case _ :java.lang.NumberFormatException =>
-            throw InvalidArgument("Bad option : not an integer")
-        }
+      val crypto = cryptoMaker(args.drop(2).mkString) // on concatène le reste des arguments
       
       try
       {
@@ -150,7 +111,7 @@ object Application
           val program = p.parse()
 
           // playing
-          (new Interpretor(mode, crypto, cryptoMaker, opponent)).interpret(program)
+          (new Interpretor(mode, crypto, cryptoMaker)).interpret(program)
         }
         catch
         {
