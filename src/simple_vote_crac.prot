@@ -1,5 +1,5 @@
 %Ceci est l'exemple donné dans l'énoncé
-(new v).(new seed).out(c_out,enc(pair(v>0,pair(pair(pair(15679878765,18765475678),19876545656567),15678765623)),pk(1),seed))^5
+(new v).(new seed).out(c_out,enc(pair(v>0,pair(pair(pair(187659876,198756),8760),3)),pk(1),seed))^5
 || in^5(c_in,x -> pi1(dec(x,sk(1))) as y).out(stdout,count (y))
 
 || in(c_out, m).out(stdout, m).out(stdout, openEnc(m)).out(c_in, m)^5
