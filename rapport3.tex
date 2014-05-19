@@ -69,44 +69,44 @@
 
 \end{verbatim}
 
-\section{Attaque sur des crytptosystèmes faibles}
+\section{Attaque sur des cryptosystèmes faibles}
 
 \subsection{César/Vigenère}
 
 
- La cryptanalyse des chiffres de César et Vignère s'appuient sur des techniques classiques d'analyses
-fréquentielles: des calculs de distances à des tables pré-calculées de probabilités d’occurrence de lettres et des calculs d'indices de coincidences.\\\\
+ La cryptanalyse des chiffres de César et Vigenère s'appuient sur des techniques classiques d'analyses
+fréquentielles: des calculs de distances à des tables pré-calculées de probabilités d'occurrence de lettres et des calculs d'indices de coïncidences.\\\\
     Nous rappellerons dans un premier temps les méthodes usuelles d'attaques de ces chiffres, puis nous étudierons leurs applications dans notre cas et détaillerons le développement d'outils annexes qui ont été nécessaires.
 
 \subsubsection{Chiffre de César}
 
-    La faiblesse de ce chiffre réside dans l'extreme petitesse de l'espaces de clefs: à peine $2^8$! On peut donc très facilement bruteforcer cet espace à la recherche de la bonne clef. Le volume de résultat produit étant petit on pourrait rechercher le résultat intelligible \emph{a la mano}. Mais si l'on souhaite complètement automatiser le processus, il est nécessaire de pouvoir distinguer les décryptions produisant un texte intelligible d'une suite de caractères aléatoires. On doit donc disposer d"une métrique sur l'espace des clairs. L'une des plus efficace repose sur les propriétés de répétitions et de non-aléa de l’occurrence de lettres dans les langues utilisées: les tables d’occurrences du français ou de l'anglais sont extrêmement particulières. Dès lors il suffit de calculer la table d’occurrence du message à peser et d'étudier sa distance (pour une distance fixée sur $\mathbb{R}^{2^8}$) à la table d'origine.
+    La faiblesse de ce chiffre réside dans l'extrême petitesse de l'espaces de clefs: à peine $2^8$! On peut donc très facilement bruteforcer cet espace à la recherche de la bonne clef. Le volume de résultat produit étant petit on pourrait rechercher le résultat intelligible \emph{a la mano}. Mais si l'on souhaite complètement automatiser le processus, il est nécessaire de pouvoir distinguer les décryptages produisant un texte intelligible d'une suite de caractères aléatoires. On doit donc disposer d'une métrique sur l'espace des clairs. L'une des plus efficace repose sur les propriétés de répétitions et de non-aléa de l'occurrence de lettres dans les langues utilisées: les tables d’occurrences du français ou de l'anglais sont extrêmement particulières. Dès lors il suffit de calculer la table d’occurrence du message à peser et d'étudier sa distance (pour une distance fixée sur $\mathbb{R}^{2^8}$) à la table d'origine.
 
 \subsubsection{Chiffre de Vigenère}
 
-    Le volume des clefs étant plus grands ($2^{8l}$ avec $l$ la longueur de la clefs) on ne peut simplement bruteforcer sur l'espace de clefs dès que $l$ dépasse quelques unités ... En revanche si tat est que l'on connaisse la longueur de clef on peut attaquer le chiffre en $2^8*l$ déchiffrements de César! En effet il suffit de décrypter $l$ chiffres de César correspondants aux sous mots 
-$\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On peut calculer la longueur de la clef en utilisant l'indice de coincidence: on cherche pour quelle longueur les indices de coincidences des sous mots susmentionnés sont les plus proches de la valeur de l'indice de coincidence de la langue considérée. On obtiendra alors avec une bonne probabilité la longueur de la clef d'encryptage, puisque la substitution monoalphabétique ne modifie pas la valeur de cet indice.
+    Le volume des clefs étant plus grands ($2^{8l}$ avec $l$ la longueur de la clef) on ne peut simplement bruteforcer sur l'espace de clefs dès que $l$ dépasse quelques unités ... En revanche si l'on connaît la longueur de clef on peut attaquer le chiffre en $2^8*l$ déchiffrements de César! En effet il suffit de décrypter $l$ chiffres de César correspondants aux sous mots 
+$\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On peut calculer la longueur de la clef en utilisant l'indice de coïncidence: on cherche pour quelle longueur les indices de coïncidence des sous mots susmentionnés sont les plus proches de la valeur de l'indice de coïncidence de la langue considérée. On obtiendra alors avec une bonne probabilité la longueur de la clef d'encryptage, puisque la substitution monoalphabétique ne modifie pas la valeur de cet indice.
 
 \subsubsection{Problème: le langage du protocole n'est pas une langue naturelle}
 
-    Ces techniques marchent très bien lorsque l'on connait les informations statistiques sur les langues étudiées... Mais dans notre cas, le langage est constitué de chiffres, de mots clefs ("pair", "(,)" , "[,]" , "::") et de quelques mots... Et bien que ces derniers soient en anglais, le test de déchiffrement en utilisant des valeurs tubulées sur celles de la langue de Shakespeare renvoient des résultats complètement dénués de sens... Il nous faut dont déterminer les constantes statistiques du langage de protocole.
+    Ces techniques marchent très bien lorsque l'on connaît les informations statistiques sur les langues étudiées... Mais dans notre cas, le langage est constitué de chiffres, de mots clefs ("pair", "(,)" , "[,]" , "::") et de quelques mots... Et bien que ces derniers soient en anglais, le test de déchiffrement en utilisant des valeurs tubulées sur celles de la langue de Shakespeare renvoient des résultats complètement dénués de sens... Il nous faut dont déterminer les constantes statistiques du langage de protocole.
 
-\subsubsection{De la génération de chaines aléatoires par processus de Markov}
+\subsubsection{De la génération de chaînes aléatoires par processus de Markov}
 
-    Pour recueillir ces informations, nous faisons sans surprise appel à la loi des grands nombres: en répétant le calcul des elements statistiques sur de gros volumes de donnés nous obtiendrons une bonne approximation de ces éléments pour le langage considéré. \\\\
+    Pour recueillir ces informations, nous faisons sans surprise appel à la loi des grands nombres: en répétant le calcul des éléments statistiques sur de gros volumes de donnés nous obtiendrons une bonne approximation de ces éléments pour le langage considéré. \\\\
 
-     Nous avons donc écrit un générateur de mots du langage pour mener à bien cette tache. Le générateur se base sur deux processus de Markov: l'un pour générer des chaines de mots anglais intelligibles et l'autre pour générer des mots de tailles finis comme enchevêtrement de paires, de listes, de nombres et de chaines de mots anglais. \\\\
+     Nous avons donc écrit un générateur de mots du langage pour mener à bien cette tache. Le générateur se base sur deux processus de Markov: l'un pour générer des chaînes de mots anglais intelligibles et l'autre pour générer des mots de tailles finis comme enchevêtrement de paires, de listes, de nombres et de chaînes de mots anglais. \\\\
 
-    La premier est en fait une chaine de Markov approchant la chaine de formation des phrases de l'anglais: on la génère à la volée en utilisant un gros volume de mots: un livre. On choisit alors deux premiers mots aléatoires, puis l'on cherche les triplets de mots apparaissant dans la source dans lesquels les deux premiers mots sont précisément ceux que l'on a choisit. On tire alors aléatoirement un troisième mot dans les triplets trouvés. On recommence alors le processus en prenant comme deux mots de base le deuxième et troisième mot du triplet construit à l'étape précédente. Cette technique donne d'excellent résultat et les phrases construites sont très proches de phrase correctes grammaticalement. \\
+    La premier est en fait une chaîne de Markov approchant la chaîne de formation des phrases de l'anglais: on la génère à la volée en utilisant un gros volume de mots: un livre. On choisit alors deux premiers mots aléatoires, puis l'on cherche les triplets de mots apparaissant dans la source dans lesquels les deux premiers mots sont précisément ceux que l'on a choisit. On tire alors aléatoirement un troisième mot dans les triplets trouvés. On recommence alors le processus en prenant comme deux mots de base le deuxième et troisième mot du triplet construit à l'étape précédente. Cette technique donne d'excellent résultat et les phrases construites sont très proches de phrase correctes grammaticalement. \\
 
-    Le deuxième processus modifie les probabilités d'apparitions des éléments d'arités non nulle (les listes et les paires ) à la volée : plus un mot en construction contient de chaines, plus la probabilité de voir apparaitre une chaine à l'étape suivante est faible.  Cette limitation évite d'une part d'avoir des chaines infinies (ou au moins de longueurs trop grandes) et d'autre part limite la profondeur des imbrications : les mots utilisés dans nos protocoles sont relativement simples! 
+    Le deuxième processus modifie les probabilités d'apparitions des éléments d'arités non nulle (les listes et les paires ) à la volée : plus un mot en construction contient de chaînes, plus la probabilité de voir apparaître une chaîne à l'étape suivante est faible.  Cette limitation évite d'une part d'avoir des chaînes infinies (ou au moins de longueurs trop grandes) et d'autre part limite la profondeur des imbrications : les mots utilisés dans nos protocoles sont relativement simples !
 
 
   \subsubsection{De l'implémentation}
 
-  L'outil de génération a été écrit en Python et est multithreadé pour faire usage effectif des processeurs multicoeurs actuels (gain jusqu'à un facteur 8 possibles!). Les implémentations effectives des attaques sont codées en Scala en faisant un usage très massif des combinateurs fonctionnels de listes : les fonctions sont presque toutes des onelines ! (contenant entre 3 et 6 combinateurs parmi map, fold, filter, groupBy, zip, reverse,... )\\\\
+  L'outil de génération a été écrit en Python et est multithreadé pour faire usage effectif des processeurs multicoeurs actuels. Les implémentations effectives des attaques sont codées en Scala en faisant un usage très massif des combinateurs fonctionnels de listes : les fonctions sont presque toutes des onelines ! (contenant entre 3 et 6 combinateurs parmi map, fold, filter, groupBy, zip, reverse,... )\\\\
 
-  Les résultats sont satisfaisants: le décryptage de chaines suffisamment longues s'effectue correctement et vite :) 
+  Les résultats sont satisfaisants: le décryptage de chaînes suffisamment longues s'effectue correctement et vite :) 
 \subsection{ElGamal}
 
 
