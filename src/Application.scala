@@ -95,13 +95,12 @@ object Application
     }
     else
     {
-      // lecture des arguments
-      val mode = args(0) == "-sync"
       val filename = args(1)
-      val crypto = cryptoMaker(args.drop(2).mkString) // on concatène le reste des arguments
-      
+      val mode = args(0) == "-sync"
       try
       {
+        val crypto = cryptoMaker(args.drop(2).mkString) // on concatène le reste des arguments
+        
         val src = new InputFromFile(filename)
         val p = new Parser(src)
         try
@@ -134,6 +133,10 @@ object Application
         case _:java.io.FileNotFoundException =>
           System.err.println("file " + filename + " not found")
           System.exit(1)
+        case InvalidArgument(m) =>
+          System.err.println(m)
+          System.exit(1)
+          
       }
     }
   }
