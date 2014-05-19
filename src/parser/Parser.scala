@@ -279,11 +279,21 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TRaw(arrayToHost(networkToArray(data)))
           
-          case ("openEnc", '(') =>
+          case ("openEnc", '(') => // TODO cryptosys
             src.cleanPeek()
             val v = parseTerm()
-            src.checkNextWord(")")
-            new TOpenEnc(v)
+            src.ignoreSpace()
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val crypto = src.getWord(src.alphaNumeric, src.parenthesis)
+                src.checkNextWord(")")
+                new TOpenEnc(v, crypto)
+              case ')' =>
+                src.cleanPeek()
+                new TOpenEnc(v, "default")
+            }
 
           // empty list
           case ("", '[') =>
@@ -420,6 +430,12 @@ class Parser(src: Input)
         val port = src.getNumber().toInt
         src.checkNextWord(")")
         new PAccept(channel, port, parseProcessSeq())
+      
+      case ("wait", '(') =>
+        src.cleanPeek()
+        val channel = parseChannel()
+        src.checkNextWord(")")
+        new PWait(channel, parseProcessSeq())
       
       case ("close", '(') =>
         src.cleanPeek()

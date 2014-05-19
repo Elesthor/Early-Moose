@@ -126,6 +126,8 @@ class StdoutStrategy extends ChannelHandler
 class Channel(c: String, synchrone: Boolean)
 {
   var socket: Option[SocketManager] = None
+  val semSocket = new Semaphore(1, true) // action on socket
+  val semWait   = new Semaphore(0, true) // socket ready
   val name: String = c
   var strategy: ChannelHandler =
     if(name == "stdout") new StdoutStrategy()
@@ -156,25 +158,55 @@ class Channel(c: String, synchrone: Boolean)
   // gestion du réseau
   def connect(host: String, port: Int) =
   {
-    System.err.println(c + " : connexion to "+host+":"+port)
-    socket = Some(new Client(host, port))
-    System.err.println(c + " : done")
+    semSocket.acquire
+      System.err.println(c + " : connexion to "+host+":"+port)
+      socket = Some(new Client(host, port))
+      System.err.println(c + " : done")
+      semWait.release // socket ready
+    semSocket.release
   }
   def accept(port: Int) =
   {
-    System.err.println(c + " : wait client on "+port)
-    socket = Some(new Server(port))
-    System.err.println(c + " : done")
+    semSocket.acquire
+      System.err.println(c + " : wait client on " + port)
+      socket = Some(new Server(port))
+      System.err.println(c + " : done")
+      semWait.release // socket ready
+    semSocket.release
   }
   def close() =
   {
-    socket match
+    semSocket.acquire
+      semWait.tryAcquire // reduce the counter to 0 (it was 0 or 1)
+      socket match
+      {
+        case None => System.err.println(c + " : already closed")
+        case Some(s) =>
+          s.close()
+          socket = None
+          System.err.println(c + " : closed")
+      }
+    semSocket.release
+  }
+  def waitSock () =
+  {
+    this.synchronized // only the first acquire semWait
     {
-      case None => System.err.println(c + " : channel already closed")
-      case Some(s) =>
-        s.close()
-        System.err.println(c + " : closed")
+      // acquire socket semaphore
+      semSocket.acquire
+      // test connection
+      socket match
+      {
+        case None =>
+          semSocket.release
+          semWait.acquire // wait connexion
+        case Some(_) =>
+          semSocket.release // ready !
+      }
     }
   }
 }
+
+
+
 

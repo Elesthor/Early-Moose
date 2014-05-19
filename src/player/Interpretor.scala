@@ -48,8 +48,8 @@ class InterpretThread
 //      - Interpretation of process, whose args are terms.
 //      - Interpretation of MetaProc, which enclapsulates some process branches.
 //
-class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
-    cryptoMaker: String => EncapsulatedCrypto, opponent: Opponent)
+class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Opponent),
+    cryptoMaker: String => (EncapsulatedCrypto, Opponent))
 {
 
   // Definition of errors exception.
@@ -67,12 +67,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
   def intToBool (x: Long): Boolean = if (x==0) false else true
 
   // return the right cryptosystem
-  def cryptoGetter(name: String): EncapsulatedCrypto =
+  def cryptoGetter(name: String): (EncapsulatedCrypto, Opponent) =
   {
     name match
     {
       case "default" =>
-        crypto
+        defaultCrypto
       case _ =>
         cryptoMaker(name)
     }
@@ -187,7 +187,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
           parseTermFromString(interpretTerm(key)) match
           {
             case TPair (TRaw(key), TPair(info, TRaw(cryptoName))) =>
-              val lcrypto = cryptoGetter(cryptoName)
+              val lcrypto = cryptoGetter(cryptoName)._1
               val cypher = lcrypto.encrypt(
                 interpretTerm(msg),
                 lcrypto.stringToKey(key),
@@ -205,7 +205,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
           {
             case (TPair(TRaw(cypher), _),
                   TPair (TRaw(key), TPair(_, TRaw(cryptoName)))) =>
-              val lcrypto = cryptoGetter(cryptoName)
+              val lcrypto = cryptoGetter(cryptoName)._1
               lcrypto.decrypt(
                 cypher,
                 lcrypto.stringToKey(key))
@@ -222,7 +222,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
 
         case TPk  (v, cryptoName) =>
           // content : pair with key, and a pair with addition information and cryptoName
-          val lcrypto = cryptoGetter(cryptoName)
+          val lcrypto = cryptoGetter(cryptoName)._1
           val key = lcrypto.makeKey(interpretValue(inTValue(v)))
           TPair(
             TRaw(lcrypto.keyToString(key._1.getPublic)),
@@ -233,7 +233,7 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
           ).toString
 
         case TSk  (v, cryptoName) =>
-          val lcrypto = cryptoGetter(cryptoName)
+          val lcrypto = cryptoGetter(cryptoName)._1
           val key = lcrypto.makeKey(interpretValue(inTValue(v)))
           TPair(
             TRaw(lcrypto.keyToString(key._1.getPrivate)),
@@ -245,11 +245,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         
         case TRaw (d) => TRaw(d).toString
 
-        case TOpenEnc (t) =>
-          t match
+        case TOpenEnc (t, cryptoName) =>
+          val lopenenc = cryptoGetter(cryptoName)._2
+          parseTermFromString(interpretTerm(t)) match
           {
             case TPair(TRaw(cypher), infos) =>
-              arrayToHost(opponent.openEnc(networkToArray(cypher), infos))
+              arrayToHost(lopenenc.openEnc(networkToArray(cypher), infos))
           }
           //interpretTerm(t)
 
@@ -307,6 +308,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
       case PClose(currentChannel, nextProc) =>
       {
         channels.get(currentChannel).get.close
+        interpretProcess(nextProc)
+      }
+
+      case PWait(currentChannel, nextProc) =>
+      {
+        channels.get(currentChannel).get.waitSock
         interpretProcess(nextProc)
       }
       
@@ -399,6 +406,9 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
           setChannel(c)
           crossProcess(p)
         case PClose(c, p) =>
+          setChannel(c)
+          crossProcess(p)
+        case PWait(c, p) =>
           setChannel(c)
           crossProcess(p)
         case PIf(_, pIf, pElse, p) =>
