@@ -279,7 +279,7 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TRaw(arrayToHost(networkToArray(data)))
           
-          case ("openEnc", '(') =>
+          case ("openEnc", '(') => // TODO cryptosys
             src.cleanPeek()
             val v = parseTerm()
             src.checkNextWord(")")
@@ -420,6 +420,12 @@ class Parser(src: Input)
         val port = src.getNumber().toInt
         src.checkNextWord(")")
         new PAccept(channel, port, parseProcessSeq())
+      
+      case ("wait", '(') =>
+        src.cleanPeek()
+        val channel = parseChannel()
+        src.checkNextWord(")")
+        new PWait(channel, parseProcessSeq())
       
       case ("close", '(') =>
         src.cleanPeek()

@@ -95,6 +95,14 @@ case class PClose(c: String, p: Process) extends Process
     new PClose(c, p.replace(x,T))
   }
 }
+case class PWait(c: String, p: Process) extends Process
+{
+  def retString(x: Int) = "| "*x+"PWait:\n"+"| "*(x+1)+c+"\n"+p.retString(x)
+  def replace(x: String , T: Term): Process =
+  {
+    new PWait(c, p.replace(x,T))
+  }
+}
 case class PIf (v: Term, pIf: Process, pElse: Process, p: Process) extends Process
 {
   def retString(x: Int) = "| "*x+"PIf:\n"+v.retString(x+1)+pIf.retString(x+1)+pElse.retString(x+1)+p.retString(x)

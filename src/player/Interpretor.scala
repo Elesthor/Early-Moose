@@ -309,6 +309,12 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
         channels.get(currentChannel).get.close
         interpretProcess(nextProc)
       }
+
+      case PWait(currentChannel, nextProc) =>
+      {
+        channels.get(currentChannel).get.waitSock
+        interpretProcess(nextProc)
+      }
       
       case PIf (value, procTrue, procFalse, nextProc) =>
       {
@@ -399,6 +405,9 @@ class Interpretor(synchrone: Boolean, crypto: EncapsulatedCrypto,
           setChannel(c)
           crossProcess(p)
         case PClose(c, p) =>
+          setChannel(c)
+          crossProcess(p)
+        case PWait(c, p) =>
           setChannel(c)
           crossProcess(p)
         case PIf(_, pIf, pElse, p) =>
