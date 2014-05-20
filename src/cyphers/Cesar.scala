@@ -120,7 +120,7 @@ class CesarOpponent extends Opponent
     val crypt = new String(crypta, java.nio.charset.Charset.forName("ISO-8859-1"))
     val cypher = new Cesar()
     val currentKey = new CesarKey(0) 
-    var minimalValue = 10000.0
+    var minimalValue = Double.PositiveInfinity
     var decryptedText = ""
     for (i<- 0 to 255)
     {
