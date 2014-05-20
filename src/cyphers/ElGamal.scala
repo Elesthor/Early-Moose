@@ -161,6 +161,14 @@ class EncapsulatedElGamalZp(p: BigInt, g: BigInt) extends EncapsulatedCrypto
   def encrypt(msg: String, key: T, seed: Long) = crypto.encrypt(msg, key, seed)
   def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                            ElGamal Opponent                                //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 class ElGamalOpponentZk extends Opponent
 {
   def openEnc(crypt: Array[Byte], infos : Term):Array[Byte] =

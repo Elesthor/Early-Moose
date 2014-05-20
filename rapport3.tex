@@ -71,21 +71,21 @@
 
 \section{Liaison des protocoles et des cryptosystème}
 
-L'intégration des cryptosystèmes dans l'interpréteur permet de faire le cryptage et décryptage effectif des messages transitant sur les canaux, moyennant quelques détails d'implémentation et autres conventions de format.
+L'intégration des cryptosystèmes dans l'interpréteur permet de faire le chiffrement et déchiffrement effectif des messages transitant sur les canaux, moyennant quelques détails d'implémentation et autres conventions de format.
 
 Les classes \texttt{CryptoSystem} et \texttt{Key} qui vont par paires sont des classes paramétrées par le types des clefs, ce qui rend impossible le typage en Scala d'un programme qui manipule ces couples, même si les couples restent toujours cohérents. Pour résoudre ce problème, le trait \texttt{EncapsulatedCrypto} contient le cryptosystème et des primitives pour créer des clefs, ainsi que quelques autres primitives utiles.
 
 Le langage a été un peu augmenté pour convenir aux nouveaux besoins :
 \begin{itemize}
-  \item les termes \textbf{enc} et \textbf{dec} prennent un argument en plus : la graine;
+  \item le terme \textbf{enc} prennent un argument optionnel en plus : la graine (s'il est omis, il vaudra la nouvelle valeur \textbf{rand} qui s'évaluera en un entier aléatoire);
   \item les termes \textbf{pk}, \textbf{sk} et le nouveau terme \textbf{openenc} prennent en deuxième argument optionnel le cryptosystème à utiliser (même format qu'en ligne de commande, tous les les arguments étant concaténés, ou format plus court);
   \item le nouveau terme \textbf{raw} permet de représenter des données brutes : il prend un argument formaté tel que fait dans la partie 2 (\emph{n\#m} où \emph{m} est le message et \emph{n} est la représentation décimale de la taille de \emph{m} en octets);
   \item afin de pouvoir écrire plus facilement des protocoles, l'affectation des variables à été rajoutée. La syntaxe est $x=T$, et au vue de l'interprétation du langage par $\beta$-réduction, seule la première affectation sera effective, les autres étant de fait calculées puis ignorées.
 \end{itemize}
 
-L'interprétation des clefs et des cryptés nécessite quelques éclairages :
+L'interprétation des clefs et des chiffrés nécessite quelques éclairages :
 \begin{itemize}
-  \item les clefs pk et sk sont interprétées en paires qui contiennent :
+  \item les clefs \textbf{pk} et \textbf{sk} sont interprétées en paires qui contiennent :
   \begin{itemize}
     \item la clef (dans un \textbf{raw});
     \item une paire qui contient :
@@ -94,7 +94,7 @@ L'interprétation des clefs et des cryptés nécessite quelques éclairages :
       \item le nom du cryptosystème.
     \end{itemize}
   \end{itemize}
-  \item les interprétations de enc et dec se basent sur le nom de cryptosystème contenue dans la clef pour utiliser le bon;
+  \item les interprétations de \textbf{enc} et \textbf{dec} utilisent le cryptosystème indiqué dans la clef;
   \item les messages encodées sont représentés en paires contenant :
   \begin{itemize}
   \item le message lui-même, dans un \textbf{raw}
@@ -118,7 +118,7 @@ fréquentielles: des calculs de distances à des tables pré-calculées de proba
 \subsubsection{Chiffre de Vigenère}
 
     Le volume des clefs étant plus grands ($2^{8l}$ avec $l$ la longueur de la clef) on ne peut simplement bruteforcer sur l'espace de clefs dès que $l$ dépasse quelques unités ... En revanche si l'on connaît la longueur de clef on peut attaquer le chiffre en $2^8*l$ déchiffrements de César! En effet il suffit de décrypter $l$ chiffres de César correspondants aux sous mots 
-$\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On peut calculer la longueur de la clef en utilisant l'indice de coïncidence: on cherche pour quelle longueur les indices de coïncidence des sous mots susmentionnés sont les plus proches de la valeur de l'indice de coïncidence de la langue considérée. On obtiendra alors avec une bonne probabilité la longueur de la clef d'encryptage, puisque la substitution monoalphabétique ne modifie pas la valeur de cet indice.
+$\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On peut calculer la longueur de la clef en utilisant l'indice de coïncidence: on cherche pour quelle longueur les indices de coïncidence des sous mots susmentionnés sont les plus proches de la valeur de l'indice de coïncidence de la langue considérée. On obtiendra alors avec une bonne probabilité la longueur de la clef de chiffrement, puisque la substitution monoalphabétique ne modifie pas la valeur de cet indice.
 
 \subsubsection{Problème: le langage du protocole n'est pas une langue naturelle}
 
@@ -143,11 +143,11 @@ $\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On p
 
 \subsection{ElGamal dans le cas $(\mathbb{Z}/p\mathbb{Z}, +)$}
 
-L'attaque sur le cryptosystème d'ElGamal avec le groupe $(\mathbb{Z}/p\mathbb{Z}, +)$ a été de loin la plus facile à mettre en place. En effet si $g$ est le générateur du groupe et $x$ la clef privée, la clé publique est $g^x$, c'est-à-dire $g\times x$. L'inversion modulo $p$ permet alors de retrouver $x$, et de décrypter les messages.
+L'attaque sur le cryptosystème d'ElGamal avec le groupe $(\mathbb{Z}/p\mathbb{Z}, +)$ a été de loin la plus facile à mettre en place. En effet si $g$ est le générateur du groupe et $x$ la clef privée, la clé publique est $g^x$ (calcul dans le groupe), i.e. $g\times x$. L'inversion modulo $p$ permet alors de retrouver $x$, et de décrypter les messages.
 
 \section{Canaux sur le réseau}
 
-La gestion du réseau est faite par les classe \texttt{SocketManager} qui gère les sockets et \texttt{PacketManager} qui écrit et lit des paquets formatés (de la même manière qu'avec un \textbf{raw}) sur une socket.
+La gestion du réseau est faite par les classes \texttt{SocketManager} qui gère les sockets et \texttt{PacketManager} qui écrit et lit des paquets formatés (de la même manière qu'avec un \textbf{raw}) sur une socket.
 
 La création des connexions se fait lors de l'interprétation des protocoles, à l'aide de plusieurs nouveaux processus :
 \begin{itemize}
@@ -159,11 +159,17 @@ La création des connexions se fait lors de l'interprétation des protocoles, à
 
 Notons que par souci de simplicité les hôtes et les ports doivent être directement écrits, et ne peuvent pas être une variable.
 
-Avec ce système, une socket est créé par canal et est partagée avec tous les processus locaux. Il est à noté que le mode synchrone ou asynchrone de l’exécution est ignoré pour laisser place à un mode asynchrone lors de l'utilisation d'une connexion réseau, et ce uniquement sur les canaux concernés. Avant et après la fin d'une éventuelle connexion, le canal se comporte comme un canal local, d'où l'importance du processus \textbf{wait} qui permet d'attendre que la connexion soit effective.
+Avec ce système, une socket est créée par canal et est partagée avec tous les processus locaux. Il est à noté que le mode synchrone ou asynchrone de l’exécution est ignoré pour laisser place à un mode asynchrone pour les canaux réseau. Avant et après la fin d'une éventuelle connexion, le canal se comporte comme un canal local, d'où l'importance du processus \textbf{wait} qui permet d'attendre que la connexion soit effective.
 
 Les sémaphores ont été très utiles pour éviter des erreurs de \emph{race condition}, ainsi que pour avoir l'implémentation du processus \textbf{wait}.
 
-\section{Implémentation d'un protocole bi-cryptosystème} % TODO
+\section{Implémentation d'un protocole bi-cryptosystème}
 
+Afin de mettre en pratique cet interpréteur de protocole, nous avons écrit deux petits programme \emph{client.prot} et \emph{server.prot} qui s'échange une clef AES chiffré avec RSA, puis qui échange deux messages codés avec AES.
+
+\section{Conclusion}
+
+Ce projet était top-kikoo-lol, ça déchirait sa race !!
+\#EmilePower
 \end{document}
 

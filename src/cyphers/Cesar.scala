@@ -55,6 +55,11 @@ class EncapsulatedCesar extends EncapsulatedCrypto
   def decrypt(msg: String, key: T) = crypto.decrypt(msg, key)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                            Cesar Opponent                                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class CesarOpponent extends Opponent
 {
@@ -133,6 +138,7 @@ class CesarOpponent extends Opponent
       }
     }
     decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
+    // TODO : parfois le texte est vide ? Si on ne trouve pas il faut renvoyer crypta
   }      
 }
 

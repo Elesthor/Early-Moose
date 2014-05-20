@@ -23,7 +23,9 @@ abstract class Term
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //                               Values                                       //
+//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -91,13 +93,21 @@ case class VNot (v: Term) extends Value
 case class VConst(s: String) extends Value
 {
   def retString(x: Int): String = "| "*x+"Const:\n"+"| "*(x+1)+s+"\n"
-  def replace (x: String, t: Term): Value = return this
+  def replace (x: String, t: Term): Value = this
   override def toString: String = s
+}
+case class VRand() extends Value
+{
+  def retString(x: Int): String = "| "*x+"Rand\n"
+  def replace(x: String, T: Term): Value = this
+  override def toString: String = "rand"
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //                               Lists                                        //
+//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 case class ListTerm(content: List[Term]) extends Term
@@ -108,9 +118,14 @@ case class ListTerm(content: List[Term]) extends Term
   {
     new ListTerm((content.map((p=>p.replace(x,T)))))
   }
+  override def toString: String =
+    "("+content.foldLeft("")
+      {(acc, item) => acc + "::" + item.toString}.drop(2)+"::[])"
 }
 ////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
 //                               Terms                                        //
+//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 case class TVar (p: String) extends Term
@@ -183,21 +198,21 @@ case class TDec (left: Term, right: Term) extends Term
 
 case class TPk  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"Pk:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def retString(x: Int): String = "| "*x+"Pk:\n"+v.retString(x+1)+"| "*(x+1)+crypto+"\n"
   def replace(x: String, T: Term): Term = new TPk(v.replace(x,T), crypto)
   override def toString: String = "pk("+v.toString+","+crypto+")"
 }
 
 case class TSk  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def retString(x: Int): String = "| "*x+"Sk:\n"+v.retString(x+1)+"| "*(x+1)+crypto+"\n"
   def replace(x: String, T: Term): Term = new TSk(v.replace(x,T), crypto)
   override def toString: String = "sk("+v.toString+","+crypto+")"
 }
 
 case class TRaw  (content: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"Raw:\n"+"| "*(x+1)+content
+  def retString(x: Int): String = "| "*x+"Raw:\n"+"| "*(x+1)+content+"\n"
   def replace(x: String, T: Term): Term = this
   override def toString: String = "raw(" +
     arrayToNetwork(injectiveString(hostToArray(content))) + ")"
@@ -205,8 +220,9 @@ case class TRaw  (content: String) extends Term
 
 case class TOpenEnc  (v: Term, crypto: String) extends Term
 {
-  def retString(x: Int): String = "| "*x+"OpenEnc:\n"+v.retString(x+1)+"| "*(x+1)+crypto
+  def retString(x: Int): String = "| "*x+"OpenEnc:\n"+v.retString(x+1)+"| "*(x+1)+crypto+"\n"
   def replace(x: String, T: Term): Term = new TOpenEnc(v.replace(x,T), crypto)
   override def toString: String = "openenc("+v.toString+","+crypto+")"
 }
+
 

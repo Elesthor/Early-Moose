@@ -63,7 +63,6 @@ trait Opponent
 
 class DummyOpponent extends Opponent
 {
-  def openEnc(crypt: Array[Byte], infos : Term):Array[Byte] =
-  { println("hello !"); crypt}
+  def openEnc(crypt: Array[Byte], infos : Term):Array[Byte] = crypt
 }
 
