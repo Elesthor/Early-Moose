@@ -145,6 +145,8 @@ class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Oppone
                  || intToBool(interpretValue(inTValue(right))))
       case VNot (v) =>
         boolToInt(!intToBool(interpretValue(inTValue(v))))
+      case VRand() =>
+        Random.nextLong
     }
   }
 
@@ -253,8 +255,10 @@ class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Oppone
               arrayToHost(lopenenc.openEnc(networkToArray(cypher), infos))
           }
           //interpretTerm(t)
-
-        case ListTerm (l) => l.map(interpretTerm).toString
+        
+        case ListTerm (l) =>
+          "("+l.foldLeft("")
+            {(acc, item) => acc + "::" + interpretTerm(item)}.drop(2)+"::[])"
       }
     } catch
     {

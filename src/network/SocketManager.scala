@@ -1,7 +1,29 @@
+////////////////////////////////////////////////////////////////////////////////
+//                             [ Early Moose ]                                //
+//                                                                            //
+//           [SocketManager.scala]                                            //
+//                              https://github.com/Elesthor/Early-Moose       //
+////////////////////////////////////////////////////////////////////////////////
+//                                              \                             //
+//                                               \   \_\_    _/_/             //
+//                                                \      \__/                 //
+//                                                  ---  (oo)\_______   /     //
+//                                                       (__)\       )\/      //
+//                                                           ||-----||        //
+//                                                           ||     ||        //
+////////////////////////////////////////////////////////////////////////////////
+
 import java.net._
 import java.io._
 import scala.io._
 import java.util.concurrent.Semaphore
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                        Manager of well-formed packets                      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 class PacketManager
 {
@@ -21,8 +43,16 @@ class PacketManager
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                           Socket Mangager                                  //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
 abstract class SocketManager
 {
+  // to be precised
   val in: Iterator[Char]
   val out: PrintStream
   var currentIn = in
@@ -50,6 +80,10 @@ abstract class SocketManager
   def close()
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//                      Server and Client classes                             //
+////////////////////////////////////////////////////////////////////////////////
+
 class Server (port: Int) extends
 {
   val s = new ServerSocket(port).accept()
@@ -75,3 +109,4 @@ class Client (host: String, port: Int) extends
     s.close
   }
 }
+

@@ -227,10 +227,18 @@ class Parser(src: Input)
             val left = parseTerm()
             src.checkNextWord(",")
             val right = parseTerm()
-            src.checkNextWord(",")
-            val seed = parseTerm()
-            src.checkNextWord(")")
-            new TEnc(left, right, seed)
+            
+            src.peek() match
+            {
+              case ',' =>
+                src.cleanPeek()
+                val seed = parseTerm()
+                src.checkNextWord(")")
+                new TEnc(left, right, seed)
+              case ')' =>
+                src.cleanPeek()
+                new TEnc(left, right, new TValue(new VRand()))
+            }
 
           case ("dec", '(') =>
             src.cleanPeek()
@@ -294,6 +302,9 @@ class Parser(src: Input)
                 src.cleanPeek()
                 new TOpenEnc(v, "default")
             }
+          
+          case ("rand", _) =>
+            new TValue(new VRand())
 
           // empty list
           case ("", '[') =>

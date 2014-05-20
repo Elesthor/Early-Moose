@@ -44,7 +44,7 @@ object Application
         case regexEG (mode, size) =>
           (mode, size) match
           {
-            case ("", "") =>
+            case (null, "") =>
               (new EncapsulatedElGamalZp( // TODO générateur ?
                 BigInt("20988936657440586486151264256610222593863921"), 7),
                new DummyOpponent())
