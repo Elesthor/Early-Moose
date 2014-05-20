@@ -69,7 +69,7 @@
 
 \end{verbatim}
 
-\section{Liaison des protocoles et des cryptosystème}
+\section{Liaison des protocoles et des cryptosystèmes}
 
 L'intégration des cryptosystèmes dans l'interpréteur permet de faire le chiffrement et déchiffrement effectif des messages transitant sur les canaux, moyennant quelques détails d'implémentation et autres conventions de format.
 
@@ -77,15 +77,15 @@ Les classes \texttt{CryptoSystem} et \texttt{Key} qui vont par paires sont des c
 
 Le langage a été un peu augmenté pour convenir aux nouveaux besoins :
 \begin{itemize}
-  \item le terme \textbf{enc} prennent un argument optionnel en plus : la graine (s'il est omis, il vaudra la nouvelle valeur \textbf{rand} qui s'évaluera en un entier aléatoire);
-  \item les termes \textbf{pk}, \textbf{sk} et le nouveau terme \textbf{openenc} prennent en deuxième argument optionnel le cryptosystème à utiliser (même format qu'en ligne de commande, tous les les arguments étant concaténés, ou format plus court);
+  \item le terme \textbf{enc} prend un argument optionnel en plus : la graine (s'il est omis, il vaudra la nouvelle valeur \textbf{rand} qui s'évaluera en un entier aléatoire);
+  \item les termes \textbf{pk}, \textbf{sk} et le nouveau terme \textbf{openenc} prennent en deuxième argument optionnel le cryptosystème à utiliser (même format qu'en ligne de commande, tous les arguments étant concaténés, ou format plus court);
   \item le nouveau terme \textbf{raw} permet de représenter des données brutes : il prend un argument formaté tel que fait dans la partie 2 (\emph{n\#m} où \emph{m} est le message et \emph{n} est la représentation décimale de la taille de \emph{m} en octets);
-  \item afin de pouvoir écrire plus facilement des protocoles, l'affectation des variables à été rajoutée. La syntaxe est $x=T$, et au vue de l'interprétation du langage par $\beta$-réduction, seule la première affectation sera effective, les autres étant de fait calculées puis ignorées.
+  \item afin de pouvoir écrire plus facilement des protocoles, l'affectation des variables à été rajoutée, avec la syntaxe est $x=T$. Au vue de l'interprétation du langage par $\beta$-réduction, seule la première affectation sera effective, les autres étant de fait calculées puis ignorées.
 \end{itemize}
 
 L'interprétation des clefs et des chiffrés nécessite quelques éclairages :
 \begin{itemize}
-  \item les clefs \textbf{pk} et \textbf{sk} sont interprétées en paires qui contiennent :
+  \item les termes \textbf{pk} et \textbf{sk} sont interprétées en paires qui contiennent :
   \begin{itemize}
     \item la clef (dans un \textbf{raw});
     \item une paire qui contient :
@@ -97,7 +97,7 @@ L'interprétation des clefs et des chiffrés nécessite quelques éclairages :
   \item les interprétations de \textbf{enc} et \textbf{dec} utilisent le cryptosystème indiqué dans la clef;
   \item les messages encodées sont représentés en paires contenant :
   \begin{itemize}
-  \item le message lui-même, dans un \textbf{raw}
+  \item le message lui-même, dans un \textbf{raw};
   \item l'information supplémentaire de la clef (clé publique dans le cas asymétrique).
   \end{itemize}
 \end{itemize}
@@ -143,7 +143,7 @@ $\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On p
 
 \subsection{ElGamal dans le cas $(\mathbb{Z}/p\mathbb{Z}, +)$}
 
-L'attaque sur le cryptosystème d'ElGamal avec le groupe $(\mathbb{Z}/p\mathbb{Z}, +)$ a été de loin la plus facile à mettre en place. En effet si $g$ est le générateur du groupe et $x$ la clef privée, la clé publique est $g^x$ (calcul dans le groupe), i.e. $g\times x$. L'inversion modulo $p$ permet alors de retrouver $x$, et de décrypter les messages.
+L'attaque sur le cryptosystème d'ElGamal avec le groupe $(\mathbb{Z}/p\mathbb{Z}, +)$ a été de loin la plus facile à mettre en place. En effet si $g$ est le générateur du groupe et $x$ la clef privée, la clé publique est $g^x$ (calcul dans le groupe), i.e. $g\times x$. L'inversion modulo $p$ de $g$ permet alors de retrouver $x$, et de décrypter les messages.
 
 \section{Canaux sur le réseau}
 
