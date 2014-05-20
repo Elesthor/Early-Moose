@@ -1,8 +1,7 @@
 %Ceci est l'exemple donné dans l'énoncé
 (new v).
-(new seed).
 seed = 1.
-out(c_out,enc(pair(v>0,seed),pk(1)))^1
+out(c_out,enc(pair(v>0,-5920384815008089566),pk(1),seed))^1
 ||
 in^1(c_in,x -> dec(x, sk(1)) as y).
 out(stdout, y)
