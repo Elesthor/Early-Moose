@@ -100,7 +100,7 @@ case class VRand() extends Value
 {
   def retString(x: Int): String = "| "*x+"Rand\n"
   def replace(x: String, T: Term): Value = this
-  override def toString: String = "rand"
+  override def toString: String = "rand()"
 }
 
 

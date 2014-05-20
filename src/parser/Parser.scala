@@ -53,7 +53,7 @@ class Parser(src: Input)
     {
       case "in" | "as" | "out" | "if" | "then" | "else" | "new"
       | "pair" | "pi1" | "pi2" | "enc" | "dec" | "pk" | "sk" | "count"
-      | "not" | "openEnc" =>
+      | "not" | "openEnc" | "raw" | "rand" =>
         throw new NameMalformed(word)
       case _ =>
         // not empty and first char is alphabetic
@@ -196,7 +196,7 @@ class Parser(src: Input)
       {
         val keyword = src.getWord(src.alphaNumeric || src.isChar('-') || src.isChar('_'),
                                   src.parenthesis || src.space || src.isChar('[') || src.isChar(':') || src.isChar('>') || src.isChar('=') || src.isChar('/') || src.isChar('\\') || src.isChar(','))
-        val spaces = src.ignoreSpace()
+        src.ignoreSpace()
         val peeked = src.peek()
 
         (keyword, peeked) match
@@ -303,7 +303,9 @@ class Parser(src: Input)
                 new TOpenEnc(v, "default")
             }
           
-          case ("rand", _) =>
+          case ("rand", '(') =>
+            src.cleanPeek()
+            src.checkNextWord(")")
             new TValue(new VRand())
 
           // empty list
