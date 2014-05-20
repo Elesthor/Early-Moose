@@ -13,12 +13,19 @@ Usage
 
 Run _run_ in a shell, for synchrone mode :
 ```bash
-./src/run -sync protocol.prot
+./src/run -sync protocol.prot cryptosystem
 ```
 for asynchrone mode :
 ```bash
-./src/run -async protocol.prot
+./src/run -async protocol.prot cryptosystem
 ```
+Where cryptosystem is one of the following :
+* -cesar
+* -vigenere
+* -RSA (you can precise -keysize <int>)
+* -AES
+* -elGamal (you can precise -zpadd <int>, -zpmul <int>, -ec)
+
 
 Systèmes Cryptographiques
 ----
