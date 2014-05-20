@@ -22,9 +22,9 @@ for asynchrone mode :
 Where cryptosystem is one of the following :
 * -cesar
 * -vigenere
-* -RSA (you can precise -keysize <int>)
+* -RSA (you can precise -keysize [int])
 * -AES
-* -elGamal (you can precise -zpadd <int>, -zpmul <int>, -ec)
+* -elGamal (you can precise -zpadd [int], -zpmul [int], -ec)
 
 
 Systèmes Cryptographiques
