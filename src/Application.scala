@@ -44,7 +44,7 @@ object Application
           (mode, size) match
           {
             case (null, "") =>
-              (new EncapsulatedElGamalZp( // TODO générateur ?
+              (new EncapsulatedElGamalZp( // we don't know a generator :(
                 BigInt("20988936657440586486151264256610222593863921"), 7),
                new DummyOpponent())
             case ("ec", "") =>
@@ -55,7 +55,7 @@ object Application
               {
                 throw InvalidArgument("Bad crypto name : not prime")
               }
-              (new EncapsulatedElGamalZp(n, 7), // TODO générateur ?
+              (new EncapsulatedElGamalZp(n, 7), // we don't know a generator :(
                new DummyOpponent())
             case ("zpadd", size) if size != "" =>
               (new EncapsulatedElGamalZk(BigInt(size)),

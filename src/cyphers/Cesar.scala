@@ -152,7 +152,6 @@ class CesarOpponent extends Opponent
       }
     }
     return decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
-    // TODO : parfois le texte est vide ? Si on ne trouve pas il faut renvoyer crypta
   }      
 }
 

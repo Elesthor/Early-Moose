@@ -124,7 +124,7 @@ class EncapsulatedElGamalEc extends EncapsulatedCrypto
 {
   val field = new Zpf(BigInt("20988936657440586486151264256610222593863921"))
   val grp = new Elliptic[BigInt](
-    field, 4, (2, 2), BigInt("100000000000000000000")) // TODO mettre une bonne courbe
+    field, 4, (456231, 6541), BigInt("12345678901234567890"))
   type T = (BigInt, Option[(BigInt,BigInt)], BigInt)
   val crypto = new ElGamal(grp)
   def makeKey(seed: Long) =
