@@ -82,7 +82,9 @@ class Rsa extends CryptoSystem [(BigInt, BigInt)]
   def PKCS1StringToInt(msg: Array[Byte], seed: Long): String  = 
   {
     val randomizer = new util.Random(seed)
-    val randomness = "0000"+ BigInt(0x80, randomizer).toString + "0"*0x10
+    var rando = BigInt(0x80, randomizer)
+    if  (rando%10 == 0) rando += 1
+    val randomness = "0000"+ rando.toString + "0"*0x10
     randomness+ (msg.map({x => padByte((x+0x80).toString, 3)})).foldLeft(""){(s,c)=>s+c}
   }
 
