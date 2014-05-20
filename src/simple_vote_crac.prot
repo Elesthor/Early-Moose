@@ -1,6 +1,6 @@
 %Ceci est l'exemple donné dans l'énoncé
 (new v).
-out(c_out,enc(pair(v>0,rand),pk(1)))^2
+out(c_out,enc(pair(v>0, pair ( v>0, rand )),pk(1)))^2
 ||
 in^2(c_in,x -> dec(x, sk(1)) as y).
 out(stdout, y)

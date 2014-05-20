@@ -60,11 +60,7 @@ class EncapsulatedCesar extends EncapsulatedCrypto
 //                            Cesar Opponent                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
-
-class CesarOpponent extends Opponent
-{
-  val FREQ_FR = scala.collection.immutable.Map( 
-      ('!',0.0427497311748),('%',0.000546763515274),(')',1.37707006828),
+    /*  ('!',0.0427497311748),('%',0.000546763515274),(')',1.37707006828),
       ('(',1.37701272883), ('+',6.09756097561e-05), ('-',0.0699495741795),
       (',',1.67779290886), ('/',0.000569363676566),('.',0.369103254673),
       ('1',6.84596406525),('0',6.1201961431),('3',6.69875001885),
@@ -80,8 +76,23 @@ class CesarOpponent extends Opponent
       ('S',1.11592692364), ('R',2.25477591137),('U',0.528778101758),
       ('T',1.90436916684),('W',0.536821827016),('V',0.180590633963),
       ('Y',0.476629186144),('X', 0.0), ('Z', 0.0),('[',0.384171689195),(']',0.384132976566),
-      ('<', 0.0), ('=', 0.0), ('>', 0.0), ('@', 0.0))
-
+      ('<', 0.0), ('=', 0.0), ('>', 0.0), ('@', 0.0))*/
+class CesarOpponent extends Opponent
+{
+  val FREQ = scala.collection.immutable.Map( 
+    (')', 1.67822580845),('(', 1.67814874097), (',', 1.86433503088),
+    ('1', 7.39269159131),('0', 6.60281206778),('3', 7.40279083996),
+    ('2', 7.41829166797),('5', 7.41771215346),('4', 7.43546544648),('7', 7.41899816374),
+    ('6', 7.42762848623),('9', 7.44632420825),('8', 7.4365972798),(';', 0.0054717757903),
+    (':', 2.09411558428),('?', 0.0319416110812),('A', 2.64502813442),('C', 0.237739745314),
+    ('B', 0.203500571684),('E', 1.40780335636),('D', 0.513485404825),('G', 0.261784059227),
+    ('F', 0.263446726299),('I', 2.56692892259),('H', 0.743693911184),('K', 0.134212786996),
+    ('J', 0.0325523895344),('M', 0.315028219816),('L', 0.458378351719),('O', 0.996685272847),
+    ('N', 0.756690527901),('Q', 0.00717927457173),('P', 1.85750228867),('S', 0.695199208445),
+    ('R', 2.24331464955),('U', 0.348938168218),('T', 1.18783124318),('W', 0.31498888617),
+    ('V', 0.111237998567),('Y', 0.292303165622),('X', 0.001), ('[', 0.282919113175),('Z', 0.00592342909836),
+    (']', 0.282990570984), ('<', 0.0), ('=', 0.0), ('>', 0.0), ('@', 0.0)) ;      
+      
   // Compute the frequency table of the letters occurence in the string inpt.
   def letterFrequencies(inpt: String) =
     inpt groupBy (c => c) mapValues (_.length.toFloat/inpt.length*100)
@@ -89,11 +100,11 @@ class CesarOpponent extends Opponent
   // Filter the string str from all non-printable ascii characters.
  def filterString(str: String) = 
     str.filter 
-    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93).contains(x) }
+    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44,45, 58, 93).contains(x) }
 
   def getLetters(str: String) = 
   {
-   ( (str.toUpperCase).filter {x=> (x > 47  && x < 92) || List(40, 41, 44, 46, 58, 93 ).contains(x) }  )
+   ( (str.toUpperCase).filter {x=> (x > 47  && x < 92) || List(40, 41, 44, 58, 93 ).contains(x) }  )
   }
   
   
@@ -101,21 +112,21 @@ class CesarOpponent extends Opponent
   {
     var sum = 0.0;
     var baseFreq = letterFrequencies(str);
-    for (i <- (48 to 91).toList ++  List(40, 41, 44, 46, 58, 93 ))
+    for (i <- (48 to 91).toList ++  List(40, 41, 44, 58, 93 ))
     {
       val bqp = 
       (
         if (str.contains(i.toChar)) baseFreq(i.toChar)
         else 0.0
       )
-      sum +=  (bqp - FREQ_FR(i.toChar))*(bqp - FREQ_FR(i.toChar))
+      sum +=  (bqp - FREQ(i.toChar))*(bqp - FREQ(i.toChar))
     }
 
 
     sum
   }
 
-  def openEnc(crypta: Array[Byte], _infos : Term):Array[Byte] =
+  def openEnc(crypta: Array[Byte], _infos : Term): Array[Byte] =
   {
     val crypt = new String(crypta, java.nio.charset.Charset.forName("ISO-8859-1"))
     val cypher = new Cesar()
@@ -135,9 +146,12 @@ class CesarOpponent extends Opponent
           minimalValue = currentDist;
           decryptedText = currentDecrypt
         }
+        if (currentDecrypt contains "pair(")
+          return  decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
+
       }
     }
-    decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
+    return decryptedText.getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
     // TODO : parfois le texte est vide ? Si on ne trouve pas il faut renvoyer crypta
   }      
 }

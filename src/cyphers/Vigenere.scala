@@ -28,7 +28,7 @@ class VigenereKey(seed: Long) extends Key[Array[Byte]]
     // random Array[Byte] of random size
     val randomizer = new util.Random(seed)
     // nextString return string of any character (chinese...), we cast them to bytes
-    randomizer.nextString(randomizer.nextInt() % 4 + 6).toCharArray.map(_.toByte)
+    randomizer.nextString(randomizer.nextInt() % 2 + 4).toCharArray.map(_.toByte)
   }
   
   def getPublic  = generate()
@@ -89,7 +89,7 @@ class VigenereOpponent extends Opponent
   // Remove all non printable characters from the str string.
   def filterString(str: String) = 
     str.filter 
-    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 46, 58, 93).contains(x) }
+    {x=> (x > 47  && x < 59) || (x > 64 && x < 92) || (96 < x && x < 123) || List(32, 40, 41, 44, 58, 93).contains(x) }
 
   // Compute the substring constituted from the chars at positions which are 
   // congrous to x mod k.
