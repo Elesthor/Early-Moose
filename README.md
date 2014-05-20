@@ -22,22 +22,22 @@ for asynchrone mode :
 Where cryptosystem is one of the following :
 * -cesar
 * -vigenere
-* -RSA (you can precise -keysize <int>)
+* -RSA (you can precise -keysize \<int\>)
 * -AES
 * -elGamal (you can precise -zpadd <int>, -zpmul <int>, -ec)
 
 
-Systèmes Cryptographiques
+CryptoSystems
 ----
 
-Utilisez dans le dossier src
+Use in directory src/
 ```bash
 make cyphers
 ```
-pour compiler l'ensemble du sous-projet.
+to compile the subproject.
 
-Utilisez par exemple dans le dossier src/cyphers
+For example, use in directory src/cyphers/
 ```bash
-scala TestCyphers --ElGamal --encrypt 10 coucou | scala TestCyphers --ElGamal --decrypt 10
+scala TestCyphers --ElGamal --encrypt 10 hello | scala TestCyphers --ElGamal --decrypt 10
 ```
-Pour encoder et décoder puis décoder la chaîne "coucou" avec l'algorithme d'ElGamal, et la graine 10
+to encrypt then decrypt the word "hello" with ElGamal's cryptosystem and the seed 10.
