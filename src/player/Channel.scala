@@ -155,7 +155,7 @@ class Channel(c: String, synchrone: Boolean)
     }
   }
   
-  // gestion du réseau
+  // NETWORK :
   def connect(host: String, port: Int) =
   {
     semSocket.acquire

@@ -287,7 +287,7 @@ class Parser(src: Input)
             src.checkNextWord(")")
             new TRaw(arrayToHost(networkToArray(data)))
           
-          case ("openEnc", '(') | ("openenc", '(') => // TODO cryptosys
+          case ("openEnc", '(') | ("openenc", '(') =>
             src.cleanPeek()
             val v = parseTerm()
             src.ignoreSpace()

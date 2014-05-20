@@ -20,7 +20,6 @@ object Application
   // crée des cryptosystème en fonction de leur nom
   def cryptoMaker(cryptoName: String): (EncapsulatedCrypto, Opponent) =
   {
-    // TODO : maintenir une map des systèmes déjà créés ?
     val regexRSA = "-?RSA(-keysize)?([0-9]*)".r
     val regexEG  = "-?elGamal-?(ec|zpmul|zpadd)?([0-9]*)".r
     try

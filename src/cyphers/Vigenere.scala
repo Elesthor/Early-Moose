@@ -173,14 +173,4 @@ class VigenereOpponent extends Opponent
     return "".getBytes(java.nio.charset.Charset.forName("ISO-8859-1"))
   }
 }
-/*
-val c = new CesarOpponent()
-val cypher = new Vigenere();
-val opp = new VigenereOpponent();
-val toto = "pair(pair(19876509876, pair(654, pair(098761, 98765)), 987654567), 09876546)"
-val key = new VigenereKey(98765);
-println(key.getPublic.length)
-val crypt = cypher.encrypt(toto, key.getPublic)
-println(opp.indexOfCoincidence(toto))
-println(new String (opp.openEnc((crypt.getBytes))))
-println(opp.indexOfCoincidence(new String (opp.openEnc((crypt.getBytes)))))*/
+
