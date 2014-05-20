@@ -13,7 +13,7 @@
 //                                                           ||     ||        //
 ////////////////////////////////////////////////////////////////////////////////
 //
-// abstract classes of Key and CryptoSystem
+// abstract classes of Key, CryptoSystem, EncapsulatedCrypto and Opponent
 
 import perso.utils.NetworkTools._
 

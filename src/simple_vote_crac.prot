@@ -1,15 +1,14 @@
 %Ceci est l'exemple donné dans l'énoncé
 (new v).
 out(c_out,enc(pair(v>0, pair ( v>0, rand )),pk(1)))^2
+
 ||
-in^2(c_in,x -> dec(x, sk(1)) as y).
+in^1(c_in,x -> dec(x, sk(1)) as y).
 out(stdout, y)
 || in(c_out, m).
 out(stdout, m).
 out(stdout, openEnc(m)).
-out(c_in, m)^2
+out(c_in, m)^1
 
 %chaque votant doit envoyer (suivant son choix de vote) la chaîne "enc(v,pk(1))"
 % alice construit la liste des v et compte le nombre de 1
-
-|| out(stdout, (1::(2::[])::[]))

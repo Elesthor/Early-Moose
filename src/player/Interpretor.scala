@@ -195,9 +195,8 @@ class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Oppone
                 lcrypto.stringToKey(key),
                 interpretValue(inTValue(seed)))
               "pair("+TRaw(cypher).toString+","+info.toString+")"
-            case _       => "err"
+            case _ => throw new InterpretationError()
           }
-          //"enc("+interpretTerm(left)+","+interpretTerm(right)+")"
         }
 
         case TDec (msg, key) =>
@@ -211,15 +210,8 @@ class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Oppone
               lcrypto.decrypt(
                 cypher,
                 lcrypto.stringToKey(key))
-            case _ => "err"
-          }
-          /*( parseTermFromString(interpretTerm(left)),
-            parseTermFromString(interpretTerm(right)) ) match
-          {
-            case (TEnc(msg, TPk(TValue(VInt(n1)))), TSk(TValue(VInt(n2)))) if n1 == n2 =>
-              msg.toString
             case _ => throw new InterpretationError()
-          }*/
+          }
         }
 
         case TPk  (v, cryptoName) =>
@@ -253,8 +245,8 @@ class Interpretor(synchrone: Boolean, defaultCrypto: (EncapsulatedCrypto, Oppone
           {
             case TPair(TRaw(cypher), infos) =>
               arrayToHost(lopenenc.openEnc(networkToArray(cypher), infos))
+            case _ => throw new InterpretationError()
           }
-          //interpretTerm(t)
         
         case ListTerm (l) =>
           "("+l.foldLeft("")
