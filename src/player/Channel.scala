@@ -142,7 +142,7 @@ class Channel(c: String, synchrone: Boolean)
     socket match
     {
       case None => strategy.push(msg)
-      case Some(s) => s.push(msg)
+      case Some(s) => s.push(msg) // there is a semaphore in SocketManager
     }
   }
   // Dequeue an element
@@ -151,7 +151,7 @@ class Channel(c: String, synchrone: Boolean)
     socket match
     {
       case None => strategy.pop()
-      case Some(s) => s.pop()
+      case Some(s) => s.pop() // there is a semaphore in SocketManager
     }
   }
   

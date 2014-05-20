@@ -69,7 +69,40 @@
 
 \end{verbatim}
 
-\section{Attaque sur des cryptosystèmes faibles}
+\section{Liaison des protocoles et des cryptosystème}
+
+L'intégration des cryptosystèmes dans l'interpréteur permet de faire le cryptage et décryptage effectif des messages transitant sur les canaux, moyennant quelques détails d'implémentation et autres conventions de format.
+
+Les classes \texttt{CryptoSystem} et \texttt{Key} qui vont par paires sont des classes paramétrées par le types des clefs, ce qui rend impossible le typage en Scala d'un programme qui manipule ces couples, même si les couples restent toujours cohérents. Pour résoudre ce problème, le trait \texttt{EncapsulatedCrypto} contient le cryptosystème et des primitives pour créer des clefs, ainsi que quelques autres primitives utiles.
+
+Le langage a été un peu augmenté pour convenir aux nouveaux besoins :
+\begin{itemize}
+  \item les termes \textbf{enc} et \textbf{dec} prennent un argument en plus : la graine;
+  \item les termes \textbf{pk}, \textbf{sk} et le nouveau terme \textbf{openenc} prennent en deuxième argument optionnel le cryptosystème à utiliser (même format qu'en ligne de commande, tous les les arguments étant concaténés, ou format plus court);
+  \item le nouveau terme \textbf{raw} permet de représenter des données brutes : il prend un argument formaté tel que fait dans la partie 2 (\emph{n\#m} où \emph{m} est le message et \emph{n} est la représentation décimale de la taille de \emph{m} en octets);
+  \item afin de pouvoir écrire plus facilement des protocoles, l'affectation des variables à été rajoutée. La syntaxe est $x=T$, et au vue de l'interprétation du langage par $\beta$-réduction, seule la première affectation sera effective, les autres étant de fait calculées puis ignorées.
+\end{itemize}
+
+L'interprétation des clefs et des cryptés nécessite quelques éclairages :
+\begin{itemize}
+  \item les clefs pk et sk sont interprétées en paires qui contiennent :
+  \begin{itemize}
+    \item la clef (dans un \textbf{raw});
+    \item une paire qui contient :
+    \begin{itemize}
+      \item une information complémentaire fournie par le cryptosystème : il s'agit de la clef publique pour les cryptosystèmes asymétriques;
+      \item le nom du cryptosystème.
+    \end{itemize}
+  \end{itemize}
+  \item les interprétations de enc et dec se basent sur le nom de cryptosystème contenue dans la clef pour utiliser le bon;
+  \item les messages encodées sont représentés en paires contenant :
+  \begin{itemize}
+  \item le message lui-même, dans un \textbf{raw}
+  \item l'information supplémentaire de la clef (clé publique dans le cas asymétrique).
+  \end{itemize}
+\end{itemize}
+
+\section{Attaques sur des cryptosystèmes faibles}
 
 \subsection{César/Vigenère}
 
@@ -106,9 +139,31 @@ $\{\quad [ w[i]\quad | \quad i = j [l] ] \quad | \quad j \in \{1..l\} \}$ . On p
 
   L'outil de génération a été écrit en Python et est multithreadé pour faire usage effectif des processeurs multicoeurs actuels. Les implémentations effectives des attaques sont codées en Scala en faisant un usage très massif des combinateurs fonctionnels de listes : les fonctions sont presque toutes des onelines ! (contenant entre 3 et 6 combinateurs parmi map, fold, filter, groupBy, zip, reverse,... )\\\\
 
-  Les résultats sont satisfaisants: le décryptage de chaînes suffisamment longues s'effectue correctement et vite :) 
-\subsection{ElGamal}
+  Les résultats sont satisfaisants: le décryptage de chaînes suffisamment longues s'effectue correctement et vite :)
 
+\subsection{ElGamal dans le cas $(\mathbb{Z}/p\mathbb{Z}, +)$}
+
+L'attaque sur le cryptosystème d'ElGamal avec le groupe $(\mathbb{Z}/p\mathbb{Z}, +)$ a été de loin la plus facile à mettre en place. En effet si $g$ est le générateur du groupe et $x$ la clef privée, la clé publique est $g^x$, c'est-à-dire $g\times x$. L'inversion modulo $p$ permet alors de retrouver $x$, et de décrypter les messages.
+
+\section{Canaux sur le réseau}
+
+La gestion du réseau est faite par les classe \texttt{SocketManager} qui gère les sockets et \texttt{PacketManager} qui écrit et lit des paquets formatés (de la même manière qu'avec un \textbf{raw}) sur une socket.
+
+La création des connexions se fait lors de l'interprétation des protocoles, à l'aide de plusieurs nouveaux processus :
+\begin{itemize}
+  \item \textbf{connect}(\emph{channel, host, port}) : essaye de se connecter à \emph{host:port}, et substitue le canal \emph{channel} par cette connexion;
+  \item \textbf{accept}(\emph{channel, port}) : attend une connexion sur le port \emph{port}, et substitue le canal \emph{channel} par cette connexion;
+  \item \textbf{wait}(\emph{channel}) : attend qu'une connexion substituant le canal \emph{channel} soit créée par un processus en parallèle;
+  \item \textbf{close}(\emph{channel}) : ferme la connexion correspondant au canal \emph{channel}.
+\end{itemize}
+
+Notons que par souci de simplicité les hôtes et les ports doivent être directement écrits, et ne peuvent pas être une variable.
+
+Avec ce système, une socket est créé par canal et est partagée avec tous les processus locaux. Il est à noté que le mode synchrone ou asynchrone de l’exécution est ignoré pour laisser place à un mode asynchrone lors de l'utilisation d'une connexion réseau, et ce uniquement sur les canaux concernés. Avant et après la fin d'une éventuelle connexion, le canal se comporte comme un canal local, d'où l'importance du processus \textbf{wait} qui permet d'attendre que la connexion soit effective.
+
+Les sémaphores ont été très utiles pour éviter des erreurs de \emph{race condition}, ainsi que pour avoir l'implémentation du processus \textbf{wait}.
+
+\section{Implémentation d'un protocole bi-cryptosystème} % TODO
 
 \end{document}
 

@@ -1,10 +1,17 @@
-connect(c, localhost, 2001).
+connect(sock, localhost, 2001).
 new seed.
-pkrsa = pk(seed, RSA).
-skrsa = sk(seed, RSA).
-out(c, pkrsa).
-in(c, kaes_enc).
-kaes = dec(kaes_enc, skrsa).
-in(c, msg).
+
+% clef RSA
+in(sock, pkrsa).
+
+
+
+% clef AES
+kaes = pk(seed, AES).
+% on envoit le crypté RSA de la clef AES
+out(sock, enc(kaes, pkrsa, seed)).
+
+% la connexion est prête
+in(sock, msg).
 out(stdout, dec(msg, kaes)).
-close(c)
+close(sock)

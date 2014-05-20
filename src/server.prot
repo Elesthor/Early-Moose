@@ -1,7 +1,16 @@
-accept(c, 2001).
+accept(sock, 2001).
 new seed.
-kaes = pk(seed, AES).
-in(c, pkrsa).
-out(c, enc(kaes, pkrsa, seed)).
-out(c, enc(coucou, kaes, seed)).
-close(c)
+
+% clef RSA
+pkrsa = pk(seed, RSA).
+skrsa = sk(seed, RSA).
+out(sock, pkrsa).
+
+% clef AES
+in(sock, kaes_enc).
+kaes = dec(kaes_enc, skrsa).
+
+
+% la connexion est prête
+out(sock, enc(coucou, kaes, seed)).
+close(sock)
