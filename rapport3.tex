@@ -161,15 +161,11 @@ Notons que par souci de simplicité les hôtes et les ports doivent être direct
 
 Avec ce système, une socket est créée par canal et est partagée avec tous les processus locaux. Il est à noté que le mode synchrone ou asynchrone de l’exécution est ignoré pour laisser place à un mode asynchrone pour les canaux réseau. Avant et après la fin d'une éventuelle connexion, le canal se comporte comme un canal local, d'où l'importance du processus \textbf{wait} qui permet d'attendre que la connexion soit effective.
 
-Les sémaphores ont été très utiles pour éviter des erreurs de \emph{race condition}, ainsi que pour avoir l'implémentation du processus \textbf{wait}.
+Les sémaphores ont été très utiles pour éviter des erreurs de \emph{race condition}, ainsi que pour l'implémentation du processus \textbf{wait}.
 
-\section{Implémentation d'un protocole bi-cryptosystème}
+\section{Implémentation d'un protocole hybride}
 
-Afin de mettre en pratique cet interpréteur de protocole, nous avons écrit deux petits programme \emph{client.prot} et \emph{server.prot} qui s'échange une clef AES chiffré avec RSA, puis qui échange deux messages codés avec AES.
+Afin de mettre en pratique cet interpréteur de protocole, nous avons écrit deux petits programme \emph{client.prot} et \emph{server.prot} qui s'échangent une clef AES chiffrée avec RSA, puis qui échangent deux messages codés avec AES.
 
-\section{Conclusion}
-
-Ce projet était top-kikoo-lol, ça déchirait sa race !!
-\#EmilePower
 \end{document}
 
